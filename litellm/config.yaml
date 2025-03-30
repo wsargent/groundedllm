@@ -1,0 +1,57 @@
+model_list:
+  # A full list of providers is here: https://docs.litellm.ai/docs/providers/
+
+  # Openrouter doesn't require Google's complicated sign up process
+  # https://openrouter.ai/google/gemini-2.5-pro-exp-03-25:free
+  - model_name: openrouter-gemini-2.5-pro
+    litellm_params:
+      model: openrouter/google/gemini-2.5-pro-exp-03-25:free
+      api_key: "os.environ/OPENROUTER_API_KEY"
+      tags: ["gemini"]
+    model_info:
+      max_input_tokens: 1048576
+      max_output_tokens: 64000
+      supports_function_calling: True
+
+  - model_name: gemini-2.5-pro
+    litellm_params:
+      model: gemini/gemini-2.5-pro-exp-03-25
+      api_key: "os.environ/GEMINI_API_KEY"
+      tags: ["gemini"]
+    model_info:
+      max_input_tokens: 1048576
+      max_output_tokens: 8192
+
+  - model_name: gemini-2.0-flash
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: "os.environ/GEMINI_API_KEY"
+      tags: ["gemini"]
+
+  - model_name: gemini-2.0-flash-lite
+    litellm_params:
+      model: gemini/gemini-2.0-flash-lite
+      api_key: "os.environ/GEMINI_API_KEY"
+      tags: ["gemini"]      
+
+  - model_name: claude-3-5-sonnet
+    litellm_params: 
+      model: anthropic/claude-3-5-sonnet-20240620
+      api_key: "os.environ/ANTHROPIC_API_KEY"
+      tags: ["anthropic"]  
+
+  - model_name: claude-3-5-sonnet
+    litellm_params: 
+      model: anthropic/claude-3-5-sonnet-20240620
+      api_key: "os.environ/ANTHROPIC_API_KEY"
+      tags: ["anthropic"]  
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_base: https://api.openai.com/v1
+      api_key: "os.environ/OPENAI_API_KEY"
+
+litellm_settings:
+  request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
+  

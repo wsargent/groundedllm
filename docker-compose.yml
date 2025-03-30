@@ -1,0 +1,152 @@
+services:
+  
+  # https://docs.litellm.ai/docs/proxy/deploy      
+  litellm:
+    build: litellm/
+    container_name: litellm
+    ports:
+      - 4000:4000
+    environment:
+      - LITELLM_LOG=WARN
+      - LITELLM_MASTER_KEY=sk-1234
+      - GEMINI_API_KEY=$GEMINI_API_KEY
+      - ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+      - OPENAI_API_KEY=$OPENAI_API_KEY
+
+  # https://github.com/deepset-ai/hayhooks-open-webui-docker-compose
+  # We only want Open WebUI talking to Hayhooks and Letta
+  hayhooks:
+    build: hayhooks/
+    container_name: hayhooks
+    ports:
+      - 1416:1416
+    depends_on:
+      - litellm
+    volumes:
+      - ./hayhooks/pipelines:/pipelines
+    environment:
+      - OPENAI_API_BASE=http://litellm:4000
+      - OPENAI_API_KEY=sk-1234
+      - CHAT_MODEL=gemini-2.0-flash
+      - HAYHOOKS_PIPELINES_DIR=/pipelines
+      - HAYHOOKS_DISABLE_SSL=true
+      - HAYHOOKS_HOST=0.0.0.0
+      - HAYHOOKS_PORT=1416
+      - LOG_LEVEL=INFO
+      - HAYSTACK_LOG_LEVEL=INFO
+      - HAYHOOKS_SHOW_TRACEBACKS=true
+      # Needed for search pipeline
+      - TAVILY_API_KEY=$TAVILY_API_KEY
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 5s
+
+  # https://docs.letta.com/quickstart/docker
+  letta:
+    image: letta/letta:0.6.44
+    container_name: letta
+    ports:
+      - 8283:8283
+    depends_on:
+      - hayhooks
+    volumes:
+      # Make pgdata accessible to Letta Desktop
+      - ~/.letta/.persist/pgdata:/var/lib/postgresql/data
+    environment:
+      HAYHOOKS_URL: http://hayhooks:1416
+      #SECURE: "{{ letta_server_secure }}"
+      #LETTA_SERVER_PASSWORD: "{{ letta_server_password }}"
+      #LETTA_DEBUG: "{{ letta_debug }}"
+
+      # https://docs.letta.com/guides/server/providers/anthropic
+      #ANTHROPIC_API_KEY: "$ANTHROPIC_API_KEY"
+      
+      # https://docs.letta.com/guides/server/providers/google
+      GEMINI_API_KEY: "$GEMINI_API_KEY"
+
+      # https://docs.letta.com/guides/server/providers/openai-proxy
+      # # Sadly, Letta doesn't support LiteLLM so openrouter is the best free option
+      # Also "We strongly recommend using providers directly"
+      #OPENAI_API_KEY: "$OPENROUTER_API_KEY"
+     
+      # Smaller models will not work effectively with Letta, use at least an 11 GB model
+      # https://docs.letta.com/guides/server/providers/ollama
+      # OLLAMA_BASE_URL: ""
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8283/v1/health/"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:0.5.20
+    container_name: open-webui
+    volumes:
+     - open-webui:/app/backend/data
+    ports:
+      - ${OPEN_WEBUI_PORT-3000}:8080
+    depends_on:
+      - letta
+      - hayhooks
+    environment:
+      - GLOBAL_LOG_LEVEL=WARNING  
+      # Disable admin login
+      - WEBUI_AUTH=false
+      # Enable the /docs endpoint
+      - ENV=dev
+      # Prevent a langchain warning
+      - USER_AGENT=openwebui
+      # Disable sneaky calls to LLMs by all methods possible
+      - ENABLE_TAGS_GENERATION=false
+      - ENABLE_EVALUATION_ARENA_MODELS=false
+      - ENABLE_AUTOCOMPLETE_GENERATION=false
+      - ENABLE_RETRIEVAL_QUERY_GENERATION=false
+      # Add models from LiteLLM and Hayhooks
+      - OPENAI_API_BASE_URLS=http://litellm:4000,http://hayhooks:1416
+      - OPENAI_API_KEYS=sk-1234,dummy
+      # Disable giant downloads
+      - WHISPER_MODEL_AUTO_UPDATE=false
+      # Set up configuration to Letta
+      - LETTA_BASE_URL=http://letta:8283
+      - LETTA_AGENT_NAME=Letta
+      - LETTA_SERVER_PASSWORD=
+      - LETTA_AGENT_ID=agent-d575be8f-14d4-4858-9876-5b641b7812a3      
+      # - LETTA_PASSWORD={{ letta_server_password }}
+    restart: unless-stopped
+    # https://docs.openwebui.com/getting-started/advanced-topics/monitoring/#basic-health-check-endpoint
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+
+  # initializer:
+  #   # Option A: Build a small image with dependencies
+  #   build:
+  #     context: ./initializer
+  #   volumes:
+  #     - ./scripts:/scripts # Mount your local './scripts' dir into the container
+  #   depends_on:
+  #     open-webui:
+  #       condition: service_healthy 
+  #     letta:
+  #       condition: service_healthy 
+  #       # If no healthcheck:
+  #       # condition: service_started # Falls back to container start, SCRIPT MUST WAIT!
+  #   networks:
+  #     - my_network
+  #   # Optional: If you need environment variables for the script
+  #   # environment:
+  #   #   - OPEN_WEBUI_API_KEY=...
+  #   #   - LETTA_API_KEY=...
+
+
+volumes:
+  open-webui:
