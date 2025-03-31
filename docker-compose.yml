@@ -1,6 +1,5 @@
 services:
-  
-  # https://docs.litellm.ai/docs/proxy/deploy      
+
   litellm:
     build: litellm/
     container_name: litellm
@@ -8,12 +7,11 @@ services:
       - 4000:4000
     environment:
       - LITELLM_LOG=WARN
-      - LITELLM_MASTER_KEY=sk-1234
+      - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
       - GEMINI_API_KEY=$GEMINI_API_KEY
       - ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-      - OPENAI_API_KEY=$OPENAI_API_KEY
-
-  # https://github.com/deepset-ai/hayhooks-open-webui-docker-compose
+      # - OPENAI_API_KEY=$OPENAI_API_KEY
+      
   # We only want Open WebUI talking to Hayhooks and Letta
   hayhooks:
     build: hayhooks/
@@ -25,8 +23,9 @@ services:
     volumes:
       - ./hayhooks/pipelines:/pipelines
     environment:
+      - LETTA_BASE_URL=http://letta:8283
       - OPENAI_API_BASE=http://litellm:4000
-      - OPENAI_API_KEY=sk-1234
+      - OPENAI_API_KEY=$LITELLM_MASTER_KEY
       - CHAT_MODEL=gemini-2.0-flash
       - HAYHOOKS_PIPELINES_DIR=/pipelines
       - HAYHOOKS_DISABLE_SSL=true
@@ -46,7 +45,7 @@ services:
 
   # https://docs.letta.com/quickstart/docker
   letta:
-    image: letta/letta:0.6.44
+    image: letta/letta:0.6.48
     container_name: letta
     ports:
       - 8283:8283
@@ -55,36 +54,22 @@ services:
     volumes:
       # Make pgdata accessible to Letta Desktop
       - ~/.letta/.persist/pgdata:/var/lib/postgresql/data
+      # Mount the MCP configuration file
+      - ./letta_mcp_config.json:/root/.letta/mcp_config.json
     environment:
-      HAYHOOKS_URL: http://hayhooks:1416
-      #SECURE: "{{ letta_server_secure }}"
-      #LETTA_SERVER_PASSWORD: "{{ letta_server_password }}"
-      #LETTA_DEBUG: "{{ letta_debug }}"
-
-      # https://docs.letta.com/guides/server/providers/anthropic
-      #ANTHROPIC_API_KEY: "$ANTHROPIC_API_KEY"
-      
-      # https://docs.letta.com/guides/server/providers/google
-      GEMINI_API_KEY: "$GEMINI_API_KEY"
-
-      # https://docs.letta.com/guides/server/providers/openai-proxy
-      # # Sadly, Letta doesn't support LiteLLM so openrouter is the best free option
-      # Also "We strongly recommend using providers directly"
-      #OPENAI_API_KEY: "$OPENROUTER_API_KEY"
-     
-      # Smaller models will not work effectively with Letta, use at least an 11 GB model
-      # https://docs.letta.com/guides/server/providers/ollama
-      # OLLAMA_BASE_URL: ""
+      # https://docs.letta.com/guides/server/docker#setting-environment-variables
+      ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+      GEMINI_API_KEY: $GEMINI_API_KEY
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8283/v1/health/"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 18
-      start_period: 30s
+      start_period: 1s
 
   open-webui:
-    image: ghcr.io/open-webui/open-webui:0.5.20
+    image: ghcr.io/open-webui/open-webui:0.6.0
     container_name: open-webui
     volumes:
      - open-webui:/app/backend/data
@@ -94,29 +79,36 @@ services:
       - letta
       - hayhooks
     environment:
-      - GLOBAL_LOG_LEVEL=WARNING  
+      # https://docs.openwebui.com/getting-started/env-configuration/
+      - GLOBAL_LOG_LEVEL=WARNING
       # Disable admin login
       - WEBUI_AUTH=false
       # Enable the /docs endpoint
-      - ENV=dev
+      #- ENV=dev
       # Prevent a langchain warning
       - USER_AGENT=openwebui
       # Disable sneaky calls to LLMs by all methods possible
       - ENABLE_TAGS_GENERATION=false
+      - ENABLE_TITLE_GENERATION=false
       - ENABLE_EVALUATION_ARENA_MODELS=false
       - ENABLE_AUTOCOMPLETE_GENERATION=false
       - ENABLE_RETRIEVAL_QUERY_GENERATION=false
-      # Add models from LiteLLM and Hayhooks
-      - OPENAI_API_BASE_URLS=http://litellm:4000,http://hayhooks:1416
-      - OPENAI_API_KEYS=sk-1234,dummy
+      # Disable Ollama
+      - ENABLE_OLLAMA_API=false
+      # Point the RAG at Gemini to disable giant downloads
+      - RAG_EMBEDDING_ENGINE=openai
+      #- RAG_OPENAI_API_BASE_URL=http://litellm:4000
+      #- RAG_OPENAI_API_KEY=$LITELLM_MASTER_KEY
+      #- RAG_EMBEDDING_MODEL=text-embedding-004
+      # Enable Tavily Web Search
+      #- ENABLE_RAG_WEB_SEARCH=true
+      #- RAG_WEB_SEARCH_ENGINE=tavily
+      #- TAVILY_API_KEY=$TAVILY_API_KEY
+      # Add models from LiteLLM
+      #- OPENAI_API_BASE_URLS=http://litellm:4000
+      #- OPENAI_API_KEY=$LITELLM_MASTER_KEY
       # Disable giant downloads
-      - WHISPER_MODEL_AUTO_UPDATE=false
-      # Set up configuration to Letta
-      - LETTA_BASE_URL=http://letta:8283
-      - LETTA_AGENT_NAME=Letta
-      - LETTA_SERVER_PASSWORD=
-      - LETTA_AGENT_ID=agent-d575be8f-14d4-4858-9876-5b641b7812a3      
-      # - LETTA_PASSWORD={{ letta_server_password }}
+      - AUDIO_STT_ENGINE=openai
     restart: unless-stopped
     # https://docs.openwebui.com/getting-started/advanced-topics/monitoring/#basic-health-check-endpoint
     healthcheck:
@@ -124,29 +116,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 18
-      start_period: 30s
+      start_period: 5s
 
-
-  # initializer:
-  #   # Option A: Build a small image with dependencies
-  #   build:
-  #     context: ./initializer
-  #   volumes:
-  #     - ./scripts:/scripts # Mount your local './scripts' dir into the container
-  #   depends_on:
-  #     open-webui:
-  #       condition: service_healthy 
-  #     letta:
-  #       condition: service_healthy 
-  #       # If no healthcheck:
-  #       # condition: service_started # Falls back to container start, SCRIPT MUST WAIT!
-  #   networks:
-  #     - my_network
-  #   # Optional: If you need environment variables for the script
-  #   # environment:
-  #   #   - OPEN_WEBUI_API_KEY=...
-  #   #   - LETTA_API_KEY=...
-
+  # This service runs after open-webui and letta has come up and is healthy
+  # and adds an agent and tools to Letta and changes settings in Open WebUI.
+  initializer:
+    build: ./initializer
+    container_name: initializer
+    depends_on:
+      open-webui:
+        condition: service_healthy
+      letta:
+        condition: service_healthy
+    environment:
+      - OPEN_WEBUI_URL=http://open-webui:8080
+      - LETTA_BASE_URL=http://letta:8283
 
 volumes:
   open-webui:

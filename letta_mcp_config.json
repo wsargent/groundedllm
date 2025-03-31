@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "hayhooks": {
+      "url": "http://hayhooks:1416/sse",
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
