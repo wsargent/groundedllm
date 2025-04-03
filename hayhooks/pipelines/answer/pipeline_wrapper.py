@@ -132,9 +132,13 @@ Provide a clear and direct response to the user's query, including inline citati
              raise RuntimeError("Pipeline not initialized during setup.")
         
         result = self.pipeline.run(self.create_pipeline_args(question))
+
+        logger.trace(s"answer: answer result from pipeline {result}")
+
         # Assuming the LLM component is named 'llm' and returns replies
         if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
-            return result["llm"]["replies"][0]
+            reply = result["llm"]["replies"][0]
+            return reply
         else:
             raise "Error: Could not retrieve answer from the pipeline."
         
