@@ -1,8 +1,8 @@
 import requests
-import json # Import the json module
-from typing import Optional # Keep Optional for consistency, though not used here
+import json
+from typing import List
 
-def answer(question: str) -> str:
+def answer(question: str, urls: List[str]) -> str:
     """
     Passes the question to an LLM model that will do a search and extract
     the full content of the web pages, and answer the question.
@@ -11,26 +11,24 @@ def answer(question: str) -> str:
     ----------
     question: str
         The question to answer.
+    urls: List[str]
+        The urls of the pages to use as context    
 
     Returns
     -------
     str
         The answer to the question from the agent.
     """
-    # This assumes hayhooks is running and accessible at this address
-    # Consider making the base URL configurable if needed
     hayhooks_url = "http://hayhooks:1416/answer/run"
     try:
         response = requests.post(
             hayhooks_url,
             json={"urls": urls, "question": question},
-            timeout=60 # Add a timeout
+            timeout=60 
         )
-        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+        response.raise_for_status()
         return response.json()["result"]
     except requests.exceptions.RequestException as e:
-        # Log or handle the error appropriately before re-raising or returning an error message
-        # For now, returning a simple error message string
         return f"Error calling Hayhooks answer pipeline: {e}"
     except (KeyError, json.JSONDecodeError) as e:
         return f"Error processing Hayhooks answer response: {e}"

@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Optional, Union
+from typing import Literal
 
 from haystack import (
     Document,
@@ -16,16 +17,14 @@ logger = logging.getLogger(__name__)
 # https://docs.haystack.deepset.ai/docs/custom-components
 TAVILY_BASE_URL = "https://api.tavily.com/search"
 
+
 @component
 class TavilyWebSearch:
     """
     Uses [Tavily](https://docs.tavily.com/welcome) to search the web for relevant documents.
     """
 
-    def __init__(
-        self,
-        api_key: Secret = Secret.from_env_var("TAVILY_API_KEY")
-    ):
+    def __init__(self, api_key: Secret = Secret.from_env_var("TAVILY_API_KEY")):
         """
         Initialize the TavilySearch component.
 
@@ -63,18 +62,19 @@ class TavilyWebSearch:
         return default_from_dict(cls, data)
 
     @component.output_types(documents=List[Document], links=List[str])
-    def run(self, 
-            query: str, 
-            max_results: int = 10,
-            include_domains: Optional[list[str]] = None,   
-            exclude_domains: Optional[list[str]] = None
-            ) -> Dict[str, Union[List[Document], List[str]]]:
+    def run(
+        self,
+        query: str,
+        max_results: int = 10,
+        include_domains: Optional[list[str]] = None,
+        exclude_domains: Optional[list[str]] = None 
+    ) -> Dict[str, Union[List[Document], List[str]]]:
         """
         Uses [Tavily](https://docs.tavily.com/welcome) to search the web for relevant documents.
 
         Parameters
         -------------
-        query: str  
+        query: str
             The query.
         max_results: int
             The maximum number of results to return.
@@ -82,7 +82,6 @@ class TavilyWebSearch:
             The only website domains that should be searched.
         exclude_domains: Optional[list[str]]
             The website domains that should not be searched.
-
         Returns
         -------
         Dict[str, Union[List[Document], List[str]]]
@@ -97,7 +96,7 @@ class TavilyWebSearch:
             include_domains=include_domains,
             exclude_domains=exclude_domains,
             search_depth="basic",
-            time_range=None,
+            time_range=None
         )
 
         documents = []
@@ -107,7 +106,7 @@ class TavilyWebSearch:
                 "title": result["title"],
                 "content": result["content"],
                 "link": result["url"],
-                "score": result["score"]
+                "score": result["score"],
             }
             urls.append(result["url"])
             documents.append(Document.from_dict(doc_dict))
