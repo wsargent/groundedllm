@@ -8,7 +8,7 @@ Also see [hayhooks-open-webui-docker-compose](https://github.com/deepset-ai/hayh
 
 ## Running
 
-This project uses [uv](https://docs.astral.sh/uv/).
+This project uses [uv](https://docs.astral.sh/uv/).  It requires Python 3.12.
 
 You should set up the environment variables in `.env`:
 
