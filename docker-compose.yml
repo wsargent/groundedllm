@@ -54,9 +54,7 @@ services:
     depends_on:
       - hayhooks
     volumes:
-      # Make pgdata accessible to Letta Desktop
-      - ~/.letta/.persist/pgdata:/var/lib/postgresql/data
-      # Mount the MCP configuration file
+      # Mount the MCP configuration file (this doesn't work)
       - ./letta_mcp_config.json:/root/.letta/mcp_config.json
     environment:
       # https://docs.letta.com/guides/server/docker#setting-environment-variables
@@ -85,8 +83,8 @@ services:
       - GLOBAL_LOG_LEVEL=WARNING
       # Disable admin login
       - WEBUI_AUTH=false
-      # Enable the /docs endpoint
-      #- ENV=dev
+      # Enable the /docs endpoint for OpenAPI viewing
+      - ENV=dev
       # Prevent a langchain warning
       - USER_AGENT=openwebui
       # Disable sneaky calls to LLMs by all methods possible
@@ -133,6 +131,11 @@ services:
     environment:
       - OPEN_WEBUI_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
+      # Gemini does not work reliably (will output in reasoning stage)
+      #- LETTA_MODEL=google_ai/gemini-2.5-pro-exp-03-25
+      #- LETTA_MODEL=letta/letta-free
+      - LETTA_MODEL=anthropic/claude-3-7-sonnet-20250219
+      
 
 volumes:
   open-webui:

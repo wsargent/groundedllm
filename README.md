@@ -21,7 +21,7 @@ You will want the following:
 
 * [Tavily API key](https://app.tavily.com/home) (required for search) -- this is free up to a certain level.
 * [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) (very useful for searching documentation) -- also has a free tier
-* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc) -- not free but often cheaper than the monthly subscription.
+* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc) -- not free but often cheaper than the monthly subscription.  The docker-compose.yml file is set up for Claude Sonnet 3.7.
 
 ## Docker
 
@@ -41,7 +41,19 @@ cp env.example .env
 To start the services, run the following:
 
 ```bash
-docker compose up --build
+docker compose up
+```
+
+When you want it to run in the background, you can run it as a daemon:
+
+```bash
+docker compose up -d
+```
+
+To stop it:
+
+```bash
+docker compose down
 ```
 
 ### Management
@@ -62,6 +74,12 @@ To delete a particular container:
 
 ```bash
 docker rm -f litellm
+```
+
+To completely destroy all resources:
+
+```bash
+docker compose down -v --remove-orphans
 ```
 
 ## Open WebUI

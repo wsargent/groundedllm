@@ -100,9 +100,16 @@ class OpenWebUISetup:
         response = self._make_request("post", endpoint, json=valve_payload)
         logger.debug(f"Valve update response: {json.dumps(response.json(), indent=2)}")
 
+    def _get_function_state(self):
+        """Gets the current function state"""
+        logger.debug(f"Getting function ID {self.function_id} toggle...")
+        endpoint = f"/api/v1/functions/id/{self.function_id}"
+        response = self._make_request("get", endpoint)
+        logger.debug(f"_get_function_state response: {json.dumps(response.json(), indent=2)}")
+
     def _toggle_function(self):
         """Toggles the specified function state (enables it)."""
-        logger.debug(f"Enabling function ID {self.function_id}...")
+        logger.debug(f"Toggling function ID {self.function_id}...")
         endpoint = f"/api/v1/functions/id/{self.function_id}/toggle"
         response = self._make_request("post", endpoint)
         logger.debug(f"Toggle response: {json.dumps(response.json(), indent=2)}")
@@ -114,21 +121,20 @@ class OpenWebUISetup:
         Args:
             valve_payload (dict): The dictionary payload for the valve update request.
         """
-        # Removed try block to allow specific exceptions to propagate
         logger.info(f"Starting setup for function ID {self.function_id}...")
-        self._signin() # Sign in and set self.headers
+        self._signin()
 
         existing_functions = self._get_functions()
         function_exists = any(func.get('id') == self.function_id for func in existing_functions)
 
         if not function_exists:
-            # _create_function handles its own FileNotFoundError and API errors via _make_request
             self._create_function()
+            ### if it's already there it toggles it off?
+            self._toggle_function()
         else:
             logger.info(f"Function ID {self.function_id} already exists.")
 
-        # API errors handled by _make_request
+        # Set up the agent id as a valve setting
         self._update_function_valve(valve_payload)
-        self._toggle_function()
-
+        
         logger.info(f"Setup complete for function ID {self.function_id}.")

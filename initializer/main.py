@@ -9,7 +9,7 @@ from letta_setup import LettaSetup # Import the new class
 from openwebui_setup import OpenWebUISetup # Import the class
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger("main")
@@ -109,5 +109,5 @@ if __name__ == "__main__":
 
         logger.info("Initialization complete.") 
     except Exception as e:
-        logger.error(f"Initialization failed: {e}")
+        logger.error(f"Initialization failed: {e}", e, exc_info=True)
         sys.exit(1)

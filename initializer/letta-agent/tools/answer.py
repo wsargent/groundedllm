@@ -1,6 +1,7 @@
 import requests
 import json
 from typing import List
+import os
 
 def answer(question: str, urls: List[str]) -> str:
     """
@@ -19,7 +20,8 @@ def answer(question: str, urls: List[str]) -> str:
     str
         The answer to the question from the agent.
     """
-    hayhooks_url = "http://hayhooks:1416/answer/run"
+    endpoint = os.getenv("HAYHOOKS_URL", "http://hayhooks:1416")
+    hayhooks_url = f"{endpoint}/answer/run"
     try:
         response = requests.post(
             hayhooks_url,
