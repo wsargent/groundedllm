@@ -54,7 +54,7 @@ services:
     depends_on:
       - hayhooks
     volumes:
-      # Mount the MCP configuration file (this doesn't work)
+      # Mount the MCP configuration file (this points to Hayhooks)
       - ./letta_mcp_config.json:/root/.letta/mcp_config.json
     environment:
       # https://docs.letta.com/guides/server/docker#setting-environment-variables
@@ -133,7 +133,9 @@ services:
       - LETTA_BASE_URL=http://letta:8283
       # Gemini does not work reliably (will output in reasoning stage)
       #- LETTA_MODEL=google_ai/gemini-2.5-pro-exp-03-25
+      # This is the default option if you don't have Gemini or Anthropic set up
       #- LETTA_MODEL=letta/letta-free
+      # This is the preferred option
       - LETTA_MODEL=anthropic/claude-3-7-sonnet-20250219
       
 
