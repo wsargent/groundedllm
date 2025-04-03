@@ -15,8 +15,7 @@ from tavily_web_search import TavilyWebSearch
 
 class PipelineWrapper(BasePipelineWrapper):
     """
-    A Haystack pipeline wrapper that performs web searches using Tavily, fetches
-    content from the resulting links, converts HTML to text documents, and then
+    A Haystack pipeline wrapper that scrapes the URL, and then
     uses an OpenAI model to generate an answer based on the fetched content and
     the user's query.
 
@@ -24,6 +23,7 @@ class PipelineWrapper(BasePipelineWrapper):
     is preferred over relying solely on search result snippets.
 
     Input:
+      urls (str): The URLs to search for
       question (str): The user's query to search for and answer.
 
     Output:
@@ -35,7 +35,6 @@ class PipelineWrapper(BasePipelineWrapper):
         Constructs the Haystack pipeline by defining and connecting components.
 
         Components:
-        - TavilyWebSearch: Performs the initial web search.
         - LinkContentFetcher: Fetches content from URLs found by the search.
         - HTMLToDocument: Converts fetched HTML content into Haystack Documents.
         - PromptBuilder: Creates the prompt for the language model using a template
@@ -45,8 +44,7 @@ class PipelineWrapper(BasePipelineWrapper):
         Returns:
             Pipeline: The constructed Haystack pipeline instance.
         """
-        search = TavilyWebSearch()
-        link_content = LinkContentFetcher()
+        fetcher = LinkContentFetcher()
         html_converter = HTMLToDocument()
 
         # Note: This prompt template provides detailed instructions for the LLM,
@@ -93,28 +91,26 @@ Provide a clear and direct response to the user's query, including inline citati
         )
 
         pipe = Pipeline()
-        pipe.add_component("search", search)
-        pipe.add_component("fetcher", link_content)
+        pipe.add_component("fetcher", fetcher)
         pipe.add_component("converter", html_converter)
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
 
         # Connect components
-        pipe.connect("search.links", "fetcher.urls")
         pipe.connect("fetcher.streams", "converter.sources")
         pipe.connect("converter.documents", "prompt_builder.documents")
         pipe.connect("prompt_builder.prompt", "llm.prompt")
 
         return pipe
 
-    def create_pipeline_args(self, query: str) -> dict:
-        return {"search": {"query": query}, "prompt_builder": {"query": query}}
+    def create_pipeline_args(self, query: str, urls: List[str]) -> dict:
+        return {"fetcher": {"urls": urls}, "prompt_builder": {"query": query}}
 
     def setup(self) -> None:
         self.pipeline = self.create_pipeline()
         log.info("Answer pipeline created successfully.")
 
-    def run_api(self, question: str) -> str:
+    def run_api(self, question: str, urls: List[str]) -> str:
         """
         Passes the question to an LLM model that will do a search and extract
         the full content of the web pages, and answer the question.
@@ -123,25 +119,22 @@ Provide a clear and direct response to the user's query, including inline citati
         ----------
         question: str
             The question to answer.
+        urls: List[str]
+            The urls to pass in.    
 
         Returns
         -------
         str
             The answer to the question from the agent.
         """
-        log.trace(f"Running answer pipeline with question: {question}")
+        log.trace(f"Running answer pipeline with question: {question} and urls {urls}")
         if not hasattr(self, 'pipeline') or self.pipeline is None:
-             log.error("Pipeline is not initialized. Call setup() first.")
-             # Or handle appropriately, maybe raise a specific error
              raise RuntimeError("Pipeline not initialized during setup.")
-        try:
-            result = self.pipeline.run(self.create_pipeline_args(question))
-            # Assuming the LLM component is named 'llm' and returns replies
-            if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
-                return result["llm"]["replies"][0]
-            else:
-                log.error("Unexpected result structure from pipeline: %s", result)
-                return "Error: Could not retrieve answer from the pipeline."
-        except Exception as e:
-            log.error("Error running answer pipeline: %s", e, exc_info=True)
-            raise e # Re-raise the exception after logging
+        
+        result = self.pipeline.run(self.create_pipeline_args(question))
+        # Assuming the LLM component is named 'llm' and returns replies
+        if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
+            return result["llm"]["replies"][0]
+        else:
+            raise "Error: Could not retrieve answer from the pipeline."
+        
