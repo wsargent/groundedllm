@@ -4,8 +4,6 @@ import os
 import sys
 import logging
 
-# Import the refactored functions/classes
-from letta_setup import LettaSetup # Import the new class
 from openwebui_setup import OpenWebUISetup # Import the class
 
 logging.basicConfig(
@@ -63,12 +61,7 @@ def configure_and_setup_letta() -> str:
         "agent_name": "letta-agent"
     })
     logger.info(f"letta: response={response}")
-
-    logger.info("Configuring Letta agent...")
-    letta_setup = LettaSetup(base_url=letta_base_url)
-    agent_id = letta_setup.setup_agent() # Call the setup method
-    logger.info("Letta agent setup completed successfully.")
-    return agent_id
+    return response["agent_id"]
     
 
 def configure_and_setup_openwebui(agent_id):
