@@ -184,6 +184,11 @@ class LettaAttachTools:
             # Create Letta tools from MCP tools and attach them
             attached_tools: Dict[str, str] = {}
             for mcp_tool in mcp_tools:
+
+                # We should not add this
+                if mcp_tool.name == "provision_letta_agent":
+                    continue
+
                 tool_id = self._attach_single_mcp_tool(
                     agent_id=agent_id,
                     mcp_server_name=mcp_server_name,

@@ -3,6 +3,7 @@ import time
 import os
 import sys
 import logging
+import json
 
 from openwebui_setup import OpenWebUISetup # Import the class
 
@@ -46,30 +47,28 @@ def wait_for_service(url, service_name):
     logger.error(f"Error: {service_name} did not become ready within {MAX_WAIT_SECONDS} seconds.")
     return False
 
+
 def configure_and_setup_letta() -> str:
     """Gets Letta URL, waits for service, configures and executes the setup for the Letta agent."""
-    letta_base_url = os.getenv("LETTA_BASE_URL")
-    if letta_base_url is None:
-        raise ValueError("LETTA_BASE_URL environment variable is not defined!")
-
+    letta_base_url = os.getenv("LETTA_BASE_URL", "http://letta:8283")
     letta_health_url = f"{letta_base_url}/v1/health/"
     if not wait_for_service(letta_health_url, "Letta"):
         raise RuntimeError(f"Letta service at {letta_health_url} did not become ready.")
 
-    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
+    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL", "http://hayhooks:1416")
     response = requests.post(f"{hayhooks_base_url}/provision_letta_agent/run", json={
         "agent_name": "letta-agent"
     })
-    logger.info(f"letta: response={response}")
-    return response["agent_id"]
+    response.raise_for_status()
+    json_result = response.json()
+    logger.debug(f"configure_and_setup_letta: {json.dumps(json_result, indent=2)}")
+    return json_result["result"]
     
 
 def configure_and_setup_openwebui(agent_id):
     """Gets OpenWebUI URL, waits for service, configures and executes the setup for the Open WebUI function."""
-    openwebui_base_url = os.getenv("OPEN_WEBUI_URL")
-    if openwebui_base_url is None:
-        raise ValueError("OPEN_WEBUI_URL environment variable is not defined!")
-
+    openwebui_base_url = os.getenv("OPEN_WEBUI_URL", "http://open-webui:3000")
+    
     openwebui_health_url = f"{openwebui_base_url}/health"
     if not wait_for_service(openwebui_health_url, "Open WebUI"):
         raise RuntimeError(f"Open WebUI service at {openwebui_health_url} did not become ready.")
