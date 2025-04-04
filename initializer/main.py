@@ -9,7 +9,7 @@ from letta_setup import LettaSetup # Import the new class
 from openwebui_setup import OpenWebUISetup # Import the class
 
 logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger("main")

@@ -5,22 +5,26 @@ from hayhooks import create_app
 from hayhooks.server.utils.mcp_utils import list_pipelines_as_tools, run_pipeline_as_tool
 from hayhooks.server.logger import log
 
-import logging
 from haystack import tracing
 from haystack.tracing.logging_tracer import LoggingTracer
 from haystack.lazy_imports import LazyImport
+
+import logging
 
 with LazyImport("Run 'pip install \"mcp\"' to install MCP.") as mcp_import:
     from mcp.types import Tool, TextContent, ImageContent, EmbeddedResource
     from mcp.server import Server
     from mcp.server.sse import SseServerTransport
 
-logging.basicConfig(format="%(levelname)s - %(name)s -  %(message)s", level=logging.WARNING)
-logging.getLogger("haystack").setLevel(logging.DEBUG)
+HAYSTACK_DETAILED_TRACING=True
 
-# https://docs.haystack.deepset.ai/docs/logging
-tracing.tracer.is_content_tracing_enabled = True # to enable tracing/logging content (inputs/outputs)
-tracing.enable_tracing(LoggingTracer(tags_color_strings={"haystack.component.input": "\x1b[1;31m", "haystack.component.name": "\x1b[1;34m"}))
+if HAYSTACK_DETAILED_TRACING:
+    #logging.basicConfig(format="%(levelname)s - %(name)s -  %(message)s", level=logging.WARNING)
+    logging.getLogger("haystack").setLevel(logging.DEBUG)
+
+    # https://docs.haystack.deepset.ai/docs/logging
+    tracing.tracer.is_content_tracing_enabled = True # to enable tracing/logging content (inputs/outputs)
+    tracing.enable_tracing(LoggingTracer(tags_color_strings={"haystack.component.input": "\x1b[1;31m", "haystack.component.name": "\x1b[1;34m"}))
 
 # https://github.com/deepset-ai/hayhooks/tree/main?tab=readme-ov-file#run-hayhooks-programmatically
 hayhooks = create_app()

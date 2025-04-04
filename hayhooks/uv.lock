@@ -296,7 +296,6 @@ dependencies = [
     { name = "openapi3" },
     { name = "pydantic-settings" },
     { name = "rich" },
-    { name = "structlog" },
     { name = "tavily-python" },
     { name = "trafilatura" },
 ]
@@ -318,7 +317,6 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.12" },
     { name = "rich", specifier = ">=13.7.1" },
-    { name = "structlog", specifier = ">=25.2.0" },
     { name = "tavily-python", specifier = ">=0.5.3" },
     { name = "trafilatura", specifier = ">=2.0.0" },
 ]
@@ -1159,15 +1157,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/43/e2/d49a94ecb665b3a1c34b40c78165a737abc384fcabc843ccb14a3bd3dc37/starlette-0.38.2.tar.gz", hash = "sha256:c7c0441065252160993a1a37cf2a73bb64d271b17303e0b0c1eb7191cfb12d75", size = 2844770 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/60/d976da9998e4f4a99e297cda09d61ce305919ea94cbeeb476dba4fece098/starlette-0.38.2-py3-none-any.whl", hash = "sha256:4ec6a59df6bbafdab5f567754481657f7ed90dc9d69b0c9ff017907dd54faeff", size = 72020 },
-]
-
-[[package]]
-name = "structlog"
-version = "25.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/78/b8/d3670aec25747e32d54cd5258102ae0d69b9c61c79e7aa326be61a570d0d/structlog-25.2.0.tar.gz", hash = "sha256:d9f9776944207d1035b8b26072b9b140c63702fd7aa57c2f85d28ab701bd8e92", size = 1367438 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/eb/244741c1abf7b4092686db0798a4c43491298f40ddec4226f5c4f6b5d3eb/structlog-25.2.0-py3-none-any.whl", hash = "sha256:0fecea2e345d5d491b72f3db2e5fcd6393abfc8cd06a4851f21fcd4d1a99f437", size = 68448 },
 ]
 
 [[package]]

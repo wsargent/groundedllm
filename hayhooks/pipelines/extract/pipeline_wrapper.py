@@ -7,8 +7,6 @@ from haystack.components.fetchers import LinkContentFetcher
 from haystack.components.converters import HTMLToDocument
 from haystack.components.preprocessors import DocumentCleaner
 
-# TODO: Add support for PDF extraction using components like PyPDFToDocumentConverter
-# from haystack.components.converters import PyPDFToDocumentConverter
 
 class PipelineWrapper(BasePipelineWrapper):
     """
@@ -19,6 +17,9 @@ class PipelineWrapper(BasePipelineWrapper):
     Output: The extracted text content of the webpage as a string.
     """
 
+    # TODO: Add support for PDF extraction using components like PyPDFToDocumentConverter
+    # from haystack.components.converters import PyPDFToDocumentConverter
+
     def create_pipeline(self) -> Pipeline:
         fetcher = LinkContentFetcher()
         converter = HTMLToDocument()
@@ -27,9 +28,9 @@ class PipelineWrapper(BasePipelineWrapper):
         pipe = Pipeline()
         pipe.add_component("fetcher", fetcher)
         pipe.add_component("converter", converter)
-        pipe.add_component("cleaner", cleaner)
+        #pipe.add_component("cleaner", cleaner)
         pipe.connect("fetcher.streams", "converter.sources")
-        pipe.connect("converter.documents", "cleaner.documents")
+        #pipe.connect("converter.documents", "cleaner.documents")
 
         return pipe
 
@@ -60,6 +61,6 @@ class PipelineWrapper(BasePipelineWrapper):
         pipeline_args = self.create_pipeline_args([url])
         result = self.pipeline.run(pipeline_args)
 
-        documents: List[Document] = result["cleaner"]["documents"]
+        documents: List[Document] = result["converter"]["documents"]
         content = documents[0].content
         return content

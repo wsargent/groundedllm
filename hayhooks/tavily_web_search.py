@@ -1,5 +1,4 @@
 from typing import Any, Dict, List, Optional, Union
-from typing import Literal
 
 from haystack import (
     Document,
@@ -17,6 +16,7 @@ logger = logging.getLogger(__name__)
 # https://docs.haystack.deepset.ai/docs/custom-components
 TAVILY_BASE_URL = "https://api.tavily.com/search"
 
+DEFAULT_MAX_RESULTS = 5
 
 @component
 class TavilyWebSearch:
@@ -65,7 +65,7 @@ class TavilyWebSearch:
     def run(
         self,
         query: str,
-        max_results: int = 10,
+        max_results: int = DEFAULT_MAX_RESULTS,
         include_domains: Optional[list[str]] = None,
         exclude_domains: Optional[list[str]] = None 
     ) -> Dict[str, Union[List[Document], List[str]]]:

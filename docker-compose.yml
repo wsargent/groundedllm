@@ -23,7 +23,6 @@ services:
     volumes:
       - ./hayhooks/pipelines:/pipelines
     environment:
-      - LETTA_BASE_URL=http://letta:8283
       - OPENAI_API_BASE=http://litellm:4000
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
       - CHAT_MODEL=gemini-2.0-flash

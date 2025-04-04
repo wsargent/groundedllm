@@ -137,10 +137,12 @@ class LettaSetup:
             enable_reasoner = None
             max_reasoning_tokens = None
             max_tokens = None
-            if selected_model == "anthropic/claude-3.7-sonnet-20250219":
-                enable_reasoner = True
-                max_reasoning_tokens = 1024
-                max_tokens = 8192
+
+            # Still not sure if reasoning model is an advantage here
+            # if "claude-3-7-sonnet" in selected_model:
+            #     enable_reasoner = True
+            #     max_reasoning_tokens = 1024
+            #     max_tokens = 8192
 
             # Is there a way to set the context window size from here?
             # https://github.com/letta-ai/letta-python/blob/main/reference.md
