@@ -58,6 +58,12 @@ def configure_and_setup_letta() -> str:
     if not wait_for_service(letta_health_url, "Letta"):
         raise RuntimeError(f"Letta service at {letta_health_url} did not become ready.")
 
+    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
+    response = requests.post(f"{hayhooks_base_url}/provision_letta_agent/run", json={
+        "agent_name": "letta-agent"
+    })
+    logger.info(f"letta: response={response}")
+
     logger.info("Configuring Letta agent...")
     letta_setup = LettaSetup(base_url=letta_base_url)
     agent_id = letta_setup.setup_agent() # Call the setup method
