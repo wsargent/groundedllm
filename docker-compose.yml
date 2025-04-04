@@ -130,6 +130,7 @@ services:
     environment:
       - OPEN_WEBUI_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
+      - HAYHOOKS_BASE_URL=http://hayhooks:1416
       # Gemini does not work reliably (will output in reasoning stage)
       #- LETTA_MODEL=google_ai/gemini-2.5-pro-exp-03-25
       # This is the default option if you don't have Gemini or Anthropic set up

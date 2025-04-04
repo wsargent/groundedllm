@@ -16,6 +16,9 @@ with LazyImport("Run 'pip install \"mcp\"' to install MCP.") as mcp_import:
     from mcp.server import Server
     from mcp.server.sse import SseServerTransport
 
+#uvicorn_access = logging.getLogger("uvicorn.access")
+#uvicorn_access.disabled = True
+
 HAYSTACK_DETAILED_TRACING=True
 
 if HAYSTACK_DETAILED_TRACING:
