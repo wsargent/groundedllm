@@ -21,6 +21,7 @@ You can run hayhooks out of the box:
 ```
 $ uv venv
 $ source .venv/bin/activate
+$ uv sync # needed for some reason?
 $ hayhooks run --additional-python-path "."
 ```
 
@@ -38,17 +39,11 @@ The pipelines here do not use RAG in the traditional sense of indexing / retriev
 
 Make sure you have Hayhooks running in another terminal before calling `hayhooks pipeline run <foo>`.
 
-### Answer Pipeline
-
-TODO
+All pipelines start off in the undeployed directory, as Letta can easily get rate-limited by Anthropic for running too many queries in succession.  You can deploy it to a running container by running [deploy-files](https://github.com/deepset-ai/hayhooks/tree/main?tab=readme-ov-file#pipelinewrapper-development-with-overwrite-option) on it.
 
 ### Search Pipeline
 
-This pipeline queries with Tavily and returns a Markdown representation of the results, containing scores and snippets.
-
-```
-hayhooks pipeline run search --param 'query="What does Haystack do?"'
-```
+Searches using Tavily, and uses Gemini 2.0 Flash to read the summary and return an answer.
 
 ### Extract Pipeline
 
@@ -57,6 +52,16 @@ This pipeline takes a URL, scrapes the contents, and converts it to Markdown.
 ```
 hayhooks pipeline run extract --param 'url=https://gist.github.com/wsargent/fc99042002ce3d6067cfde3fa04ec6ca'
 ```
+
+### Direct Search Pipeline
+
+This pipeline queries with Tavily and returns a Markdown representation of the results, containing scores and snippets.
+
+```
+hayhooks pipeline run search --param 'query="What does Haystack do?"'
+```
+
+Note that this does not register or unregister the MCP tool with Letta -- that's another step.  However, you can use this to remove search capability from Letta at runtime.
 
 ## Tavily
 

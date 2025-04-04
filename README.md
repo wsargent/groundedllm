@@ -56,30 +56,10 @@ To stop it:
 docker compose down
 ```
 
-### Management
-
-To see the running containers:
+To completely destroy all resources and rebuild from scratch:
 
 ```bash
-docker ps
-```
-
-To see the logs for one of the containers:
-
-```bash
-docker logs open-webui -f
-```
-
-To delete a particular container:
-
-```bash
-docker rm -f litellm
-```
-
-To completely destroy all resources:
-
-```bash
-docker compose down -v --remove-orphans
+docker compose down -v --remove-orphans && docker compose up --build
 ```
 
 ## Open WebUI

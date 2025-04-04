@@ -136,5 +136,9 @@ class OpenWebUISetup:
 
         # Set up the agent id as a valve setting
         self._update_function_valve(valve_payload)
-        
+
+        # Set it as the default model
+        # GET /api/v1/configs/models
+        # POST /api/v1/configs/models
+
         logger.info(f"Setup complete for function ID {self.function_id}.")
