@@ -63,4 +63,9 @@ class PipelineWrapper(BasePipelineWrapper):
 
         documents: List[Document] = result["cleaner"]["documents"]
         content = documents[0].content
-        return content
+        match content:
+            case str():
+                return content
+            case _:  
+                log.warning(f"Unknown content type encountered after cleaning: {type(content)}")
+                return str(content)
