@@ -33,9 +33,9 @@ class OpenWebUISetup:
         self.function_script_path = function_script_path
         self.headers = None # Will be set after signin
 
-    def _make_request(self, method, endpoint, **kwargs):
+    def _make_request(self, method, resource_path, **kwargs):
         """Internal helper method for making requests and handling errors."""
-        url = f"{self.base_url}{endpoint}"
+        url = f"{self.base_url}{resource_path}"
         # Ensure headers are included if available
         if self.headers and 'headers' not in kwargs:
              kwargs['headers'] = self.headers
@@ -50,10 +50,10 @@ class OpenWebUISetup:
     def _signin(self):
         """Signs into Open WebUI using provided credentials and sets auth headers."""
         logger.info(f"Attempting to sign in to Open WebUI as {self.email}...")
-        endpoint = "/api/v1/auths/signin"
+        resource_path = "/api/v1/auths/signin"
         payload = {"email": self.email, "password": self.password}
         # Signin doesn't require auth headers initially
-        response = self._make_request("post", endpoint, json=payload, headers={})
+        response = self._make_request("post", resource_path, json=payload, headers={})
         token = response.json()["token"]
         self.headers = {
             "Authorization": f"Bearer {token}",
@@ -63,8 +63,8 @@ class OpenWebUISetup:
 
     def _get_functions(self):
         """Fetches the list of existing functions from Open WebUI."""
-        endpoint = "/api/v1/functions/"
-        response = self._make_request("get", endpoint)
+        resource_path = "/api/v1/functions/"
+        response = self._make_request("get", resource_path)
         existing_functions = response.json()
         return existing_functions
 
@@ -77,7 +77,7 @@ class OpenWebUISetup:
         except FileNotFoundError as e:
             raise RuntimeError(f"Could not find function script at {self.function_script_path}") from e
 
-        endpoint = "/api/v1/functions/create"
+        resource_path = "/api/v1/functions/create"
         payload = {
             "id": self.function_id,
             "name": self.function_name,
@@ -87,7 +87,7 @@ class OpenWebUISetup:
                 "manifest": {} # Assuming empty manifest for now
             }
         }
-        response = self._make_request("post", endpoint, json=payload)
+        response = self._make_request("post", resource_path, json=payload)
         new_function = response.json()
         logger.debug(f"Successfully created function: {json.dumps(new_function, indent=2)}")
 
@@ -96,23 +96,30 @@ class OpenWebUISetup:
         if not isinstance(valve_payload, dict):
              raise TypeError("valve_payload must be a dictionary.")
         logger.debug(f"Updating valve for function ID {self.function_id} with payload: {json.dumps(valve_payload)}")
-        endpoint = f"/api/v1/functions/id/{self.function_id}/valves/update"
-        response = self._make_request("post", endpoint, json=valve_payload)
+        resource_path = f"/api/v1/functions/id/{self.function_id}/valves/update"
+        response = self._make_request("post", resource_path, json=valve_payload)
         logger.debug(f"Valve update response: {json.dumps(response.json(), indent=2)}")
 
     def _get_function_state(self):
         """Gets the current function state"""
         logger.debug(f"Getting function ID {self.function_id} toggle...")
-        endpoint = f"/api/v1/functions/id/{self.function_id}"
-        response = self._make_request("get", endpoint)
+        resource_path = f"/api/v1/functions/id/{self.function_id}"
+        response = self._make_request("get", resource_path)
         logger.debug(f"_get_function_state response: {json.dumps(response.json(), indent=2)}")
 
     def _toggle_function(self):
         """Toggles the specified function state (enables it)."""
         logger.debug(f"Toggling function ID {self.function_id}...")
-        endpoint = f"/api/v1/functions/id/{self.function_id}/toggle"
-        response = self._make_request("post", endpoint)
+        resource_path = f"/api/v1/functions/id/{self.function_id}/toggle"
+        response = self._make_request("post", resource_path)
         logger.debug(f"Toggle response: {json.dumps(response.json(), indent=2)}")
+
+    def _set_default_model(self):
+        """Sets the default model"""
+        logger.info("_set_default_model setting the default model.")
+        resource_path = "/api/v1/configs/models"
+        response = self._make_request("get", resource_path)
+        logger.info(f"_set_default_model response: {json.dumps(response.json(), indent=2)}")
 
     def setup_function(self, valve_payload: dict):
         """
@@ -137,8 +144,6 @@ class OpenWebUISetup:
         # Set up the agent id as a valve setting
         self._update_function_valve(valve_payload)
 
-        # Set it as the default model
-        # GET /api/v1/configs/models
-        # POST /api/v1/configs/models
+        self._set_default_model()
 
         logger.info(f"Setup complete for function ID {self.function_id}.")

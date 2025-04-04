@@ -14,9 +14,11 @@ logger = logging.getLogger("answer")
 
 TEMPLATE = """
 # Task:
+
 Respond to the user query using the provided context from a search engine that has ranked the context documents based on the query.
 
 ### Guidelines:
+
 - If you don't know the answer, clearly state that.
 - If uncertain, ask the user for clarification.
 - Respond in the same language as the user's query.
@@ -25,21 +27,28 @@ Respond to the user query using the provided context from a search engine that h
 - Do not use XML tags in your response.
 
 ### Output:
+
 Provide a clear and direct response to the user's query.
 
 ### Citations:
 
-Provide sources in as Markdown links, i.e. [Title](URL) 
+Provide sources in as Markdown links, i.e. [Title](URL).
+
+### Format:
+
+The document format is in XML, i.e. <document>...</document> indicates the document, and
+<score>...</score> indicates the document's relevance in the search engine.
 
 <context>
 {% for doc in documents %}
-Document {% loop.index %}
-Title: {{ doc.meta.title }}
-Score: {{ doc.score }}
-URL: {{ doc.meta.link }}
-Content:
-   
+<document>
+<title>{{ doc.meta.title }}</title>
+<score>{{ doc.score }}</score>
+<url>{{ doc.meta.link }}</url>
+<content> 
 {{ doc.content }}
+</content>
+</document>
 {% endfor %}
 </context>
 
@@ -47,6 +56,7 @@ Content:
 {{query}}
 </user_query>
 """
+
 
 class PipelineWrapper(BasePipelineWrapper):
     """
@@ -59,8 +69,8 @@ class PipelineWrapper(BasePipelineWrapper):
       str: The generated answer based on the web search results.
     """
 
-    def create_pipeline(self) -> Pipeline:
-        search = TavilyWebSearch()        
+    def setup(self) -> None:
+        search = TavilyWebSearch()
         prompt_builder = PromptBuilder(template=TEMPLATE, required_variables=["query"])
 
         # This will typically use Gemini 2.0 Flash, as the LLM is fast, cheap, and has a huge context window.
@@ -72,7 +82,7 @@ class PipelineWrapper(BasePipelineWrapper):
         llm = OpenAIGenerator(
             api_key=Secret.from_env_var("OPENAI_API_KEY"),
             api_base_url=os.getenv("OPENAI_API_BASE"),
-            model=os.getenv("CHAT_MODEL")
+            model=os.getenv("CHAT_MODEL"),
         )
 
         pipe = Pipeline()
@@ -86,20 +96,10 @@ class PipelineWrapper(BasePipelineWrapper):
 
         return pipe
 
-    def create_pipeline_args(self, question: str) -> dict:
-        return {
-            "search": {"query": question},
-            "prompt_builder": {"query": question}
-        }
-
-    def setup(self) -> None:
-        self.pipeline = self.create_pipeline()
-        log.info("Answer pipeline created successfully.")
-
     def run_api(self, question: str) -> str:
         """
         Passes the question to an LLM Model that will search and answer the question.
-    
+
         This tool is also useful for cheap summarization of a web page.
 
         The LLM Model is not very creative, but has a large context window, and is fast.
@@ -115,10 +115,12 @@ class PipelineWrapper(BasePipelineWrapper):
             The answer to the question from the LLM Model.
         """
         log.trace(f"Running answer pipeline with question: {question}")
-        if not hasattr(self, 'pipeline') or self.pipeline is None:
-             raise RuntimeError("Pipeline not initialized during setup.")
-        
-        result = self.pipeline.run(self.create_pipeline_args(question))
+        if not hasattr(self, "pipeline") or self.pipeline is None:
+            raise RuntimeError("Pipeline not initialized during setup.")
+
+        result = self.pipeline.run(
+            {"search": {"query": question}, "prompt_builder": {"query": question}}
+        )
 
         logger.info(f"answer: answer result from pipeline {result}")
 
