@@ -28,9 +28,9 @@ class PipelineWrapper(BasePipelineWrapper):
         pipe = Pipeline()
         pipe.add_component("fetcher", fetcher)
         pipe.add_component("converter", converter)
-        #pipe.add_component("cleaner", cleaner)
+        pipe.add_component("cleaner", cleaner)
         pipe.connect("fetcher.streams", "converter.sources")
-        #pipe.connect("converter.documents", "cleaner.documents")
+        pipe.connect("converter.documents", "cleaner.documents")
 
         return pipe
 
@@ -61,6 +61,6 @@ class PipelineWrapper(BasePipelineWrapper):
         pipeline_args = self.create_pipeline_args([url])
         result = self.pipeline.run(pipeline_args)
 
-        documents: List[Document] = result["converter"]["documents"]
+        documents: List[Document] = result["cleaner"]["documents"]
         content = documents[0].content
         return content

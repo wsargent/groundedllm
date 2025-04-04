@@ -19,7 +19,7 @@ with LazyImport("Run 'pip install \"mcp\"' to install MCP.") as mcp_import:
 HAYSTACK_DETAILED_TRACING=True
 
 if HAYSTACK_DETAILED_TRACING:
-    #logging.basicConfig(format="%(levelname)s - %(name)s -  %(message)s", level=logging.WARNING)
+    logging.basicConfig(format="%(levelname)s - %(name)s -  %(message)s", level=logging.WARNING)
     logging.getLogger("haystack").setLevel(logging.DEBUG)
 
     # https://docs.haystack.deepset.ai/docs/logging
