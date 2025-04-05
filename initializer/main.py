@@ -1,11 +1,8 @@
 import requests
-import time
 import os
 import sys
 import logging
 import json
-
-from openwebui_setup import OpenWebUISetup # Import the class
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -13,88 +10,57 @@ logging.basicConfig(
 
 logger = logging.getLogger("main")
 
-MAX_WAIT_SECONDS = 120
-SLEEP_INTERVAL = 5
+def _get_hayhooks_base_url() -> str:
+    """Retrieves the Hayhooks base URL from environment or uses default."""
+    return os.getenv("HAYHOOKS_BASE_URL", "http://hayhooks:1416")
 
-def wait_for_service(url, service_name):
-    """Polls a service's health/base endpoint until it's responsive."""
-    start_time = time.time()
-    logger.info(f"Waiting for {service_name} at {url}...")
-    while time.time() - start_time < MAX_WAIT_SECONDS:
-        try:
-            # Use a simple GET request to a known endpoint (e.g., health or base URL)
-            response = requests.get(url, timeout=3) # Adjust endpoint if needed
-            # Check for a successful status code (e.g., 200-299)
-            if response.status_code >= 200 and response.status_code < 300:
-                logger.info(f"{service_name} is ready!")
-                return True
-            else:
-                # Use warning for non-2xx status during polling
-                logger.warning(f"{service_name} returned status {response.status_code}. Retrying...")
-        except requests.exceptions.ConnectionError as e:
-             # Use warning for transient connection issues during polling
-            logger.warning(f"{service_name} connection failed. Retrying at {url}", e)
-        except requests.exceptions.Timeout:
-             # Use warning for timeouts during polling
-            logger.warning(f"{service_name} request timed out. Retrying at {url}")
-        except requests.exceptions.RequestException as e:
-             # Use warning for other request exceptions during polling
-            logger.warning(f"Error connecting to {service_name}: {e}. Retrying at {url}")
 
-        time.sleep(SLEEP_INTERVAL)
+def _configure_service(
+    hayhooks_endpoint: str,
+    hayhooks_payload: dict,
+    result_key: str = "result",
+    default_result: str | None = None,
+    service_name_for_logging: str = "Service", # Optional name for logging
+) -> str:
+    """Generic function to configure a service via Hayhooks."""
+    hayhooks_base_url = _get_hayhooks_base_url()
+    hayhooks_url = f"{hayhooks_base_url}/{hayhooks_endpoint}/run"
 
-    # Use error when the wait finally fails
-    logger.error(f"Error: {service_name} did not become ready within {MAX_WAIT_SECONDS} seconds.")
-    return False
+    try:
+        response = requests.post(hayhooks_url, json=hayhooks_payload)
+        response.raise_for_status()
+        json_result = response.json()
+        logger.debug(
+            f"Configuration result for {service_name_for_logging}: {json.dumps(json_result, indent=2)}"
+        )
+        if default_result is not None:
+            return json_result.get(result_key, default_result)
+        else:
+            return json_result[result_key]
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to configure {service_name_for_logging} via Hayhooks: {e}")
+        raise RuntimeError(f"Failed to configure {service_name_for_logging}") from e
 
 
 def configure_and_setup_letta() -> str:
-    """Gets Letta URL, waits for service, configures and executes the setup for the Letta agent."""
-    letta_base_url = os.getenv("LETTA_BASE_URL", "http://letta:8283")
-    letta_health_url = f"{letta_base_url}/v1/health/"
-    if not wait_for_service(letta_health_url, "Letta"):
-        raise RuntimeError(f"Letta service at {letta_health_url} did not become ready.")
+    """Configures and executes the setup for the Letta agent."""
+    return _configure_service(
+        hayhooks_endpoint="provision_letta_agent",
+        hayhooks_payload={"agent_name": "letta-agent"},
+        result_key="result",
+        service_name_for_logging="Letta Agent",
+    )
 
-    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL", "http://hayhooks:1416")
-    response = requests.post(f"{hayhooks_base_url}/provision_letta_agent/run", json={
-        "agent_name": "letta-agent"
-    })
-    response.raise_for_status()
-    json_result = response.json()
-    logger.debug(f"configure_and_setup_letta: {json.dumps(json_result, indent=2)}")
-    return json_result["result"]
-    
-
-def configure_and_setup_openwebui(agent_id):
-    """Gets OpenWebUI URL, waits for service, configures and executes the setup for the Open WebUI function."""
-    openwebui_base_url = os.getenv("OPEN_WEBUI_URL", "http://open-webui:3000")
-    
-    openwebui_health_url = f"{openwebui_base_url}/health"
-    if not wait_for_service(openwebui_health_url, "Open WebUI"):
-        raise RuntimeError(f"Open WebUI service at {openwebui_health_url} did not become ready.")
-
-    openwebui_email = "admin@localhost"
-    openwebui_password = "password" # Consider getting this from env vars in a real scenario
-    letta_pipe_id = "letta_pipe"
-    letta_pipe_name = "Letta Pipe"
-    letta_pipe_description = "Pipe requests to Letta Agent"
-    # Path relative to the WORKDIR (/app) inside the container
-    letta_pipe_script_path = "open-webui/letta_pipe.py"
-    # Define the payload needed for the valve update step
-    letta_pipe_valve_payload = {"Agent_ID": agent_id}
-    
-    logger.info(f"Configuring Open WebUI function: {letta_pipe_name} (ID: {letta_pipe_id})")
-    openwebui_setup = OpenWebUISetup(
-        base_url=openwebui_base_url,
-        email=openwebui_email,
-        password=openwebui_password,
-        function_id=letta_pipe_id,
-            function_name=letta_pipe_name,
-            function_description=letta_pipe_description,
-            function_script_path=letta_pipe_script_path
-        )
-    openwebui_setup.setup_function(valve_payload=letta_pipe_valve_payload)
-    logger.info("Open WebUI function setup completed successfully.")
+def configure_and_setup_openwebui(agent_id: str) -> str:
+    """Configures and executes the setup for the Open WebUI function."""
+    # Wait for OpenWebUI service separately if needed before configuration
+    return _configure_service(
+        hayhooks_endpoint="provision_letta_pipe",
+        hayhooks_payload={"agent_id": agent_id},
+        result_key="result",
+        default_result="Setup initiated", # Provide default if key might be missing
+        service_name_for_logging="OpenWebUI Pipe",
+    )
 
 
 if __name__ == "__main__":
@@ -105,7 +71,7 @@ if __name__ == "__main__":
         # Configure and set up Open WebUI
         configure_and_setup_openwebui(agent_id)
 
-        logger.info("Initialization complete.") 
+        logger.info("Initialization complete.")
     except Exception as e:
         logger.error(f"Initialization failed: {e}", e, exc_info=True)
         sys.exit(1)
