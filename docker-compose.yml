@@ -29,7 +29,7 @@ services:
       - HAYHOOKS_HOST=0.0.0.0
       - HAYHOOKS_PORT=1416
       - LOG_LEVEL=INFO
-      - HAYSTACK_LOG_LEVEL=DEBUG
+      - HAYSTACK_LOG_LEVEL=INFO
       - HAYHOOKS_SHOW_TRACEBACKS=true
       # Needed for search pipeline
       - TAVILY_API_KEY=$TAVILY_API_KEY
@@ -121,6 +121,8 @@ services:
       open-webui:
         condition: service_healthy
       letta:
+        condition: service_healthy
+      hayhooks:
         condition: service_healthy
     environment:
       - OPEN_WEBUI_URL=http://open-webui:8080
