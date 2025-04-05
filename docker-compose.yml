@@ -38,7 +38,7 @@ services:
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283      
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
       interval: 10s
       timeout: 5s
       retries: 18
@@ -121,8 +121,6 @@ services:
       open-webui:
         condition: service_healthy
       letta:
-        condition: service_healthy
-      hayhooks:
         condition: service_healthy
     environment:
       - OPEN_WEBUI_URL=http://open-webui:8080
