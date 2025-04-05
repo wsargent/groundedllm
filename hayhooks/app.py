@@ -64,6 +64,11 @@ async def handle_sse(request):
     async with mcp_sse.connect_sse(request.scope, request.receive, request._send) as streams:
         await mcp_server.run(streams[0], streams[1], mcp_server.create_initialization_options())
 
+# Docker Compose likes having a /health endpoint it can check
+@hayhooks.get("/health")
+async def health():
+    return {"message": "OK!"}
+
 # Add MCP routes directly to the main Hayhooks app
 hayhooks.add_route("/sse", handle_sse)
 hayhooks.mount("/messages", mcp_sse.handle_post_message)
