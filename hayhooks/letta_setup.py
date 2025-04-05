@@ -16,22 +16,17 @@ logger = logging.getLogger("letta_setup")
 class LettaCreateAgent:
     """Handles the setup and configuration of the Letta agent."""
 
-    DEFAULT_MODEL = "letta/letta-free"
-    LETTA_MODEL = os.getenv("LETTA_MODEL", DEFAULT_MODEL)
-    LETTA_EMBEDDING = os.getenv("LETTA_EMBEDDING", DEFAULT_MODEL)
 
-    PERSONA_FILE_PATH = "letta-agent/persona_memory.md"
-
-    def __init__(self, letta: Letta):
+    def __init__(self, letta: Letta, chat_model: str, embedding_model: str, persona_block_content: str):
         """
         Initializes the setup class with Letta connection details.
-
-        Args:
-            letta (str): The base URL of the Letta instance.
         """
         if not letta:
             raise ValueError("letta must be provided and non-empty.")
 
+        self.persona_block_content = persona_block_content
+        self.letta_model = chat_model
+        self.letta_embedding = embedding_model
         self.client = letta
 
     @component.output_types(agent_id=str)
@@ -40,7 +35,7 @@ class LettaCreateAgent:
         Checks if the Letta agent exists, creates it if not, and returns its ID.
 
         Returns:
-            str: The ID of the Letta agent.
+            str: The name of the Letta agent.
         """
         try:
             logger.info(f"Starting setup for agent '{agent_name}'...")
@@ -53,14 +48,12 @@ class LettaCreateAgent:
 
             if found_agent_id is None:
                 logger.info(f"{agent_name} not found, creating agent...")
-                persona_block_content = self._read_persona_block_content()
-                letta_model = self.LETTA_MODEL
-                letta_embedding = self.LETTA_EMBEDDING
+                
                 agent_id = self._create_agent(
                     agent_name=agent_name,
-                    persona_block_content=persona_block_content,
-                    letta_embedding=letta_embedding,
-                    letta_model=letta_model,
+                    persona_block_content=self.persona_block_content,
+                    letta_embedding=self.letta_embedding,
+                    letta_model=self.letta_model,
                 )
                 logger.info(f"Created new agent '{agent_name}'")
             else:
@@ -71,15 +64,6 @@ class LettaCreateAgent:
         except Exception as e:
             raise RuntimeError(
                 f"An unexpected error occurred during Letta agent setup for '{agent_name}'"
-            ) from e
-
-    def _read_persona_block_content(self):
-        try:
-            with open(self.PERSONA_FILE_PATH, "r") as f:
-                return f.read()
-        except FileNotFoundError as e:
-            raise RuntimeError(
-                f"Could not find persona file at {self.PERSONA_FILE_PATH}"
             ) from e
 
     def _create_agent(
@@ -104,10 +88,7 @@ class LettaCreateAgent:
                 selected_model = letta_model
                 logger.info(f"Using configured LETTA_MODEL: {selected_model}")
             else:
-                selected_model = self.DEFAULT_MODEL
-                logger.warning(
-                    f"'{letta_model}' not found in {available_model_names}. Defaulting to {selected_model}"
-                )
+                raise ValueError(f"Model {letta_model} not found in available models: {available_model_names}")
 
             # Use reasoning model if we got it (gemini 2.5 pro does not support)
             enable_reasoner = None

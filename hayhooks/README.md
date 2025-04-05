@@ -8,23 +8,39 @@ Also see [hayhooks-open-webui-docker-compose](https://github.com/deepset-ai/hayh
 
 This project uses [uv](https://docs.astral.sh/uv/).  It requires Python 3.12.
 
-This is primarily used in the docker compose, but you can run hayhooks out of the box for development purposes, which is useful for debugging pipelines:
+This is primarily used in the docker compose, but you can run hayhooks out of the box for development purposes, which is useful for debugging pipelines.
+
+First, set up your uv environment.
 
 ```bash
-$ cp env.example .env # modify as needed
-$ uv venv
-$ source .venv/bin/activate
-$ uv sync # needed for some reason?
-$ hayhooks run --additional-python-path "." --pipelines-dir "./pipelines"
+cp env.example .env # modify as needed
+uv venv
+source .venv/bin/activate
+uv sync # needed for some reason?
 ```
 
-You can see the OpenAPI routes at http://localhost:1416/docs
+And then start up Open WebUI and Letta:
+
+```
+docker compose -f '../docker-compose.yml' up -d --build 'open-webui'
+docker compose -f '../docker-compose.yml' up -d --build 'letta'
+```
+
+And then start the hayhooks server:
+
+```
+export OPENWEBUI_BASE_URL=http://localhost:3000
+export LETTA_BASE_URL=http://localhost:8382
+python app.py
+```
+
+You can see the OpenAPI routes at http://localhost:1416/docs to see what pipelines are available.
 
 ## Pipelines
 
 The pipelines here do not use RAG in the traditional sense of indexing / retrieving from a vector database.  They do retrieve content that assists in generation, but are set up to be as lightweight as possible.
 
-Make sure you have Hayhooks running in another terminal before calling `hayhooks pipeline run <foo>`.
+**Make sure you have Hayhooks running in another terminal before calling `hayhooks pipeline run <foo>`.**
 
 All pipelines start off in the undeployed directory, as Letta can easily get rate-limited by Anthropic for running too many queries in succession.  You can deploy it to a running container by running [deploy-files](https://github.com/deepset-ai/hayhooks/tree/main?tab=readme-ov-file#pipelinewrapper-development-with-overwrite-option) on it.
 
@@ -52,6 +68,14 @@ This pipeline queries with Tavily and returns a Markdown representation of the r
 
 ```bash
 hayhooks pipeline run direct_search --param 'query="What does Haystack do?"'
+```
+
+### Provision Search Agent Pipeline
+
+This pipeline provisions a search agent in Letta and creates a pipe function in Open WebUI to talk to it.
+
+```bash
+hayhooks pipeline run provision_search_agent --param 'agent_name=letta-agent'
 ```
 
 ## Custom Components
