@@ -18,8 +18,6 @@ services:
     container_name: hayhooks
     ports:
       - 1416:1416
-    depends_on:
-      - litellm
     volumes:
       - ./hayhooks/pipelines:/pipelines
     environment:
@@ -31,12 +29,14 @@ services:
       - HAYHOOKS_HOST=0.0.0.0
       - HAYHOOKS_PORT=1416
       - LOG_LEVEL=INFO
-      - HAYSTACK_LOG_LEVEL=INFO
+      - HAYSTACK_LOG_LEVEL=DEBUG
       - HAYHOOKS_SHOW_TRACEBACKS=true
       # Needed for search pipeline
       - TAVILY_API_KEY=$TAVILY_API_KEY
       # Prevent __pycache__ directories
       - PYTHONDONTWRITEBYTECODE=1
+      - OPENWEBUI_BASE_URL=http://open-webui:8080
+      - LETTA_BASE_URL=http://letta:8283      
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/health"]
       interval: 10s
@@ -50,8 +50,6 @@ services:
     container_name: letta
     ports:
       - 8283:8283
-    depends_on:
-      - hayhooks
     volumes:
       # Mount the MCP configuration file (this points to Hayhooks)
       - ./letta_mcp_config.json:/root/.letta/mcp_config.json
@@ -74,9 +72,6 @@ services:
      - open-webui:/app/backend/data
     ports:
       - ${OPEN_WEBUI_PORT-3000}:8080
-    depends_on:
-      - letta
-      - hayhooks
     environment:
       # https://docs.openwebui.com/getting-started/env-configuration/
       - GLOBAL_LOG_LEVEL=WARNING
