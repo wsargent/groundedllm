@@ -70,6 +70,9 @@ class PipelineWrapper(BasePipelineWrapper):
     """
 
     def setup(self) -> None:
+        self.pipeline = self.create_pipeline()
+        
+    def create_pipeline(self) -> Pipeline:
         search = TavilyWebSearch()
         prompt_builder = PromptBuilder(template=TEMPLATE, required_variables=["query"])
 
@@ -115,8 +118,6 @@ class PipelineWrapper(BasePipelineWrapper):
             The answer to the question from the LLM Model.
         """
         log.trace(f"Running answer pipeline with question: {question}")
-        if not hasattr(self, "pipeline") or self.pipeline is None:
-            raise RuntimeError("Pipeline not initialized during setup.")
 
         result = self.pipeline.run(
             {"search": {"query": question}, "prompt_builder": {"query": question}}

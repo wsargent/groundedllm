@@ -21,7 +21,10 @@ class PipelineWrapper(BasePipelineWrapper):
     def setup(self) -> None:
         pipe = Pipeline()
 
-        letta_base_url = os.getenv("LETTA_BASE_URL", "http://letta:8283")    
+        letta_base_url = os.getenv("LETTA_BASE_URL")    
+        if letta_base_url is None:
+            raise ValueError("LETTA_BASE_URL is not defined!")
+
         letta = Letta(base_url=letta_base_url)
         create_agent = LettaCreateAgent(letta=letta)
         attach_tools = LettaAttachTools(letta=letta)
