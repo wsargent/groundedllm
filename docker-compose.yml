@@ -66,7 +66,7 @@ services:
       start_period: 1s
 
   open-webui:
-    image: ghcr.io/open-webui/open-webui:0.6.0
+    image: ghcr.io/open-webui/open-webui:0.6.1
     container_name: open-webui
     volumes:
      - open-webui:/app/backend/data
