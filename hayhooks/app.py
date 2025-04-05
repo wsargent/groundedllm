@@ -10,11 +10,13 @@ from haystack.tracing.logging_tracer import LoggingTracer
 from haystack.lazy_imports import LazyImport
 
 import logging
-
 with LazyImport("Run 'pip install \"mcp\"' to install MCP.") as mcp_import:
     from mcp.types import Tool, TextContent, ImageContent, EmbeddedResource
     from mcp.server import Server
     from mcp.server.sse import SseServerTransport
+
+###########
+# This class add healthchecks and MCP support and logging beyond what running `hayhooks run` would get us.
 
 #uvicorn_access = logging.getLogger("uvicorn.access")
 #uvicorn_access.disabled = True
@@ -66,12 +68,6 @@ async def handle_sse(request):
 hayhooks.add_route("/sse", handle_sse)
 hayhooks.mount("/messages", mcp_sse.handle_post_message)
 # --- End MCP Server Integration ---
-
-
-# Docker Compose likes having a /health endpoint it can check
-@hayhooks.get("/health")
-async def health():
-    return {"message": "OK!"}
 
 if __name__ == "__main__":
     # Run the combined Hayhooks + MCP server

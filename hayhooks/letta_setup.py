@@ -189,6 +189,9 @@ class LettaAttachTools:
                 if mcp_tool.name == "provision_letta_agent":
                     continue
 
+                if mcp_tool.name == "provision_letta_pipe":
+                    continue
+
                 tool_id = self._attach_single_mcp_tool(
                     agent_id=agent_id,
                     mcp_server_name=mcp_server_name,
