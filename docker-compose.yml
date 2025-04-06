@@ -23,7 +23,7 @@ services:
     environment:
       - OPENAI_API_BASE=http://litellm:4000
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
-      - CHAT_MODEL=gemini-2.0-flash
+      - SEARCH_CHAT_MODEL=gemini-2.0-flash
       - HAYHOOKS_PIPELINES_DIR=/pipelines
       - HAYHOOKS_DISABLE_SSL=true
       - HAYHOOKS_HOST=0.0.0.0

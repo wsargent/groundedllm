@@ -1,16 +1,18 @@
-import importlib.resources as pkg_resources
 import os
 
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
+
 from haystack import Pipeline, logging
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
 
+from resources.utils import read_resource_file
 from tavily_web_search import TavilyWebSearch
 
 logger = logging.getLogger("answer")
+
 
 class PipelineWrapper(BasePipelineWrapper):
     """
@@ -24,12 +26,16 @@ class PipelineWrapper(BasePipelineWrapper):
     """
 
     def setup(self) -> None:
-        self.template = self._read_resource_file("search_prompt.md")
+        # Removed settings instantiation
+        # Use the imported utility function
+        self.template = read_resource_file("search_prompt.md")
         self.pipeline = self.create_pipeline()
-        
+
     def create_pipeline(self) -> Pipeline:
         search = TavilyWebSearch()
-        prompt_builder = PromptBuilder(template=self.template, required_variables=["query"])
+        prompt_builder = PromptBuilder(
+            template=self.template, required_variables=["query"]
+        )
 
         # This will typically use Gemini 2.0 Flash, as the LLM is fast, cheap, and has a huge context window.
         #
@@ -37,10 +43,11 @@ class PipelineWrapper(BasePipelineWrapper):
         #
         # RATE_LIMIT_EXCEEDED: Rate limited by Anthropic: Error code: 429...
         # This request would exceed the rate limit for your organization of 40,000 input tokens per minute
+        # Revert to using os.getenv and Secret
         llm = OpenAIGenerator(
             api_key=Secret.from_env_var("OPENAI_API_KEY"),
             api_base_url=os.getenv("OPENAI_API_BASE"),
-            model=os.getenv("CHAT_MODEL"),
+            model=os.getenv("SEARCH_CHAT_MODEL"),
         )
 
         pipe = Pipeline()
@@ -86,34 +93,7 @@ class PipelineWrapper(BasePipelineWrapper):
             logger.info(f"answer: reply is {reply}")
             return reply
         else:
-            raise "Error: Could not retrieve answer from the pipeline."
+            # Raise a proper exception instance
+            raise RuntimeError("Error: Could not retrieve answer from the pipeline.")
 
-    def _read_resource_file(self, relative_path: str) -> str:
-        """
-        Reads content from a resource file located within the 'resources' package.
-
-        Uses importlib.resources for reliable access to package data files,
-        making it suitable for use even when the application is packaged.
-
-        Args:
-            relative_path (str): The path to the resource file relative to the 'resources' package.
-
-        Returns:
-            str: The content of the resource file as a string.
-
-        Raises:
-            RuntimeError: If the file cannot be found or read.
-        """
-        try:
-            # Use importlib.resources to access package data files reliably
-            package_resources = pkg_resources.files("resources")
-            resource_path = package_resources.joinpath(relative_path)
-            return resource_path.read_text(encoding="utf-8")
-        except FileNotFoundError as e:
-            raise RuntimeError(
-                f"Could not find resource file '{package_resources}/{relative_path}'"
-            ) from e
-        except Exception as e:
-            raise RuntimeError(
-                f"An error occurred while reading '{package_resources}/{relative_path}'"
-            ) from e
+    # The duplicated _read_resource_file method is now removed.
