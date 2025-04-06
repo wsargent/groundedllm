@@ -12,7 +12,7 @@ This project may be of interest to you if:
 * **You are interested in AI agents.** This project is a low effort way to play with [Letta](https://docs.letta.com/letta-platform), and see a [stateful agent](https://docs.letta.com/stateful-agents) that can remember and learn.
 * **You are interested in RAG pipelines.**  [Haystack](https://haystack.deepset.ai/) toolkit has several options to deal with document conversion, cleaning, and extraction.  The [Hayhooks](https://docs.haystack.deepset.ai/docs/hayhooks) deployment system is nice, and the project includes several pipelines and has custom components.
 * **You're interested in [Open WebUI](https://github.com/open-webui/open-webui) tooling.** this project goes to some lengths to work through OWUI's environment variables and REST API to provision Letta.
-* **You are interested in tool calling and management.** Hayhooks exposes an MCP server, and and there's a lot you can do with MCP and Open API -- it has [OpenAPIServiceToFunctions](https://docs.haystack.deepset.ai/docs/openapiservicetofunctions), [OpenAPIConnector](https://docs.haystack.deepset.ai/docs/openapiconnector) [MCPTool](https://docs.haystack.deepset.ai/docs/mcptool), and more.
+* **You are interested in tool calling and management.** Hayhooks exposes an MCP server, and and there's a lot you can do with MCP and Open API -- it has [OpenAPIServiceToFunctions](https://docs.haystack.deepset.ai/docs/openapiservicetofunctions), [OpenAPIConnector](https://docs.haystack.deepset.ai/docs/openapiconnector), [MCPTool](https://docs.haystack.deepset.ai/docs/mcptool), and more.
 
 ## Description
 
@@ -35,6 +35,8 @@ And produced this:
 ![AI Spam](./images/aispam.png)
 
 The search technique is pulled from this academic paper on [DeepRAG](https://arxiv.org/abs/2502.01142).
+
+You will typically teach Letta about what you want when it gets it slightly wrong.  
 
 If you want more details on what it's thinking, you can dig into the reasoning using [Letta Desktop](https://docs.letta.com/quickstart/desktop).  Here's an example of what goes on behind the scenes when I ask "What are the differences between [Roo Code](https://docs.roocode.com) and [Cline](https://github.com/cline/cline)?"
 
@@ -144,4 +146,8 @@ See the [README](./hayhooks/README.md) for details of the tools provided by Hayh
 
 The [LiteLLM proxy server](https://docs.litellm.ai/docs/proxy/deploy) that provides an OpenAI compatible layer on top of several different providers. It is provided to Open WebUI (commented out) and to Hayhooks.
 
-See [README](./litellm/README.md)
+LiteLLM is useful in several different ways, especially as you scale up in complexity, and I think it's easier if you start using it from the beginning.
+
+* It provides a way to point to a conceptual model rather than a concrete one (you can point to "claude-sonnet" and change the model from 3.5 to 3.7).  
+* It insulates Open WebUI from the underlying providers.  You don't have to worry about changing your API key or other configuration settings when switching providers.  You also don't have to worry about Open WebUI timing out for 30 seconds while it tries to reach an unreachable provider.
+* It lets you specify the same model with different parameters, so you can use `extra-headers` to experiment with [token-efficient tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/token-efficient-tool-use), for example.

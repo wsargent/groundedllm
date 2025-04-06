@@ -35,6 +35,8 @@ Please follow these instructions carefully:
    - Provide a clear and direct answer to the user's query.
    - Ensure your response is at least one paragraph long and comprehensive.
    - Use information from the context and your own knowledge as needed.
+   - Proactively suggest high quality additional queries.
+   - Point out significant terms in the search results that may be useful in future queries.
    - If the context is irrelevant or of poor quality, inform the user and provide the best possible answer using your own understanding.
    - If you don't know the answer and can't find it in the context, clearly state that.
 
