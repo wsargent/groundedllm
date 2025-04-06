@@ -1,22 +1,24 @@
 # Hayhooks
 
-[Hayhooks](https://docs.haystack.deepset.ai/docs/hayhooks#overview) implements Haystack Pipelines as REST APIs.  It's also a FastAPI application, so this is where any custom Python tools go.
+[Hayhooks](https://docs.haystack.deepset.ai/docs/hayhooks#overview) is the tool server for Letta (or Open WebUI, or anything else you want for tool use).
+
+It implements Haystack Pipelines as REST APIs, it's a FastAPI application and an MCP server, and it lets you deploy and undeploy tools very quickly.
 
 Also see [hayhooks-open-webui-docker-compose](https://github.com/deepset-ai/hayhooks-open-webui-docker-compose).
 
-## Running
+## Running in Development
+
+In addition to running as part of the docker compose stack, you can run hayhooks out of the box for development purposes.
 
 This project uses [uv](https://docs.astral.sh/uv/).  It requires Python 3.12.
-
-This is primarily used in the docker compose, but you can run hayhooks out of the box for development purposes, which is useful for debugging pipelines.
 
 First, set up your uv environment.
 
 ```bash
-cp env.example .env # modify as needed
+cp env.example .env
 uv venv
 source .venv/bin/activate
-uv sync # needed for some reason?
+uv sync
 ```
 
 And then start up Open WebUI and Letta:
@@ -51,41 +53,30 @@ Searches using Tavily, and uses a model to read the summary and return an answer
 Using a distinct model for searches also protects the agent against itself; giving an agent a tool that can search and telling it to search unti it knows what's going on can result in rate limiting errors in some models, especially Claude Sonnet 3.7.  
 
 ```bash
-hayhooks pipeline run search --param 'query="What does Haystack do?"'
+hayhooks pipeline run search \
+    --param 'query="What does Haystack do?"'
 ```
 
 ### Extract Pipeline
 
-This pipeline takes a URL, scrapes the contents, and converts it to Markdown.
+This pipeline takes URLs, scrapes the contents, and feeds it to an LLM with a large context window.
 
 ```bash
-hayhooks pipeline run extract --param 'url=https://gist.github.com/wsargent/fc99042002ce3d6067cfde3fa04ec6ca'
+hayhooks pipeline run extract \
+    --param 'urls=[https://gist.github.com/wsargent/fc99042002ce3d6067cfde3fa04ec6ca]' \
+    --param 'query="What is the contents of this URL?  Provide a detailed summary."'
 ```
 
 ### Provision Search Agent Pipeline
 
-This pipeline provisions a search agent in Letta and creates a pipe function in Open WebUI to talk to it.
+This pipeline provisions a search agent in Letta and creates a pipe function in Open WebUI to talk to it.  The search agent is configured with the search and extract tools by the pipeline.
+
+This pipeline is called by an initializer docker container that runs after Letta and Open WebUI are both healthy.
 
 ```bash
 hayhooks pipeline run provision_search_agent \
     --param 'agent_name=letta-agent' \
-    --param 'chat_model=anthropic/" \
+    --param 'chat_model=anthropic/claude-3-7-sonnet-20250219" \
     --param 'embedding_model=letta/letta-free'
 ```
-
-## Custom Components
-
-There are a few Haystack [custom components](https://docs.haystack.deepset.ai/docs/custom-components) that are in root of the project.
-
-### Tavily Component
-
-This is a custom Tavily search component that is used for the search pipelines.  It uses the [tavily-python](https://github.com/tavily-ai/tavily-python) library.
-
-### OpenWebUI Setup Component
-
-This is an component used for provisioning the Letta pipeline function in Open WebUI.  It uses straight `requests`.
-
-### Letta Setup Component
-
-This component is used to provision the Letta agent and register tools
 

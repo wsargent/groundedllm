@@ -1,4 +1,3 @@
-import importlib.resources as pkg_resources  # Added import
 import logging
 import os
 import re
@@ -11,6 +10,7 @@ from letta_client import Letta
 
 from letta_setup import LettaAttachTools, LettaCreateAgent
 from openwebui_setup import CreateFunction
+from resources.utils import read_resource_file
 
 logger = logging.getLogger("provision_search_agent")
 
@@ -53,24 +53,24 @@ class PipelineWrapper(BasePipelineWrapper):
             ValueError: If required environment variables (LETTA_BASE_URL, OPENWEBUI_BASE_URL)
                         are not set.
         """
+        # Removed settings instantiation
         pipe = Pipeline()
 
+        # Revert to using os.getenv
         letta_base_url = os.getenv("LETTA_BASE_URL")
         if letta_base_url is None:
             raise ValueError("LETTA_BASE_URL is not defined!")
-
-        logger.info(f"Using {letta_base_url}")
-
+        logger.info(f"Using Letta base URL: {letta_base_url}")
         letta = Letta(base_url=letta_base_url)
         create_agent = LettaCreateAgent(letta=letta)
         attach_tools = LettaAttachTools(letta=letta)
 
-        # Setup for CreateFunction (OpenWebUI pipe)
+        # Revert Setup for CreateFunction
         openwebui_base_url = os.getenv("OPENWEBUI_BASE_URL")
         if openwebui_base_url is None:
             raise ValueError("OPENWEBUI_BASE_URL is not defined!")
-
-        # Should break this out for credentials.
+        logger.info(f"Using OpenWebUI base URL: {openwebui_base_url}")
+        # Revert to hardcoded/Secret values
         openwebui_email = "admin@localhost"
         openwebui_password = Secret.from_token("password")
 
@@ -126,6 +126,7 @@ class PipelineWrapper(BasePipelineWrapper):
             "chat_model": chat_model,
             "embedding_model": embedding_model,
             "human_block": "",
+            # Revert to using internal helper method (which now uses shared util)
             "persona_block": self._read_persona_block_content(),
         }
 
@@ -136,7 +137,9 @@ class PipelineWrapper(BasePipelineWrapper):
             "function_id": self._snake_case(agent_name),
             "function_name": f"{agent_name}",
             "function_description": f"A pipe function for {agent_name}",
+            # Revert to using internal helper method
             "function_content": self._get_letta_pipe_script(),
+            # Revert to using internal helper method
             "function_manifest": self._get_function_manifest(),
         }
 
@@ -168,47 +171,18 @@ class PipelineWrapper(BasePipelineWrapper):
         # Convert to lowercase
         return s.lower()
 
-    def _read_resource_file(self, relative_path: str) -> str:
-        """
-        Reads content from a resource file located within the 'resources' package.
-
-        Uses importlib.resources for reliable access to package data files,
-        making it suitable for use even when the application is packaged.
-
-        Args:
-            relative_path (str): The path to the resource file relative to the 'resources' package.
-
-        Returns:
-            str: The content of the resource file as a string.
-
-        Raises:
-            RuntimeError: If the file cannot be found or read.
-        """
-        try:
-            # Use importlib.resources to access package data files reliably
-            package_resources = pkg_resources.files("resources")
-            resource_path = package_resources.joinpath(relative_path)
-            return resource_path.read_text(encoding="utf-8")
-        except FileNotFoundError as e:
-            raise RuntimeError(
-                f"Could not find resource file '{package_resources}/{relative_path}'"
-            ) from e
-        except Exception as e:
-            raise RuntimeError(
-                f"An error occurred while reading '{package_resources}/{relative_path}'"
-            ) from e
-
+    # Restore internal helper methods (they now use the shared read_resource_file)
     def _read_persona_block_content(self):
         """Reads the persona content from the file."""
-        return self._read_resource_file("persona_memory.md")
+        return read_resource_file("persona_memory.md")
 
     def _get_letta_pipe_script(self) -> str:
         """Reads the Letta pipe script content from the file."""
-        return self._read_resource_file("letta_pipe.py")
+        return read_resource_file("letta_pipe.py")
 
     def _get_function_manifest(self) -> dict:
         """Loads the manifest dictionary from the YAML file."""
-        manifest_content = self._read_resource_file("function_manifest.yaml")
+        manifest_content = read_resource_file("function_manifest.yaml")
         try:
             manifest_data = yaml.safe_load(manifest_content)
             if not isinstance(manifest_data, dict):
