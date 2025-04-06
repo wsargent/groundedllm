@@ -82,6 +82,23 @@ When you see that, you should be good to go.  Open a browser at http://localhost
 
 ![Hello](./images/hello.png)
 
+## Working with Letta
+
+The first thing you'll want to do is tell Letta your name and location -- this will help it understand where and when you are.
+
+After that, you will want to give it preferences, using the phrase "store this in your core memory" so that it can remember it for later.
+
+Some example preferences:
+
+* I like mermaid diagrams for visualizing technical concepts and relationships.
+* I am using Haystack 2.12, please specify 2.x when searching for Haystack docs.
+* When searching for AWS documentation, prefer using documentation from https://docs.aws.amazon.com.
+* Only give me sample code examples when I explicitly ask you to.
+
+Because Letta doesn't always store conversations in archival memory, you also want to ask it to explicitly summarize and store the conversation when you're changing topics.  This lets you take notes and store bookmarks when you want to bring up an old topic for later.
+
+Grounding with search can reduce hallucinations, but *will not eliminate them*.  You will still need to check the sources and validate that what Letta is telling you is accurate, especially if you are doing anything critical.  Also, do your own searches!  Search engines are free for humans, and Letta will be happy to give you its reference material.
+
 ## Management
 
 When you want it to run in the background, you can run it as a daemon:
