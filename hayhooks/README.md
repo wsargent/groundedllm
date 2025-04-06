@@ -75,7 +75,10 @@ hayhooks pipeline run direct_search --param 'query="What does Haystack do?"'
 This pipeline provisions a search agent in Letta and creates a pipe function in Open WebUI to talk to it.
 
 ```bash
-hayhooks pipeline run provision_search_agent --param 'agent_name=letta-agent'
+hayhooks pipeline run provision_search_agent \
+    --param 'agent_name=letta-agent' \
+    --param 'chat_model=anthropic/" \
+    --param 'embedding_model=letta/letta-free'
 ```
 
 ## Custom Components

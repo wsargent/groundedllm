@@ -131,7 +131,7 @@ services:
       # This is the default option if you don't have Gemini or Anthropic set up
       #- LETTA_MODEL=letta/letta-free
       # This is the preferred option
-      - LETTA_MODEL=anthropic/claude-3-7-sonnet-20250219
+      - CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
       
 
 volumes:
