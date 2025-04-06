@@ -1,4 +1,5 @@
 import os
+from typing import Literal, Optional
 
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
@@ -61,28 +62,54 @@ class PipelineWrapper(BasePipelineWrapper):
 
         return pipe
 
-    def run_api(self, question: str) -> str:
+    def run_api(self, question: str,
+                max_results: int, 
+                search_depth: Literal["basic", "advanced"] = "basic", 
+                include_domains: Optional[list[str]] = None,
+                exclude_domains: Optional[list[str]] = None) -> str:
         """
-        Passes the question to an LLM Model that will search and answer the question.
+        Runs the search pipeline to answer a given question using web search results.
 
-        This tool is also useful for cheap summarization of a web page.
-
-        The LLM Model is not very creative, but has a large context window, and is fast.
+        This method takes a user's question, performs a web search using Tavily,
+        constructs a prompt with the search results, and generates an answer
+        using an LLM. It allows customization of the search parameters.
 
         Parameters
         ----------
-        question: str
-            The question to answer.
+        question : str
+            The user's query to search for and answer.
+        max_results : int
+            The maximum number of search results to retrieve from Tavily.
+        search_depth : Literal["basic", "advanced"], optional
+            The depth of the web search. "basic" provides standard results,
+            while "advanced" uses more sophisticated techniques for higher relevance
+            at a higher cost (2 API credits vs 1). Defaults to "basic".
+        include_domains : Optional[list[str]], optional
+            A list of domains to specifically include in the search results. Defaults to None.
+        exclude_domains : Optional[list[str]], optional
+            A list of domains to specifically exclude from the search results. Defaults to None.
 
         Returns
         -------
         str
-            The answer to the question from the LLM Model.
+            The generated answer based on the web search results.
+
+        Raises
+        ------
+        RuntimeError
+            If the pipeline fails to retrieve an answer from the LLM.
         """
         log.trace(f"Running answer pipeline with question: {question}")
 
         result = self.pipeline.run(
-            {"search": {"query": question}, "prompt_builder": {"query": question}}
+            {"search": {
+                "query": question,
+                "search_depth": search_depth,
+                "max_results": max_results,
+                "include_domains": include_domains,
+                "exclude_domains": exclude_domains
+            },
+            "prompt_builder": {"query": question}}
         )
 
         logger.info(f"answer: answer result from pipeline {result}")
