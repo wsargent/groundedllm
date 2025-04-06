@@ -9,7 +9,7 @@ from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
 
 from resources.utils import read_resource_file
-from tavily_web_search import TavilyWebSearch
+from components.tavily_web_search import TavilyWebSearch
 
 logger = logging.getLogger("answer")
 

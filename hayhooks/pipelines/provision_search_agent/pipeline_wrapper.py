@@ -8,8 +8,8 @@ from haystack import Pipeline
 from haystack.utils import Secret
 from letta_client import Letta
 
-from letta_setup import LettaAttachTools, LettaCreateAgent
-from openwebui_setup import CreateFunction
+from components.letta_setup import LettaAttachTools, LettaCreateAgent
+from components.openwebui_setup import CreateFunction
 from resources.utils import read_resource_file
 
 logger = logging.getLogger("provision_search_agent")
