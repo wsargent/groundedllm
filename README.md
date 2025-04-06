@@ -34,15 +34,17 @@ And produced this:
 
 ![AI Spam](./images/aispam.png)
 
-If you are familiar with Deep Research, this is the same technique.
+The search technique is pulled from this academic paper on [DeepRAG](https://arxiv.org/abs/2502.01142).
 
-If you want more details, you can dig into the reasoning using [Letta Desktop](https://docs.letta.com/quickstart/desktop).  Here's an example of what goes on behind the scenes when I ask "What are the differences between [Roo Code](https://docs.roocode.com) and [Cline](https://github.com/cline/cline)?"
+If you want more details on what it's thinking, you can dig into the reasoning using [Letta Desktop](https://docs.letta.com/quickstart/desktop).  Here's an example of what goes on behind the scenes when I ask "What are the differences between [Roo Code](https://docs.roocode.com) and [Cline](https://github.com/cline/cline)?"
 
 ![Letta Grounding with Search](./images/grounding.png)
 
 In addition to search, Letta can also extract content from specific URLs.  For example:
 
 ![Extract](./images/extract.png)
+
+This is useful when the search engine hasn't picked up information on the pages.
 
 ## Getting Started
 
