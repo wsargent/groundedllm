@@ -45,13 +45,13 @@ You will need to have Docker Compose installed. The easiest way to do this is by
 
 https://docs.openwebui.com/tutorials/docker-install#for-windows-and-mac-users
 
-### Running
+### Getting Started
 
 First, configure your keys by creating an `.env` file:
 
 ```
 cp env.example .env
-# edit .env file with your own keys
+# edit .env file with your own API keys
 ```
 
 To start the services, run the following:
@@ -60,23 +60,35 @@ To start the services, run the following:
 docker compose up
 ```
 
+You will see a bunch of text in the logs, but the important bit is this line:
+
+```
+initializer  | 2025-04-06 14:29:00,484 - INFO - Initialization complete!
+```
+
+(If you don't see this, it's probably a bug.  [File an issue](https://github.com/wsargent/groundedllm/issues/new) and copy and paste the logs into the issue.)
+
+When you see that, you should be good to go.  Open a browser at http://localhost:3000 and type in "hello."
+
+Unlike other models, Letta is a stateful agent.  It doesn't matter if you bring up a new chat, Letta will continue the conversation from where you left off.
+
+## Management
+
 When you want it to run in the background, you can run it as a daemon:
 
 ```bash
 docker compose up -d
 ```
 
-To stop it:
-
-```bash
-docker compose down
-```
-
-To completely destroy all resources and rebuild from scratch:
+To completely destroy all resources (including all your data!) and rebuild from scratch:
 
 ```bash
 docker compose down -v --remove-orphans && docker compose up --build
 ```
+
+## Initialization
+
+Note that if you delete or rename the Letta agent or the Open WebUI pipe, the initializer will provision a new one with the same name automatically.
 
 ## Open WebUI
 
