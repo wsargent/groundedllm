@@ -6,11 +6,13 @@ If you have the API keys and Docker Compose, you should be able to go to http://
 
 ## Who's Interested?
 
-* You don't want to mess around with prompts or RAG: you just want a search engine that knows what you want and gets smarter over time with very little effort on your part, and if that means you wait for 30 seconds to get the right answer, you're okay with that.
-* If you are interested in AI agents, this project is a low effort way to play with [Letta](https://docs.letta.com/letta-platform), and see a [stateful agent](https://docs.letta.com/stateful-agents) that can learn from its own interactions.
-* If you are interested in RAG problems (document conversion / cleaning / extraction), the [Hayhooks](https://docs.haystack.deepset.ai/docs/hayhooks) and [Haystack](https://haystack.deepset.ai/) toolkit is used to implement pipelines, including several custom components.
-* If you're interested in [Open WebUI](https://github.com/open-webui/open-webui), this project goes to some lengths to work through OWUI's environment variables and REST API to provision Letta.
-* If you are interested in tooling like MCP and OpenAPI, Hayhooks exposes an MCP server, and has [OpenAPIServiceToFunctions](https://docs.haystack.deepset.ai/docs/openapiservicetofunctions), [OpenAPIConnector](https://docs.haystack.deepset.ai/docs/openapiconnector) [MCPTool](https://docs.haystack.deepset.ai/docs/mcptool), and more.
+This project may be of interest to you if:
+
+* **You don't want to mess around.**  You just want a search engine that knows what you want and gets smarter over time with very little effort on your part, and if that means you wait for 30 seconds to get the right answer, you're okay with that.
+* **You are interested in AI agents.** This project is a low effort way to play with [Letta](https://docs.letta.com/letta-platform), and see a [stateful agent](https://docs.letta.com/stateful-agents) that can remember and learn.
+* **You are interested in RAG pipelines.**  [Haystack](https://haystack.deepset.ai/) toolkit has several options to deal with document conversion, cleaning, and extraction.  The [Hayhooks](https://docs.haystack.deepset.ai/docs/hayhooks) deployment system is nice, and the project includes several pipelines and has custom components.
+* **You're interested in [Open WebUI](https://github.com/open-webui/open-webui) tooling.** this project goes to some lengths to work through OWUI's environment variables and REST API to provision Letta.
+* **You are interested in tool calling and management.** Hayhooks exposes an MCP server, and and there's a lot you can do with MCP and Open API -- it has [OpenAPIServiceToFunctions](https://docs.haystack.deepset.ai/docs/openapiservicetofunctions), [OpenAPIConnector](https://docs.haystack.deepset.ai/docs/openapiconnector) [MCPTool](https://docs.haystack.deepset.ai/docs/mcptool), and more.
 
 ## Description
 
@@ -37,6 +39,10 @@ If you are familiar with Deep Research, this is the same technique.
 If you want more details, you can dig into the reasoning using [Letta Desktop](https://docs.letta.com/quickstart/desktop).  Here's an example of what goes on behind the scenes when I ask "What are the differences between [Roo Code](https://docs.roocode.com) and [Cline](https://github.com/cline/cline)?"
 
 ![Letta Grounding with Search](./images/grounding.png)
+
+In addition to search, Letta can also extract content from specific URLs.  For example:
+
+![Extract](./images/extract.png)
 
 ## Getting Started
 
