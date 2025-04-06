@@ -46,9 +46,9 @@ All pipelines start off in the undeployed directory, as Letta can easily get rat
 
 ### Search Pipeline
 
-Searches using Tavily, and uses a model with a large context window to read the summary and return an answer.
+Searches using Tavily, and uses a model to read the summary and return an answer.  Gemini 2.0 Flash is perfect for this, as it's cheap, fast, and has a large context window.
 
-This is the default, because using direct_search on Claude Sonnet 3.7 with Letta will result in an agent that can run its own queries to drill down on search results.  This can often result in a rate limit error.
+Using a distinct model for searches also protects the agent against itself; giving an agent a tool that can search and telling it to search unti it knows what's going on can result in rate limiting errors in some models, especially Claude Sonnet 3.7.  
 
 ```bash
 hayhooks pipeline run search --param 'query="What does Haystack do?"'
@@ -60,14 +60,6 @@ This pipeline takes a URL, scrapes the contents, and converts it to Markdown.
 
 ```bash
 hayhooks pipeline run extract --param 'url=https://gist.github.com/wsargent/fc99042002ce3d6067cfde3fa04ec6ca'
-```
-
-### Direct Search Pipeline
-
-This pipeline queries with Tavily and returns a Markdown representation of the results, containing scores and snippets.
-
-```bash
-hayhooks pipeline run direct_search --param 'query="What does Haystack do?"'
 ```
 
 ### Provision Search Agent Pipeline
