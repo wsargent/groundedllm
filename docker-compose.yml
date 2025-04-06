@@ -83,24 +83,24 @@ services:
       - ENV=dev
       # Prevent a langchain warning
       - USER_AGENT=openwebui
-      # Disable sneaky calls to LLMs by all methods possible
+      # Disable sneaky calls to LLMs by all methods possible (use Ollama or Flash-Lite if desired)
       - ENABLE_TAGS_GENERATION=false
       - ENABLE_TITLE_GENERATION=false
       - ENABLE_EVALUATION_ARENA_MODELS=false
       - ENABLE_AUTOCOMPLETE_GENERATION=false
       - ENABLE_RETRIEVAL_QUERY_GENERATION=false
-      # Disable Ollama
+      # Disable Ollama (focus attention on Letta Pipe)
       - ENABLE_OLLAMA_API=false
       # Point the RAG at Gemini to disable giant downloads
       - RAG_EMBEDDING_ENGINE=openai
-      #- RAG_OPENAI_API_BASE_URL=http://litellm:4000
-      #- RAG_OPENAI_API_KEY=$LITELLM_MASTER_KEY
-      #- RAG_EMBEDDING_MODEL=text-embedding-004
-      # Enable Tavily Web Search in Open WebUI
+      - RAG_OPENAI_API_BASE_URL=http://litellm:4000
+      - RAG_OPENAI_API_KEY=$LITELLM_MASTER_KEY
+      - RAG_EMBEDDING_MODEL=text-embedding-005
+      # Enable Tavily Web Search in Open WebUI (commented out as Letta does a better job)
       #- ENABLE_RAG_WEB_SEARCH=true
       #- RAG_WEB_SEARCH_ENGINE=tavily
       #- TAVILY_API_KEY=$TAVILY_API_KEY
-      # Add models from LiteLLM
+      # Add models from LiteLLM (commented out to focus attention on Letta)
       #- OPENAI_API_BASE_URLS=http://litellm:4000
       #- OPENAI_API_KEY=$LITELLM_MASTER_KEY
       # Disable giant downloads
@@ -128,9 +128,9 @@ services:
       - OPEN_WEBUI_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - HAYHOOKS_BASE_URL=http://hayhooks:1416
-      # If you have an Anthropic API key, you should use Claude 3.7 Sonnet 
-      #- CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
-      - CHAT_MODEL=google_ai/gemini-2.0-flash
+      # You can also use OpenAI, but Gemini models don't work reliably
+      # If you don't have anything suitable, use letta/letta-free
+      - CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
       - EMBEDDING_MODEL=google_ai/text-embedding-004
       
 
