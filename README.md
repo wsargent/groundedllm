@@ -86,12 +86,6 @@ To completely destroy all resources (including all your data!) and rebuild from 
 docker compose down -v --remove-orphans && docker compose up --build
 ```
 
-## Initialization
-
-Note that if you delete or rename the Letta agent or the Open WebUI pipe, the initializer will provision a new one with the same name automatically.
-
-There is no vector/embeddings/database RAG involved in this package, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is a RAG implementation based on pgvector.
-
 ## Composition
 
 The docker compose file integrates several key components:
@@ -100,6 +94,9 @@ The docker compose file integrates several key components:
 * **Letta:** An agent framework with built-in memory and tooling capabilities.
 * **Hayhooks:** A tool server for use by Letta.
 * **LiteLLM Proxy Server:**  Makes all providers "OpenAI style" for Hayhooks.
+* **Initializer:** A container that calls the 'provision' pipeline to create agent if necessary.
+
+Note that if you delete or rename the Letta agent or the Open WebUI pipe, the initializer will provision a new one with the same name automatically.
 
 ### Open WebUI
 
@@ -130,6 +127,8 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 ### Hayhooks
 
 [Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs. It's primarily used for RAG, but it's also a great way to make tools available in general as it has MCP and OpenAPI support.
+
+There is no vector/embeddings/database RAG involved in this package, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is a RAG implementation based on pgvector.
 
 See the [README](./hayhooks/README.md) for details of the tools provided by Hayhooks.
 
