@@ -1,22 +1,16 @@
 from typing import Any, Dict, List, Optional, Union
 
-from haystack import (
-    Document,
-    component,
-    default_from_dict,
-    default_to_dict,
-    logging,
-)
+from haystack import Document, component, default_from_dict, default_to_dict, logging
 from haystack.utils import Secret, deserialize_secrets_inplace
-
 from tavily import TavilyClient
 
 logger = logging.getLogger(__name__)
 
-# https://docs.haystack.deepset.ai/docs/custom-components
 TAVILY_BASE_URL = "https://api.tavily.com/search"
 
 DEFAULT_MAX_RESULTS = 5
+DEFAULT_SEARCH_DEPTH = "basic"
+
 
 @component
 class TavilyWebSearch:
@@ -65,9 +59,10 @@ class TavilyWebSearch:
     def run(
         self,
         query: str,
+        search_depth: str = DEFAULT_SEARCH_DEPTH,
         max_results: int = DEFAULT_MAX_RESULTS,
         include_domains: Optional[list[str]] = None,
-        exclude_domains: Optional[list[str]] = None 
+        exclude_domains: Optional[list[str]] = None,
     ) -> Dict[str, Union[List[Document], List[str]]]:
         """
         Uses [Tavily](https://docs.tavily.com/welcome) to search the web for relevant documents.
@@ -76,12 +71,19 @@ class TavilyWebSearch:
         -------------
         query: str
             The query.
+        search_depth: str
+            The string "basic" or "advanced", "basic" by default.
+            Advanced search looks for the most relevant content snippets and sources,
+            and uses more sophisticated techniques to filter and rank search results,
+            aiming for higher accuracy and relevance compared to the basic search option.
+            An advanced search costs 2 API Credits, compared to the lower cost of a basic search.
         max_results: int
-            The maximum number of results to return.
+            The maximum number of results to return.  5 by default.
         include_domains: Optional[list[str]]
-            The only website domains that should be searched.
+            The only website domains that should be searched, None by default.
         exclude_domains: Optional[list[str]]
-            The website domains that should not be searched.
+            The website domains that should not be searched, None by default.
+
         Returns
         -------
         Dict[str, Union[List[Document], List[str]]]
@@ -95,8 +97,8 @@ class TavilyWebSearch:
             max_results=max_results,
             include_domains=include_domains,
             exclude_domains=exclude_domains,
-            search_depth="basic",
-            time_range=None
+            search_depth=search_depth,
+            time_range=None,
         )
 
         documents = []
