@@ -1,5 +1,6 @@
 services:
 
+  # LiteLLM can be enabled in Open WebUI if you want direct access to models
   litellm:
     build: litellm/
     container_name: litellm
@@ -10,9 +11,8 @@ services:
       - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
       - GEMINI_API_KEY=$GEMINI_API_KEY
       - ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-      # - OPENAI_API_KEY=$OPENAI_API_KEY
       
-  # We only want Open WebUI talking to Hayhooks and Letta
+  # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
     build: hayhooks/
     container_name: hayhooks
@@ -23,7 +23,9 @@ services:
     environment:
       - OPENAI_API_BASE=http://litellm:4000
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
-      - SEARCH_CHAT_MODEL=gemini-2.0-flash
+      # Could probably use gemini-2.0-flash-lite here 
+      - SEARCH_MODEL=gemini-2.0-flash
+      - EXTRACT_MODEL=gemini-2.0-flash
       - HAYHOOKS_PIPELINES_DIR=/pipelines
       - HAYHOOKS_DISABLE_SSL=true
       - HAYHOOKS_HOST=0.0.0.0
@@ -33,8 +35,6 @@ services:
       - HAYHOOKS_SHOW_TRACEBACKS=true
       # Needed for search pipeline
       - TAVILY_API_KEY=$TAVILY_API_KEY
-      # Prevent __pycache__ directories
-      - PYTHONDONTWRITEBYTECODE=1
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283      
     healthcheck:
@@ -44,6 +44,7 @@ services:
       retries: 18
       start_period: 5s
 
+  # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
   letta:
     image: letta/letta:0.6.48
@@ -65,6 +66,7 @@ services:
       retries: 18
       start_period: 1s
 
+  # Open WebUI is the front-end UI to Letta
   open-webui:
     image: ghcr.io/open-webui/open-webui:0.6.0
     container_name: open-webui
@@ -94,7 +96,7 @@ services:
       #- RAG_OPENAI_API_BASE_URL=http://litellm:4000
       #- RAG_OPENAI_API_KEY=$LITELLM_MASTER_KEY
       #- RAG_EMBEDDING_MODEL=text-embedding-004
-      # Enable Tavily Web Search
+      # Enable Tavily Web Search in Open WebUI
       #- ENABLE_RAG_WEB_SEARCH=true
       #- RAG_WEB_SEARCH_ENGINE=tavily
       #- TAVILY_API_KEY=$TAVILY_API_KEY
@@ -126,12 +128,10 @@ services:
       - OPEN_WEBUI_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - HAYHOOKS_BASE_URL=http://hayhooks:1416
-      # Gemini does not work reliably (will output in reasoning stage)
-      #- LETTA_MODEL=google_ai/gemini-2.5-pro-exp-03-25
-      # This is the default option if you don't have Gemini or Anthropic set up
-      #- LETTA_MODEL=letta/letta-free
-      # This is the preferred option
-      - CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
+      # If you have an Anthropic API key, you should use Claude 3.7 Sonnet 
+      #- CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
+      - CHAT_MODEL=google_ai/gemini-2.0-flash
+      - EMBEDDING_MODEL=google_ai/text-embedding-004
       
 
 volumes:

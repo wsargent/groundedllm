@@ -21,9 +21,16 @@ model_list:
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
+
   - model_name: text-embedding-004
     litellm_params:
       model: gemini/text-embedding-004
+      api_key: "os.environ/GEMINI_API_KEY"
+      tags: ["gemini"]
+
+  - model_name: text-embedding-005
+    litellm_params:
+      model: gemini/text-embedding-005
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 

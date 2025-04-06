@@ -47,7 +47,7 @@ class PipelineWrapper(BasePipelineWrapper):
         llm = OpenAIGenerator(
             api_key=Secret.from_env_var("OPENAI_API_KEY"),
             api_base_url=os.getenv("OPENAI_API_BASE"),
-            model=os.getenv("SEARCH_CHAT_MODEL"),
+            model=os.getenv("EXTRACT_MODEL"),
         )
 
         pipe = Pipeline()
