@@ -16,14 +16,6 @@ In addition, because Letta has memory, it is teachable.  If you tell it your loc
 
 There is no vector/embeddings/database RAG involved in this package, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is a RAG implementation based on pgvector.
 
-## Minimum Requirements
-
-You will need the following:
-
-* [Tavily API key](https://app.tavily.com/home) (required for search) -- this is free up to a certain level.
-* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) (very useful for searching documentation) -- also has a free tier
-* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc) -- not free but often cheaper than the monthly subscription.  The docker-compose.yml file is set up for Claude Sonnet 3.7.
-
 ## Who's Interested?
 
 * If you are interested in AI agents, this project is a low effort way to play with [Letta](https://docs.letta.com/letta-platform), and see a [stateful agent](https://docs.letta.com/stateful-agents) that can learn from its own interactions.
@@ -39,6 +31,14 @@ The docker compose file integrates several key components:
 * **Letta:** An agent framework with built-in memory and tooling capabilities.
 * **Hayhooks:** A tool server for use by Letta.
 * **LiteLLM Proxy Server:**  Makes all providers "OpenAI style" for Hayhooks.
+
+## Minimum Requirements
+
+You will need the following:
+
+* [Tavily API key](https://app.tavily.com/home) (required for search) -- this is free up to a certain level.
+* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) (very useful for searching documentation) -- also has a free tier
+* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc) -- not free but often cheaper than the monthly subscription.  The docker-compose.yml file is set up for Claude Sonnet 3.7.
 
 ## Docker
 
