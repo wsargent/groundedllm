@@ -11,12 +11,21 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 def provision_search_agent():
-    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL", "http://hayhooks:1416")
-    hayhooks_pipeline = "provision_search_agent"
-    hayhooks_url = f"{hayhooks_base_url}/{hayhooks_pipeline}/run"
-
     try:
-        hayhooks_payload = {"agent_name": "search-agent"}
+        # Set this in your docker-compose.yml
+        chat_model = os.getenv("CHAT_MODEL", "letta/letta-free")
+        embedding_model = os.getenv("EMBEDDING_MODEL", "letta/letta-free")
+        hayhooks_payload = {
+            "agent_name": "search-agent",
+            "chat_model": chat_model,
+            "embedding_model": embedding_model
+        }
+
+        hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL", "http://hayhooks:1416")
+        hayhooks_pipeline = "provision_search_agent"
+        hayhooks_url = f"{hayhooks_base_url}/{hayhooks_pipeline}/run"
+
+        # Call the pipeline
         response = requests.post(hayhooks_url, json=hayhooks_payload)
         response.raise_for_status()
         json_result = response.json()
