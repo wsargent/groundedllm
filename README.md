@@ -155,6 +155,8 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 
 [Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs. It's primarily used for RAG, but it's also a great way to make tools available in general as it has MCP and OpenAPI support.
 
+To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  In addition, the extract tool converts HTML to Markdown and do some cleanup before sending it to Google Flash 2.0.  There is no facility to convert PDF or other formats 
+
 There is no vector/embeddings/database RAG involved in this package, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is a RAG implementation based on pgvector.
 
 See the [README](./hayhooks/README.md) for details of the tools provided by Hayhooks.
@@ -168,3 +170,24 @@ LiteLLM is useful in several different ways, especially as you scale up in compl
 * It provides a way to point to a conceptual model rather than a concrete one (you can point to "claude-sonnet" and change the model from 3.5 to 3.7).  
 * It insulates Open WebUI from the underlying providers.  You don't have to worry about changing your API key or other configuration settings when switching providers.  You also don't have to worry about Open WebUI timing out for 30 seconds while it tries to reach an unreachable provider.
 * It lets you specify the same model with different parameters, so you can use `extra-headers` to experiment with [token-efficient tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/token-efficient-tool-use), for example.
+
+## Privacy Concerns
+
+Since you're using this for search, you may want to know how your queries are processed.
+
+There are three different services involved in search, each with their own privacy policy.
+
+You do have options for customization.  Since the tools go through Hayhooks, you can write a [ConditionalRouter](https://docs.haystack.deepset.ai/docs/conditionalrouter) that will send different queries to different services or evaluate them before they are processed.
+
+### Anthropic
+
+Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: they do not use personal data for model training [without explicit consent](https://privacy.anthropic.com/en/articles/10023580-is-my-data-used-for-model-training).
+
+### Tavily
+
+Tavily's [privacy policy](https://tavily.com/privacy) is that they do store queries, and they will use queries to improve the quality of their services.  You can opt out through the [account settings](https://app.tavily.com/account/settings).
+
+### Google
+
+Google's [privacy policy](https://support.google.com/gemini/answer/13594961) states that your conversations with Gemini may be used to improve and develop their products and services, including machine learning technologies.  They do use human reviewers and there is a note saying **Please don’t enter confidential information in your conversations or any data you wouldn’t want a reviewer to see or Google to use to improve our products, services, and machine-learning technologies.**
+
