@@ -12,7 +12,7 @@ This project may be of interest to you if:
 * **You are interested in AI agents.** This project is a low effort way to play with [Letta](https://docs.letta.com/letta-platform), and see a [stateful agent](https://docs.letta.com/stateful-agents) that can remember and learn.
 * **You are interested in RAG pipelines.**  [Haystack](https://haystack.deepset.ai/) toolkit has several options to deal with document conversion, cleaning, and extraction.  The [Hayhooks](https://docs.haystack.deepset.ai/docs/hayhooks) deployment system is nice, and the project includes several pipelines and has custom components.
 * **You're interested in [Open WebUI](https://github.com/open-webui/open-webui) tooling.** this project goes to some lengths to work through OWUI's environment variables and REST API to provision Letta.
-* **You are interested in tool calling and management.** Hayhooks exposes an MCP server, and and there's a lot you can do with MCP and Open API -- it has [OpenAPIServiceToFunctions](https://docs.haystack.deepset.ai/docs/openapiservicetofunctions), [OpenAPIConnector](https://docs.haystack.deepset.ai/docs/openapiconnector), [MCPTool](https://docs.haystack.deepset.ai/docs/mcptool), and more.
+* **You are interested in tool calling and management.** Hayhooks exposes an MCP server, and there's a lot you can do with a tool server to play around with MCP and Open API -- it has [OpenAPIServiceToFunctions](https://docs.haystack.deepset.ai/docs/openapiservicetofunctions), [OpenAPIConnector](https://docs.haystack.deepset.ai/docs/openapiconnector), [MCPTool](https://docs.haystack.deepset.ai/docs/mcptool), and more.
 
 ## Description
 
@@ -129,9 +129,13 @@ There are a number of tweaks to [improve performance](https://docs.openwebui.com
 
 For example, this instance is configured to use Gemini embedding so that it doesn't download 900MB of embedding model for its local RAG.
 
+It is not possible to upload files into Letta through the Open WebUI interface right now.  The functionality does exist in Letta through the [data sources](https://docs.letta.com/guides/agents/sources) feature, but it might be easier to use a OWUI plugin to send it to Hayhooks and keep it in a document store.
+
 ### Letta
 
 [Letta](https://docs.letta.com) is an agent framework that has built-in self editing memory and built-in tooling for editing the behavior of the agent, including adding new tools.
+
+The search technique is pulled from this academic paper on [DeepRAG](https://arxiv.org/abs/2502.01142), although [query decomposition](https://haystack.deepset.ai/blog/query-decomposition) is a well known technique in general.  If you want a classic deep learning style agent, you can import one from Letta's [agent-file git repository](https://github.com/letta-ai/agent-file/tree/main/deep_research_agent).
 
 #### Picking a Model Provider
 
@@ -151,11 +155,11 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 
 [Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs. It's primarily used for RAG, but it's also a great way to make tools available in general as it has MCP and OpenAPI support.
 
-To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  Google Flash 2.0 also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.  The search technique is pulled from this academic paper on [DeepRAG](https://arxiv.org/abs/2502.01142), although [query decomposition](https://haystack.deepset.ai/blog/query-decomposition) is a well known technique in general.
+To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  Google Flash 2.0 also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.
 
-The extract tool converts HTML to Markdown and does some document cleanup before sending it to Google Flash 2.0.  Only HTML is processed for now, although there are [many converters](https://docs.haystack.deepset.ai/docs/converters) available.
+The extract tool converts HTML to Markdown and does some document cleanup before sending it to Google Flash 2.0.  Only HTML is processed for now, although there are [many converters](https://docs.haystack.deepset.ai/docs/converters) available, and PDF support through [docling-haystack](https://haystack.deepset.ai/integrations/docling) or [docling-serve](https://github.com/docling-project/docling-serve) should be easy.
 
-There is no vector/embeddings/database RAG involved in this package, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is a RAG implementation based on pgvector.
+There is no vector/embeddings/database RAG involved in this project, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is technically a RAG implementation based on pgvector.
 
 See the [README](./hayhooks/README.md) for details of the tools provided by Hayhooks.
 
@@ -163,7 +167,7 @@ See the [README](./hayhooks/README.md) for details of the tools provided by Hayh
 
 The [LiteLLM proxy server](https://docs.litellm.ai/docs/proxy/deploy) that provides an OpenAI compatible layer on top of several different providers. It is provided to Open WebUI (commented out) and to Hayhooks.
 
-LiteLLM is useful in several different ways, especially as you scale up in complexity, and I think it's easier if you start using it from the beginning.
+LiteLLM is mostly commented out here to focus attention on Letta.  However, it is very useful in general, especially as you scale up in complexity, and I think it's easier if you start using it from the beginning.
 
 * It provides a way to point to a conceptual model rather than a concrete one (you can point to "claude-sonnet" and change the model from 3.5 to 3.7).  
 * It insulates Open WebUI from the underlying providers.  You don't have to worry about changing your API key or other configuration settings when switching providers.  You also don't have to worry about Open WebUI timing out for 30 seconds while it tries to reach an unreachable provider.
