@@ -8,7 +8,7 @@ from haystack import Pipeline
 from haystack.utils import Secret
 from letta_client import Letta
 
-from components.letta_setup import LettaAttachTools, LettaCreateAgent
+from components.letta_setup import LettaCreateAgent
 from components.openwebui_setup import CreateFunction
 from resources.utils import read_resource_file
 
@@ -63,7 +63,6 @@ class PipelineWrapper(BasePipelineWrapper):
         logger.info(f"Using Letta base URL: {letta_base_url}")
         letta = Letta(base_url=letta_base_url)
         create_agent = LettaCreateAgent(letta=letta)
-        attach_tools = LettaAttachTools(letta=letta)
 
         # Revert Setup for CreateFunction
         openwebui_base_url = os.getenv("OPENWEBUI_BASE_URL")
@@ -81,11 +80,8 @@ class PipelineWrapper(BasePipelineWrapper):
         )
 
         pipe.add_component("create_agent", create_agent)
-        pipe.add_component("attach_tools", attach_tools)
         pipe.add_component("create_function", create_open_webui_function)
 
-        # Connect agent_id to both attach_tools and create_function
-        pipe.connect(sender="create_agent.agent_id", receiver="attach_tools.agent_id")
         pipe.connect(
             sender="create_agent.agent_id", receiver="create_function.agent_id"
         )
@@ -128,11 +124,9 @@ class PipelineWrapper(BasePipelineWrapper):
             "human_block": "",
             # Revert to using internal helper method (which now uses shared util)
             "persona_block": self._read_persona_block_content(),
+            "requested_tools": ["search", "extract"]
         }
-
-        # only these tools go into search agent
-        attach_tool_args = {"requested_tools": ["search", "extract"]}
-
+    
         create_open_webui_function_args = {
             "function_id": self._snake_case(agent_name),
             "function_name": f"{agent_name}",
@@ -147,7 +141,6 @@ class PipelineWrapper(BasePipelineWrapper):
         result = self.pipeline.run(
             {
                 "create_agent": create_agent_args,
-                "attach_tools": attach_tool_args,
                 "create_function": create_open_webui_function_args,
             }
         )
