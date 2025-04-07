@@ -34,10 +34,6 @@ And produced this:
 
 ![AI Spam](./images/aispam.png)
 
-The search technique is pulled from this academic paper on [DeepRAG](https://arxiv.org/abs/2502.01142).
-
-You will typically teach Letta about what you want when it gets it slightly wrong.  
-
 If you want more details on what it's thinking, you can dig into the reasoning using [Letta Desktop](https://docs.letta.com/quickstart/desktop).  Here's an example of what goes on behind the scenes when I ask "What are the differences between [Roo Code](https://docs.roocode.com) and [Cline](https://github.com/cline/cline)?"
 
 ![Letta Grounding with Search](./images/grounding.png)
@@ -155,7 +151,9 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 
 [Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs. It's primarily used for RAG, but it's also a great way to make tools available in general as it has MCP and OpenAPI support.
 
-To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  In addition, the extract tool converts HTML to Markdown and do some cleanup before sending it to Google Flash 2.0.  There is no facility to convert PDF or other formats 
+To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  Google Flash 2.0 also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.  The search technique is pulled from this academic paper on [DeepRAG](https://arxiv.org/abs/2502.01142), although [query decomposition](https://haystack.deepset.ai/blog/query-decomposition) is a well known technique in general.
+
+The extract tool converts HTML to Markdown and does some document cleanup before sending it to Google Flash 2.0.  Only HTML is processed for now, although there are [many converters](https://docs.haystack.deepset.ai/docs/converters) available.
 
 There is no vector/embeddings/database RAG involved in this package, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is a RAG implementation based on pgvector.
 
