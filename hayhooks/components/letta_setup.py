@@ -199,6 +199,7 @@ class LettaCreateAgent:
         """
         try:
             memory_blocks = [
+                CreateBlock(value="", label="topic"),
                 CreateBlock(value=human_block_content, label="human"),
                 CreateBlock(value=persona_block_content, label="persona"),
             ]
