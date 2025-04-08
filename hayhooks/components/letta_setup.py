@@ -4,7 +4,7 @@ import os
 from typing import Dict, List, Optional, Sequence
 
 from haystack import component
-from letta_client import ChildToolRule, CreateAgentRequestToolRulesItem, CreateBlock, Letta, LlmConfig, McpTool, TerminalToolRule
+from letta_client import ChildToolRule, ContinueToolRule, CreateAgentRequestToolRulesItem, CreateBlock, Letta, LlmConfig, McpTool, TerminalToolRule
 
 logger = logging.getLogger("letta_setup")
 
@@ -74,7 +74,13 @@ class LettaCreateAgent:
             If an unexpected error occurs during the setup process.
         """
         prepared_tool_ids: List[str] = []
-        prepared_tool_rules: List[CreateAgentRequestToolRulesItem] = []
+        # Even Claude Sonnet 3.7 will occasional return heartbeat_status=false on
+        # core_memory_replace or core_memory_append -- the continue tool rules are
+        # already in place on archival memory tools but not on core memory tools.
+        prepared_tool_rules: List[CreateAgentRequestToolRulesItem] = [
+            #ContinueToolRule("core_memory_replace"),
+            #ContinueToolRule("core_memory_append")
+        ]
         try:
             logger.info(f"Starting setup for agent '{agent_name}'...")
 
