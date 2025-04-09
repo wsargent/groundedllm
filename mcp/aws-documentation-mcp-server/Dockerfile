@@ -19,7 +19,7 @@ EXPOSE 9712
 
 # Define the ENTRYPOINT as mcp-proxy with its arguments.
 # The '--' separates mcp-proxy args from the command it will run.
-ENTRYPOINT ["/bin/uvx", "mcp-proxy", "--sse-port=9712"]
+ENTRYPOINT ["/bin/uvx", "mcp-proxy", "--sse-port=9712", "--sse-host=0.0.0.0"]
 
 # Define the default command (CMD) that mcp-proxy should execute.
 # This executes the aws-documentation-mcp-server directly.
