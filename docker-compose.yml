@@ -133,6 +133,11 @@ services:
       - OPEN_WEBUI_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - HAYHOOKS_BASE_URL=http://hayhooks:1416
+      #if you prefer using Anthropic, be warned that it has *very* low rate limits
+      #- CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
+      #
+      # If you don't have a google api key at all, you can always use letta/letta-free
+      #- CHAT_MODEL=letta/letta-free
       #
       # Priced competitively, this gives developers access to increased rate limits to use with 2.5 Pro. 
       # The experimental version of Gemini 2.5 Pro remains available for free with lower rate limits. 
@@ -142,14 +147,13 @@ services:
       # you can continue to use 'gemini-2.5-pro-exp-03-25' on the free tier.
       #   -- https://ai.google.dev/gemini-api/docs/thinking
       #
-      #if you prefer using Anthropic, be warned that it has *very* low rate limits
-      #- CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
+      # Gemini 2.5 Pro is being wierd, so commenting it out for now:
       #
+      #- CHAT_MODEL=google_ai/gemini-2.5-pro-exp-03-25
       #- CHAT_MODEL=google_ai/gemini-2.5-pro-preview-03-25
       #
-      # If you don't have a google api key at all, you can always use letta/letta-free
-      #- CHAT_MODEL=letta/letta-free
-      - CHAT_MODEL=google_ai/gemini-2.5-pro-exp-03-25
+      # Safest "live" option is gemini-2.0-flash
+      - CHAT_MODEL=google_ai/gemini-2.0-flash
       - EMBEDDING_MODEL=google_ai/gemini-embedding-exp-03-07
 
   aws-documentation-mcp-server:
