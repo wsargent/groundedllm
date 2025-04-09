@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "allowJs": true
+  },
+  "include": [
+    "everything/**/*"
+, "backup/index.ts", "backup/letta-sse.ts", "backup/sse.ts", "backup/tsconfig.json"  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

@@ -164,5 +164,20 @@ services:
       retries: 18
       start_period: 5s
 
+  letta-mcp-server:
+    build: mcp/letta-mcp-server/
+    ports:
+      - 9714:9714
+    environment:
+      - LETTA_BASE_URL=http://letta:8283
+      - PORT=9714
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9714/sse"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 5s
+
 volumes:
   open-webui:
