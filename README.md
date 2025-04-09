@@ -50,10 +50,13 @@ You will need the following:
 
 * [Docker Compose](https://docs.docker.com/compose/install/).
 * [Tavily API key](https://app.tavily.com/home) (required for search) -- this is free up to a certain level.
-* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) (very useful for searching documentation) -- also has a free tier
-* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc) -- not free but often cheaper than the monthly subscription.  The docker-compose.yml file is set up for Claude Sonnet 3.7.
+* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) (very useful for searching documentation).  The docker-compose.yml file is set up for `Gemini 2.5 Pro Experimental` and `Gemini Embedding Experimental 03-07`, which are on the free tier, but has [lower rate limits](https://ai.google.dev/gemini-api/docs/rate-limits#current-rate-limits).
 
-First, configure your keys by creating an `.env` file:
+Optional:
+
+* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc) -- not free but often cheaper than the monthly subscription.  Commented out in LiteLLM and the docker compose file.
+
+To configure the API keys, start by creating an `.env` file from the `env.example` file:
 
 ```
 cp env.example .env
@@ -88,13 +91,22 @@ Some example preferences:
 
 * I like mermaid diagrams for visualizing technical concepts and relationships.
 * I am using Haystack 2.12, please specify 2.x when searching for Haystack docs.
-* When searching for AWS documentation, prefer using documentation from https://docs.aws.amazon.com.
 * Only give me sample code examples when I explicitly ask you to.
 * Show me inline images when you provide results from Wikipedia pages.
 
 Because Letta doesn't always store conversations in archival memory, you also want to ask it to explicitly summarize and store the conversation when you're changing topics.  This lets you take notes and store bookmarks when you want to bring up an old topic for later.
 
 Grounding with search can reduce hallucinations, but *will not eliminate them*.  You will still need to check the sources and validate that what Letta is telling you is accurate, especially if you are doing anything critical.  Also, do your own searches!  Search engines are free for humans, and Letta will be happy to give you its reference material.
+
+## MCP Servers
+
+The search agent is configured with tools through Letta's MCP support with some MCP servers.
+
+* [wikipedia-mcp-server](https://github.com/scotthelm/wikipedia-mcp-server).
+* [aws-documentation-mcp-server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/).
+* Hayhooks itself provides the `search` and `extract` tools for fine-grained control over Tavily.
+
+The search will use these as appropriate, but you can prompt it by asking, i.e. "Use the recommend tool to recommend documentation for <sample AWS doc url>" and it will use the `recommend` tool.
 
 ## Management
 
