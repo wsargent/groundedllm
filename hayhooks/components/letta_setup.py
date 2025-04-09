@@ -1,6 +1,5 @@
 import datetime
 import logging
-import os
 from typing import Dict, List, Optional, Sequence
 
 from haystack import component
@@ -17,9 +16,7 @@ class LettaCreateAgent:
     attaching specified tools during creation if the agent doesn't exist.
     """
 
-    MCP_SERVER_NAME = os.getenv("MCP_SERVER_NAME", "hayhooks")
     DEFAULT_RETURN_CHAR_LIMIT = 50000
-
     def __init__(self, letta: Letta):
         """
         Initializes the setup class with Letta connection details.
@@ -36,8 +33,7 @@ class LettaCreateAgent:
         embedding_model: str,
         human_block: str,
         persona_block: str,
-        requested_tools: List[str],
-        mcp_server_name: str = MCP_SERVER_NAME,
+        requested_tools: Dict[str, List[str]]
     ) -> Dict[str, any]:
         """
         Finds an existing Letta agent by name or creates a new one with specified tools.
@@ -58,9 +54,8 @@ class LettaCreateAgent:
         persona_block:
             Content for the 'persona' memory block.
         requested_tools:
-            A list of tool names to discover and attach to the agent upon creation.
-        mcp_server_name:
-            The name of the MCP server to discover tools from. Defaults to env var or 'hayhooks'.
+            A dictionary of mcp server names to a list of tool names.
+            These are used to attach tools to the agent upon creation.
 
         Returns:
         --------
@@ -84,44 +79,7 @@ class LettaCreateAgent:
         try:
             logger.info(f"Starting setup for agent '{agent_name}'...")
 
-            # --- Tool Preparation ---
-            # This happens regardless of whether the agent exists,
-            # so we know which tools *should* be attached.
-            # Actual attachment only happens during creation.
-            if requested_tools:
-                logger.info(
-                    f"Preparing tools {requested_tools} from MCP server: {mcp_server_name}"
-                )
-                try:
-                    mcp_tools = self.client.tools.list_mcp_tools_by_server(
-                        mcp_server_name=mcp_server_name
-                    )
-                    logger.info(
-                        f"Found {len(mcp_tools)} tools on MCP server '{mcp_server_name}'."
-                    )
-
-                    for mcp_tool in mcp_tools:
-                        if mcp_tool.name in requested_tools:
-                            tool_id = self._prepare_single_mcp_tool(
-                                mcp_server_name=mcp_server_name, mcp_tool=mcp_tool
-                            )
-                            if tool_id:
-                                prepared_tool_ids.append(tool_id)
-                                # XXX For now, hardcode requested rules to always call archival memory insert
-                                tool_rule = ChildToolRule(tool_name=mcp_tool.name, children=["archival_memory_insert"])
-                                prepared_tool_rules.append(tool_rule)
-                            else:
-                                logger.warning(
-                                    f"Could not prepare tool '{mcp_tool.name}', it will not be attached during creation."
-                                )
-                except Exception as tool_prep_error:
-                    logger.error(
-                        f"Failed during MCP tool preparation for server '{mcp_server_name}': {tool_prep_error}",
-                        exc_info=True,
-                    )
-                    # Decide if this is fatal? For now, log and continue without tools.
-                    prepared_tool_ids = []
-                    prepared_tool_rules = []
+            self._process_requested_tools(requested_tools, prepared_tool_ids, prepared_tool_rules)
 
             # --- Agent Existence Check ---
             agents = self.client.agents.list(name=agent_name)
@@ -255,6 +213,49 @@ class LettaCreateAgent:
             return agent.id
         except Exception as e:
             raise RuntimeError(f"Failed to create agent '{agent_name}'") from e
+
+    def _process_requested_tools(self, requested_tools: Dict[str, List[str]], prepared_tool_ids: List[str], prepared_tool_rules: List[CreateAgentRequestToolRulesItem]):
+        """Processes the requested tools from MCP servers."""
+        if requested_tools:
+            # Iterate over each MCP server and its requested tools
+            for mcp_server_name, tool_names_to_request in requested_tools.items():
+                logger.info(
+                    f"Preparing tools {tool_names_to_request} from MCP server: {mcp_server_name}"
+                )
+
+                try:
+                    # List all tools available on the current MCP server
+                    available_mcp_tools = self.client.tools.list_mcp_tools_by_server(
+                        mcp_server_name=mcp_server_name
+                    )
+                    logger.info(
+                        f"Found {len(available_mcp_tools)} tools on MCP server '{mcp_server_name}'."
+                    )
+
+                    # Process each available tool on the server
+                    for mcp_tool in available_mcp_tools:
+                        # Check if this specific tool was requested for this server
+                        if mcp_tool.name in tool_names_to_request:
+                            tool_id = self._prepare_single_mcp_tool(
+                                mcp_server_name=mcp_server_name, mcp_tool=mcp_tool
+                            )
+                            if tool_id:
+                                prepared_tool_ids.append(tool_id)
+                                # XXX For now, hardcode requested rules...
+                                tool_rule = ChildToolRule(tool_name=mcp_tool.name, children=["archival_memory_insert"])
+                                prepared_tool_rules.append(tool_rule)
+                            else:
+                                logger.warning(
+                                    f"Could not prepare tool '{mcp_tool.name}' from server '{mcp_server_name}', it will not be attached during creation."
+                                )
+                except Exception as tool_prep_error:
+                    logger.error(
+                        f"Failed during MCP tool preparation for server '{mcp_server_name}': {tool_prep_error}",
+                        exc_info=True,
+                    )
+                    # Decide if this is fatal? For now, log and continue without tools.
+                    prepared_tool_ids = []
+                    prepared_tool_rules = []
 
     def _prepare_single_mcp_tool(
         self, mcp_server_name: str, mcp_tool: McpTool
