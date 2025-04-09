@@ -47,7 +47,7 @@ services:
   # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
   letta:
-    image: letta/letta:0.6.50
+    image: letta/letta:0.6.48
     container_name: letta
     ports:
       - 8283:8283
