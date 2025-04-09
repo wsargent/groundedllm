@@ -10,7 +10,7 @@ services:
       - LITELLM_LOG=WARN
       - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
       - GEMINI_API_KEY=$GEMINI_API_KEY
-      - ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+      #- ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
       
   # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
@@ -133,10 +133,24 @@ services:
       - OPEN_WEBUI_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - HAYHOOKS_BASE_URL=http://hayhooks:1416
-      # You can also use OpenAI, but Gemini models don't work reliably
-      # If you don't have anything suitable, use letta/letta-free
-      - CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
-      - EMBEDDING_MODEL=google_ai/text-embedding-004
+      #
+      # Priced competitively, this gives developers access to increased rate limits to use with 2.5 Pro. 
+      # The experimental version of Gemini 2.5 Pro remains available for free with lower rate limits. 
+      #   -- https://blog.google/products/gemini/gemini-preview-model-billing-update/
+      #
+      # Note: 'gemini-2.5-pro-preview-03-25' is a billed model,
+      # you can continue to use 'gemini-2.5-pro-exp-03-25' on the free tier.
+      #   -- https://ai.google.dev/gemini-api/docs/thinking
+      #
+      #if you prefer using Anthropic, be warned that it has *very* low rate limits
+      #- CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
+      #
+      #- CHAT_MODEL=google_ai/gemini-2.5-pro-preview-03-25
+      #
+      # If you don't have a google api key at all, you can always use letta/letta-free
+      #- CHAT_MODEL=letta/letta-free
+      - CHAT_MODEL=google_ai/gemini-2.5-pro-exp-03-25
+      - EMBEDDING_MODEL=google_ai/gemini-embedding-exp-03-07
 
   aws-documentation-mcp-server:
     build: mcp/aws-documentation-mcp-server/
