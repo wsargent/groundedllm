@@ -5,13 +5,18 @@
       "disabled": false,
       "autoApprove": []
     },
+    "mermaid-mcp-server": {
+      "url": "http://mermaid-mcp-server:9711/sse",
+      "disabled": false,
+      "autoApprove": []
+    },
     "aws-documentation-mcp-server": {
       "url": "http://aws-documentation-mcp-server:9712/sse",
       "disabled": false,
       "autoApprove": []
     },
-    "mermaid-mcp-server": {
-      "url": "http://mermaid-mcp-server:9711/sse",
+    "wikipedia": {
+      "url": "http://wikipedia-mcp-server:9713/sse",
       "disabled": false,
       "autoApprove": []
     }

@@ -159,5 +159,17 @@ services:
       retries: 18
       start_period: 5s
 
+  wikipedia-mcp-server:
+    build: mcp/wikipedia-mcp-server/
+    container_name: wikipedia-mcp-server
+    ports:
+      - 9713:9713
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9713/"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 5s
+
 volumes:
   open-webui:
