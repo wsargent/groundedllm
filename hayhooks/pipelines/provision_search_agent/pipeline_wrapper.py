@@ -122,11 +122,23 @@ class PipelineWrapper(BasePipelineWrapper):
             "chat_model": chat_model,
             "embedding_model": embedding_model,
             "human_block": "",
-            # Revert to using internal helper method (which now uses shared util)
             "persona_block": self._read_persona_block_content(),
-            "requested_tools": ["search", "extract"]
+            "requested_tools": {
+                "hayhooks": [  # internal mcp tools
+                    "search",
+                    "extract",
+                ],
+                "aws-documentation-mcp-server": [  # typescript docker
+                    "read_documentation",
+                    "search_documentation",
+                ],
+                "wikipedia-mcp-server": [  # python docker
+                    "findPage",
+                    "getPage",
+                ],
+            },
         }
-    
+
         create_open_webui_function_args = {
             "function_id": self._snake_case(agent_name),
             "function_name": f"{agent_name}",

@@ -65,6 +65,11 @@ services:
       timeout: 5s
       retries: 18
       start_period: 1s
+    #depends_on:
+      #wikipedia-mcp-server:
+      #  condition: service_healthy
+      #aws-documentation-mcp-server:
+      #  condition: service_healthy
 
   # Open WebUI is the front-end UI to Letta
   open-webui:
@@ -133,27 +138,15 @@ services:
       - CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
       - EMBEDDING_MODEL=google_ai/text-embedding-004
 
-  mermaid-mcp-server:
-    build: mcp/mermaid-mcp-server/
-    container_name: mermaid-mcp-server
-    ports:
-      - 9711:9711
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9711/"]
-      interval: 10s
-      timeout: 5s
-      retries: 18
-      start_period: 5s
-
   aws-documentation-mcp-server:
     build: mcp/aws-documentation-mcp-server/
     container_name: aws-documentation-mcp-server
     ports:
       - 9712:9712
     environment:
-      - FASTMCP_LOG_LEVEL=ERROR
+      - LOG_LEVEL=ERROR
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9712/"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9712/sse"]
       interval: 10s
       timeout: 5s
       retries: 18
@@ -165,7 +158,7 @@ services:
     ports:
       - 9713:9713
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9713/"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9713/sse"]
       interval: 10s
       timeout: 5s
       retries: 18
