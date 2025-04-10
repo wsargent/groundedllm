@@ -1,30 +1,34 @@
 import os
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
+
 from haystack import Pipeline, logging
 from haystack.components.builders.prompt_builder import PromptBuilder
-from haystack.components.converters import HTMLToDocument
-from haystack.components.fetchers import LinkContentFetcher
 from haystack.components.generators import OpenAIGenerator
-from haystack.components.preprocessors import DocumentCleaner
-from haystack.components.routers import ConditionalRouter
-from haystack.dataclasses import Document
 from haystack.utils import Secret
 
-from components.tavily_web_search import TavilyWebSearch
 from resources.utils import read_resource_file
+from components.tavily_web_search import TavilyWebSearch
 
-logger = logging.getLogger("search")
+logger = logging.getLogger("answer")
 
 
 class PipelineWrapper(BasePipelineWrapper):
     """
     A Haystack pipeline wrapper that runs a search query.
+
+    Input:
+      question (str): The user's query to search for and answer.
+
+    Output:
+      str: The generated answer based on the web search results.
     """
 
     def setup(self) -> None:
+        # Removed settings instantiation
+        # Use the imported utility function
         self.template = read_resource_file("search_prompt.md")
         self.pipeline = self.create_pipeline()
 
@@ -47,76 +51,28 @@ class PipelineWrapper(BasePipelineWrapper):
             model=os.getenv("SEARCH_MODEL"),
         )
 
-        # Extraction components (for the 'advanced' path)
-        fetcher = LinkContentFetcher()
-        converter = HTMLToDocument()
-        cleaner = DocumentCleaner()
-
-        # Define routes for the ConditionalRouter
-        routes = [
-            {
-                # If search_depth is 'advanced', extract URLs and send them to the fetcher
-                "condition": "{{ search_depth == 'advanced' }}",
-                "output": "{{ documents | map(attribute='meta.url') | list }}",
-                "output_name": "urls_to_fetch",
-                "output_type": List[str],
-            },
-            {
-                # If search_depth is 'basic', pass the original documents directly
-                "condition": "{{ search_depth == 'basic' }}",
-                "output": "{{ documents }}",
-                "output_name": "basic_documents",
-                "output_type": List[Document],
-            },
-        ]
-        router = ConditionalRouter(routes=routes)
-
-        # Build the pipeline
         pipe = Pipeline()
         pipe.add_component("search", search)
-        pipe.add_component("router", router)
-        pipe.add_component("fetcher", fetcher)
-        pipe.add_component("converter", converter)
-        pipe.add_component("cleaner", cleaner)
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
 
         # Connect components
-        # Input documents and search_depth go to the router
-        pipe.connect("search.documents", "router.documents")
-        # Note: TavilyWebSearch doesn't output search_depth, it's an input.
-        # We'll pass search_depth directly to the router in the run_api method.
-
-        # Advanced path: router -> fetcher -> converter -> cleaner -> prompt_builder
-        pipe.connect("router.urls_to_fetch", "fetcher.urls")
-        pipe.connect("fetcher.streams", "converter.sources")
-        pipe.connect("converter.documents", "cleaner.documents")
-        pipe.connect("cleaner.documents", "prompt_builder.documents")
-
-        # Basic path: router -> prompt_builder
-        pipe.connect("router.basic_documents", "prompt_builder.documents")
-
-        # Final connection to LLM
+        pipe.connect("search.documents", "prompt_builder.documents")
         pipe.connect("prompt_builder", "llm")
 
         return pipe
 
-    def run_api(
-        self,
-        question: str,
-        max_results: int,
-        search_depth: Literal["basic", "advanced"] = "basic",
-        include_domains: Optional[list[str]] = None,
-        exclude_domains: Optional[list[str]] = None,
-    ) -> str:
+    def run_api(self, question: str,
+                max_results: int, 
+                search_depth: Literal["basic", "advanced"] = "basic", 
+                include_domains: Optional[list[str]] = None,
+                exclude_domains: Optional[list[str]] = None) -> str:
         """
         Runs the search pipeline to answer a given question using web search results.
 
-        This method takes a user's question and performs a web search using Tavily.
-        Based on the `search_depth` parameter, it either uses the initial search result
-        snippets ("basic") or fetches and cleans the full content of the linked web pages
-        ("advanced"). It then constructs a prompt with the selected documents and
-        generates an answer using an LLM. Allows customization of search parameters.
+        This method takes a user's question, performs a web search using Tavily,
+        constructs a prompt with the search results, and generates an answer
+        using an LLM. It allows customization of the search parameters.
 
         Parameters
         ----------
@@ -125,10 +81,9 @@ class PipelineWrapper(BasePipelineWrapper):
         max_results : int
             The maximum number of search results to retrieve from Tavily.
         search_depth : Literal["basic", "advanced"], optional
-            Controls the search behavior. "basic" uses document snippets from the initial
-            search. "advanced" does a deeper search for context, and also fetches and
-            cleans the full content from result URLs, providing more context but potentially
-            taking longer. Defaults to "basic".
+            The depth of the web search. "basic" provides standard results,
+            while "advanced" uses more sophisticated techniques for higher relevance
+            at a higher cost (2 API credits vs 1). Defaults to "basic".
         include_domains : Optional[list[str]], optional
             A list of domains to specifically include in the search results. Defaults to None.
         exclude_domains : Optional[list[str]], optional
@@ -144,29 +99,28 @@ class PipelineWrapper(BasePipelineWrapper):
         RuntimeError
             If the pipeline fails to retrieve an answer from the LLM.
         """
-        log.trace(f"Running search pipeline with question: {question}")
+        log.trace(f"Running answer pipeline with question: {question}")
 
         result = self.pipeline.run(
-            {
-                "search": {
-                    "query": question,
-                    "search_depth": search_depth,
-                    "max_results": max_results,
-                    "include_domains": include_domains,
-                    "exclude_domains": exclude_domains,
-                },
-                "router": {
-                    "search_depth": search_depth
-                },
-                "prompt_builder": {"query": question},
-            }
+            {"search": {
+                "query": question,
+                "search_depth": search_depth,
+                "max_results": max_results,
+                "include_domains": include_domains,
+                "exclude_domains": exclude_domains
+            },
+            "prompt_builder": {"query": question}}
         )
 
-        logger.info(f"search: search result from pipeline {result}")
+        logger.info(f"answer: answer result from pipeline {result}")
 
+        # Assuming the LLM component is named 'llm' and returns replies
         if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
             reply = result["llm"]["replies"][0]
-            logger.info(f"search: reply is {reply}")
+            logger.info(f"answer: reply is {reply}")
             return reply
         else:
+            # Raise a proper exception instance
             raise RuntimeError("Error: Could not retrieve answer from the pipeline.")
+
+    # The duplicated _read_resource_file method is now removed.
