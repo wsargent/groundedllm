@@ -4,7 +4,7 @@ from typing import List
 
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
-from haystack import Pipeline
+from haystack import Pipeline, SuperComponent
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.converters import HTMLToDocument
 from haystack.components.fetchers import LinkContentFetcher
@@ -15,6 +15,7 @@ from haystack.utils import Secret
 from resources.utils import read_resource_file
 
 logger = logging.getLogger("extract")
+
 
 
 class PipelineWrapper(BasePipelineWrapper):
@@ -35,10 +36,28 @@ class PipelineWrapper(BasePipelineWrapper):
         self.template = read_resource_file("extract_prompt.md")
         self.pipeline = self.create_pipeline()
 
-    def create_pipeline(self) -> Pipeline:
+    def create_extractor_pipeline(self):
+        extraction_sub_pipeline = Pipeline()
         fetcher = LinkContentFetcher()
         converter = HTMLToDocument()
         cleaner = DocumentCleaner()
+        extraction_sub_pipeline.add_component("fetcher", fetcher)
+        extraction_sub_pipeline.add_component("converter", converter)
+        extraction_sub_pipeline.add_component("cleaner", cleaner)
+
+        extraction_sub_pipeline.connect("fetcher.streams", "converter.sources")
+        extraction_sub_pipeline.connect("converter.documents", "cleaner.documents")
+
+        extraction_component = SuperComponent(
+            pipeline=extraction_sub_pipeline,
+            # Map the external input name 'urls' to the internal 'fetcher.urls' input socket
+            input_mapping={"urls": ["fetcher.urls"]},
+            output_mapping={"cleaner.documents": "documents"}
+        )
+        return extraction_component
+
+    def create_pipeline(self) -> Pipeline:
+
         prompt_builder = PromptBuilder(
             template=self.template, required_variables=["query"]
         )
@@ -51,14 +70,11 @@ class PipelineWrapper(BasePipelineWrapper):
         )
 
         pipe = Pipeline()
-        pipe.add_component("fetcher", fetcher)
-        pipe.add_component("converter", converter)
-        pipe.add_component("cleaner", cleaner)
-        pipe.add_component("llm", llm)
+        pipe.add_component("html_extractor", self.create_extractor_pipeline())
         pipe.add_component("prompt_builder", prompt_builder)
-        pipe.connect("fetcher.streams", "converter.sources")
-        pipe.connect("converter.documents", "cleaner.documents")
-        pipe.connect("cleaner.documents", "prompt_builder.documents")
+        pipe.add_component("llm", llm)
+
+        pipe.connect("html_extractor.documents", "prompt_builder.documents")
         pipe.connect("prompt_builder", "llm")
 
         return pipe
@@ -87,15 +103,11 @@ class PipelineWrapper(BasePipelineWrapper):
             raise RuntimeError("Pipeline not initialized during setup.")
 
         result = self.pipeline.run(
-            {"fetcher": {"urls": urls}, "prompt_builder": {"query": question}}
+            {"html_extractor": {"urls": urls}, "prompt_builder": {"query": question}}
         )
-        # Assuming the LLM component is named 'llm' and returns replies
         if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
             reply = result["llm"]["replies"][0]
             logger.info(f"answer: reply is {reply}")
             return reply
         else:
-            # Raise a proper exception instance
             raise RuntimeError("Error: Could not retrieve answer from the pipeline.")
-
-    # The duplicated _read_resource_file method is now removed.
