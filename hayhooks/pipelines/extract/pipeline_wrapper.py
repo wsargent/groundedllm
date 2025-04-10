@@ -31,8 +31,6 @@ class PipelineWrapper(BasePipelineWrapper):
     # from haystack.components.converters import PyPDFToDocumentConverter
 
     def setup(self) -> None:
-        # Removed settings instantiation
-        # Use the imported utility function
         self.template = read_resource_file("extract_prompt.md")
         self.pipeline = self.create_pipeline()
 
@@ -50,7 +48,6 @@ class PipelineWrapper(BasePipelineWrapper):
 
         extraction_component = SuperComponent(
             pipeline=extraction_sub_pipeline,
-            # Map the external input name 'urls' to the internal 'fetcher.urls' input socket
             input_mapping={"urls": ["fetcher.urls"]},
             output_mapping={"cleaner.documents": "documents"}
         )
@@ -62,12 +59,12 @@ class PipelineWrapper(BasePipelineWrapper):
             template=self.template, required_variables=["query"]
         )
 
-        # Revert to using os.getenv and Secret
-        llm = OpenAIGenerator(
-            api_key=Secret.from_env_var("OPENAI_API_KEY"),
-            api_base_url=os.getenv("OPENAI_API_BASE"),
-            model=os.getenv("EXTRACT_MODEL"),
-        )
+        # Ideally I'd like to get the model at pipeline execution but
+        # that's not an option here
+        model = os.getenv("EXTRACT_MODEL")
+        if model is None:
+            raise ValueError("No model found in EXTRACT_MODEL environment variable!")
+        llm = self.get_extract_generator(model)
 
         pipe = Pipeline()
         pipe.add_component("html_extractor", self.create_extractor_pipeline())
@@ -78,6 +75,13 @@ class PipelineWrapper(BasePipelineWrapper):
         pipe.connect("prompt_builder", "llm")
 
         return pipe
+
+    def get_extract_generator(self, model) -> OpenAIGenerator:
+        return OpenAIGenerator(
+            api_key=Secret.from_env_var("OPENAI_API_KEY"),
+            api_base_url=os.getenv("OPENAI_API_BASE"),
+            model=model
+        )
 
     def run_api(self, urls: List[str], question: str) -> str:
         """
@@ -102,8 +106,12 @@ class PipelineWrapper(BasePipelineWrapper):
         if not hasattr(self, "pipeline") or not self.pipeline:
             raise RuntimeError("Pipeline not initialized during setup.")
 
+
         result = self.pipeline.run(
-            {"html_extractor": {"urls": urls}, "prompt_builder": {"query": question}}
+            {
+                "html_extractor": {"urls": urls}, # extraction bit, this can be async
+             "prompt_builder": {"query": question}
+         }
         )
         if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
             reply = result["llm"]["replies"][0]

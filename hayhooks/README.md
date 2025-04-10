@@ -63,8 +63,8 @@ This pipeline takes URLs, scrapes the contents, and feeds it to an LLM with a la
 
 ```bash
 hayhooks pipeline run extract \
-    --param 'urls=[https://gist.github.com/wsargent/fc99042002ce3d6067cfde3fa04ec6ca]' \
-    --param 'query="What is the contents of this URL?  Provide a detailed summary."'
+    --param 'urls=["https://example.com"]' \
+    --param 'question="What are the contents of this URL?  Provide a detailed summary."'
 ```
 
 ### Provision Search Agent Pipeline
