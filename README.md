@@ -90,6 +90,7 @@ Some example preferences:
 * I am using Haystack 2.12, please specify 2.x when searching for Haystack docs.
 * When searching for AWS documentation, prefer using documentation from https://docs.aws.amazon.com.
 * Only give me sample code examples when I explicitly ask you to.
+* Show me inline images when you provide results from Wikipedia pages.
 
 Because Letta doesn't always store conversations in archival memory, you also want to ask it to explicitly summarize and store the conversation when you're changing topics.  This lets you take notes and store bookmarks when you want to bring up an old topic for later.
 
@@ -108,6 +109,23 @@ To completely destroy all resources (including all your data!) and rebuild from 
 ```bash
 docker compose down -v --remove-orphans && docker compose up --build
 ```
+
+## MCP Servers
+
+The search agent is configured with tools through Letta's MCP support with some MCP servers.
+
+* [wikipedia-mcp-server](https://github.com/scotthelm/wikipedia-mcp-server).
+* [aws-documentation-mcp-server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/).
+* Hayhooks itself provides the `search` and `extract` tools for fine-grained control over Tavily.
+
+The search will use these as appropriate, but you can prompt it by asking, i.e. "Use the recommend tool to recommend documentation for <sample AWS doc url>" and it will use the `recommend` tool.
+
+You can add your own MCP servers.  To do this is a four step process:
+
+1. Find the MCP server you want, and create an `mcp/my-mcp-server` directory, then set up the `Dockerfile` to encapsulate it with a proxy that exposes it over SSE.
+2. Add the MCP docker container to `docker-compose.yml`.
+3. Add the URL to the docker container's endpoint in `letta_mcp_config.json`.
+4. Add the MCP tools that you want the search agent provisioned with in the `hayhooks/provision_search_agent/pipeline_wrapper.py` file.
 
 ## Composition
 
