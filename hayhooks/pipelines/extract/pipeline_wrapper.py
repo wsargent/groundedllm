@@ -4,7 +4,7 @@ from typing import List
 
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
-from haystack import Pipeline, SuperComponent
+from haystack import Pipeline, SuperComponent, AsyncPipeline
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.converters import HTMLToDocument
 from haystack.components.fetchers import LinkContentFetcher
