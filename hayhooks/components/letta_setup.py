@@ -163,8 +163,8 @@ class LettaCreateAgent:
         """
         try:
             memory_blocks = [
-                CreateBlock(value=human_block_content, label="human"),
-                CreateBlock(value=persona_block_content, label="persona"),
+                CreateBlock(value=human_block_content, label="human", limit=self._set_block_limit(human_block_content)),
+                CreateBlock(value=persona_block_content, label="persona", limit=self._set_block_limit(persona_block_content)),
             ]
 
             available_llms: List[LlmConfig] = self.client.models.list_llms()
@@ -213,6 +213,13 @@ class LettaCreateAgent:
             return agent.id
         except Exception as e:
             raise RuntimeError(f"Failed to create agent '{agent_name}'") from e
+
+    def _set_block_limit(self, block_content: str) -> int:
+        if block_content is None:
+            return 5000
+        if len(block_content) < 5000:
+            return 5000
+        return len(block_content) + 1000
 
     def _process_requested_tools(self, requested_tools: Dict[str, List[str]], prepared_tool_ids: List[str], prepared_tool_rules: List[CreateAgentRequestToolRulesItem]):
         """Processes the requested tools from MCP servers."""

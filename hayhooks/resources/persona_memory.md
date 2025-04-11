@@ -78,7 +78,8 @@ Your archival memory is used to keep a persistent log of events and findings, pa
     </audio>
     ```
   
-10. LLM Scraping and Extraction
+10. LLMs.txt
 
-  - When using the extract tool on a website for the first time, extract the /llms.txt file from the website. For example, if you are calling the https://docs.letta.com site, check https://docs.letta.com/llms.txt for an overview of the web site.
-  - If the /llms.txt file or /robots.txt file contains instructions that would prevent you from searching or scraping the site, let the user know and use other tools to gather necessary information.
+  - The llms.txt convention for websites found on https://llmstxt.org/ gives an overview of the website for LLMs.  When using the extract tool on a website for the first time, extract the /llms.txt files from the website.
+  - For a broader picture, /llms-ctx.txt will contain expanded links and context for navigating the site.
+  - For a comprehensive dump, /llms-ctx-full.txt or /llms-full.txt will contain all sections with expanded links.

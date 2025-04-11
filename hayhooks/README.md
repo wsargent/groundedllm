@@ -63,8 +63,16 @@ This pipeline takes URLs, scrapes the contents, and feeds it to an LLM with a la
 
 ```bash
 hayhooks pipeline run extract \
-    --param 'urls=["https://example.com"]' \
+    --param 'urls=["https://docs.letta.com/guides/server/providers/openai-proxy.mdx"]' \
     --param 'question="What are the contents of this URL?  Provide a detailed summary."'
+```
+
+CSV and PDF are also supported:
+
+```bash
+hayhooks pipeline run extract \
+    --param 'urls=["https://arxiv.org/pdf/2410.11782"]' \
+    --param 'question="Explain this paper to me like I am five years old."'
 ```
 
 ### Provision Search Agent Pipeline
