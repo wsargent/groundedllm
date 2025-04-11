@@ -114,9 +114,10 @@ docker compose down -v --remove-orphans && docker compose up --build
 
 The search agent is configured with tools through Letta's MCP support with some MCP servers.
 
-* [wikipedia-mcp-server](https://github.com/scotthelm/wikipedia-mcp-server).
-* [aws-documentation-mcp-server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/).
+* Wikipedia search is provided by [wikipedia-mcp-server](https://github.com/scotthelm/wikipedia-mcp-server).
+* AWS documentation is provided by [aws-documentation-mcp-server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/).
 * Hayhooks itself provides the `search` and `extract` tools for fine-grained control over Tavily.
+* Letta MCP Server is from [letta-mcp-server](https://github.com/oculairmedia/Letta-MCP-server) but is not provisioned automatically.
 
 The search will use these as appropriate, but you can prompt it by asking, i.e. "Use the recommend tool to recommend documentation for <sample AWS doc url>" and it will use the `recommend` tool.
 
@@ -126,6 +127,8 @@ You can add your own MCP servers.  To do this is a four step process:
 2. Add the MCP docker container to `docker-compose.yml`.
 3. Add the URL to the docker container's endpoint in `letta_mcp_config.json`.
 4. Add the MCP tools that you want the search agent provisioned with in the `hayhooks/provision_search_agent/pipeline_wrapper.py` file.
+
+It can be some work to set up credentials and work out how to set up the proxy for any given MCP server, so you should be technically comfortable with some futzing here.
 
 ## Composition
 
