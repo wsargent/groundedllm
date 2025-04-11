@@ -1,26 +1,19 @@
 import logging
 import os
-from typing import List, Any  # Added Any
+from typing import List, Any
 import json
 from urllib.parse import urlparse
 
-from haystack.components.converters import MarkdownToDocument, PyPDFToDocument, TextFileToDocument
-from haystack.components.converters.csv import CSVToDocument
-
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
-from haystack.components.joiners import DocumentJoiner
-from haystack.components.routers import FileTypeRouter
 
-from haystack import Pipeline, SuperComponent
+from haystack import Pipeline
 from haystack.components.builders.prompt_builder import PromptBuilder
-from haystack.components.converters import HTMLToDocument
-from haystack.components.fetchers import LinkContentFetcher
 from haystack.components.generators import OpenAIGenerator
-from haystack.components.preprocessors import DocumentCleaner
 from haystack.utils import Secret
 
 from resources.utils import read_resource_file
+from components.content_extraction import build_content_extraction_component
 
 logger = logging.getLogger("extract")
 
@@ -37,78 +30,8 @@ class PipelineWrapper(BasePipelineWrapper):
         self.template = read_resource_file("extract_prompt.md")
         self.pipeline = self.create_pipeline()
 
-    def create_extractor_pipeline(self):
-        preprocessing_pipeline = Pipeline()
-        fetcher = LinkContentFetcher()
-        document_cleaner = DocumentCleaner()
-
-        # Letta has text/mdx for some reason :-/
-        mime_types = [
-          "text/plain",
-          "text/html",
-          "text/csv",
-          "text/markdown",
-          "text/mdx",
-          "application/pdf"
-        ]
-        additional_mimetypes = {
-          "text/mdx": ".mdx"
-        }
-        file_type_router = FileTypeRouter(mime_types=mime_types,
-                                          additional_mimetypes=additional_mimetypes)
-        text_file_converter = TextFileToDocument()
-        html_converter = HTMLToDocument()
-        markdown_converter = MarkdownToDocument()
-        mdx_converter = MarkdownToDocument()
-        pdf_converter = PyPDFToDocument()
-        csv_converter = CSVToDocument()
-        #docx_converter = DOCXToDocument(table_format=DOCXTableFormat.CSV)
-        document_joiner = DocumentJoiner()
-
-        preprocessing_pipeline.add_component(instance=fetcher, name="fetcher")
-        preprocessing_pipeline.add_component(instance=file_type_router, name="file_type_router")
-
-        preprocessing_pipeline.add_component(instance=text_file_converter, name="text_file_converter")
-        preprocessing_pipeline.add_component(instance=markdown_converter, name="markdown_converter")
-        preprocessing_pipeline.add_component(instance=html_converter, name="html_converter")
-        preprocessing_pipeline.add_component(instance=pdf_converter, name="pypdf_converter")
-        preprocessing_pipeline.add_component(instance=csv_converter, name="csv_converter")
-        #preprocessing_pipeline.add_component(instance=docx_converter, name="docx_converter")
-        preprocessing_pipeline.add_component(instance=mdx_converter, name="mdx_converter")
-
-        preprocessing_pipeline.add_component(instance=document_joiner, name="document_joiner")
-        preprocessing_pipeline.add_component(instance=document_cleaner, name="document_cleaner")
-
-        # Could this be an async pipeline?
-        preprocessing_pipeline.connect("fetcher.streams", "file_type_router.sources")
-
-        preprocessing_pipeline.connect("file_type_router.text/plain", "text_file_converter.sources")
-        preprocessing_pipeline.connect("file_type_router.text/html", "html_converter.sources")
-        preprocessing_pipeline.connect("file_type_router.text/csv", "csv_converter.sources")
-        preprocessing_pipeline.connect("file_type_router.application/pdf", "pypdf_converter.sources")
-        preprocessing_pipeline.connect("file_type_router.text/markdown", "markdown_converter.sources")
-        preprocessing_pipeline.connect("file_type_router.text/mdx", "mdx_converter.sources")
-
-        preprocessing_pipeline.connect("text_file_converter", "document_joiner")
-        preprocessing_pipeline.connect("html_converter", "document_joiner")
-        preprocessing_pipeline.connect("csv_converter", "document_joiner")
-        preprocessing_pipeline.connect("pypdf_converter", "document_joiner")
-        preprocessing_pipeline.connect("markdown_converter", "document_joiner")
-        preprocessing_pipeline.connect("mdx_converter", "document_joiner")
-
-        preprocessing_pipeline.connect("document_joiner", "document_cleaner")
-
-        extraction_component = SuperComponent(
-            pipeline=preprocessing_pipeline,
-            input_mapping={"urls": ["fetcher.urls"]},
-            output_mapping={"document_cleaner.documents": "documents"},
-        )
-        return extraction_component
-
     def create_pipeline(self) -> Pipeline:
-        prompt_builder = PromptBuilder(
-            template=self.template, required_variables=["query"]
-        )
+        prompt_builder = PromptBuilder(template=self.template)
 
         # Ideally I'd like to get the model at pipeline execution but
         # that's not an option here
@@ -118,7 +41,7 @@ class PipelineWrapper(BasePipelineWrapper):
         llm = self.get_extract_generator(model)
 
         pipe = Pipeline()
-        pipe.add_component("content_extractor", self.create_extractor_pipeline())
+        pipe.add_component("content_extractor", build_content_extraction_component())
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
 
