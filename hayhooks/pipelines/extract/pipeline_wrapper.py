@@ -201,7 +201,7 @@ class PipelineWrapper(BasePipelineWrapper):
 
         return cleaned_urls
 
-    def run_api(self, urls: List[str], question: str) -> str:
+    def run_api(self, urls: List[str], question: str, verbatim: bool = False) -> str:
         """
         This tool fetches HTML, Markdown, PDF, or plain text web pages from URLs and sends them to an LLM model
         that can answer questions about the content of the web pages.
@@ -214,6 +214,9 @@ class PipelineWrapper(BasePipelineWrapper):
             The URLs of the pages to extract.
         question: str
             The instructions to give and questions to ask about the content of the web pages.
+            To get the full content of the webpage, say "Give me the contents verbatim" as the question.
+        verbatim: bool, optional
+            if true, renders the full content of the URLs as Markdown documents.
 
         Returns
         -------
@@ -225,6 +228,10 @@ class PipelineWrapper(BasePipelineWrapper):
             raise RuntimeError("Pipeline not initialized during setup.")
 
         clean_urls = self._clean_urls(urls)
+
+        # Dirty hack
+        if verbatim is True:
+            question = "Give me the documents verbatim."
 
         result = self.pipeline.run(
             {
