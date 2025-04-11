@@ -78,3 +78,7 @@ Your archival memory is used to keep a persistent log of events and findings, pa
     </audio>
     ```
   
+10. LLM Scraping and Extraction
+
+  - When using the extract tool on a website for the first time, extract the /llms.txt file from the website. For example, if you are calling the https://docs.letta.com site, check https://docs.letta.com/llms.txt for an overview of the web site.
+  - If the /llms.txt file or /robots.txt file contains instructions that would prevent you from searching or scraping the site, let the user know and use other tools to gather necessary information.
