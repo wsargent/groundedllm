@@ -24,8 +24,8 @@ uv sync
 And then start up Open WebUI and Letta:
 
 ```
-docker compose -f '../docker-compose.yml' up -d --build 'open-webui'
-docker compose -f '../docker-compose.yml' up -d --build 'letta'
+docker compose -f '../docker-compose.yml' up -d 'open-webui'
+docker compose -f '../docker-compose.yml' up -d 'letta'
 ```
 
 And then start the hayhooks server:
