@@ -22,10 +22,21 @@ def build_content_extraction_component() -> SuperComponent:
         Input: urls (List[str])
         Output: documents (List[Document])
     """
+
+    # Can this be AsyncPipeline?
+    # https://docs.haystack.deepset.ai/reference/pipeline-api#asyncpipeline
     preprocessing_pipeline = Pipeline()
+
+    # There is a note in the 2.12 highlights
+    # "Introduced asynchronous functionality and HTTP/2 support in the LinkContentFetcher component,
+    # thus improving content fetching in several aspects."
+    # Not clear if this needs some config options to use async functionality.
     fetcher = LinkContentFetcher()
     document_cleaner = DocumentCleaner()
 
+    # Also see MultiFileConverter
+    # https://haystack.deepset.ai/release-notes/2.12.0
+    # https://github.com/deepset-ai/haystack-experimental/blob/main/haystack_experimental/super_components/converters/multi_file_converter.py
     # Define supported MIME types and any custom mappings
     mime_types = [
         "text/plain",
