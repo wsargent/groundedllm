@@ -21,7 +21,7 @@ with LazyImport("Run 'pip install \"mcp\"' to install MCP.") as mcp_import:
 #uvicorn_access = logging.getLogger("uvicorn.access")
 #uvicorn_access.disabled = True
 
-HAYSTACK_DETAILED_TRACING=True
+HAYSTACK_DETAILED_TRACING=False
 
 if HAYSTACK_DETAILED_TRACING:
     logging.basicConfig(format="%(levelname)s - %(name)s -  %(message)s", level=logging.WARNING)

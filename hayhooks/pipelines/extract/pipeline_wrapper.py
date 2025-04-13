@@ -26,12 +26,15 @@ class PipelineWrapper(BasePipelineWrapper):
     Output: The answer based on the contents of the URLs.
     """
 
-    def setup(self) -> None:
+    def __init__(self):
+        super().__init__()
         self.template = read_resource_file("extract_prompt.md")
+
+    def setup(self) -> None:
         self.pipeline = self.create_pipeline()
 
     def create_pipeline(self) -> Pipeline:
-        prompt_builder = PromptBuilder(template=self.template)
+        prompt_builder = PromptBuilder(template=self.template, required_variables=["query", "documents"])
 
         # Ideally I'd like to get the model at pipeline execution but
         # that's not an option here
