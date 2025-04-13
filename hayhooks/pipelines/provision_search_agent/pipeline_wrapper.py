@@ -4,7 +4,7 @@ import re
 
 import yaml
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
-from haystack import Pipeline
+from haystack import AsyncPipeline
 from haystack.utils import Secret
 from letta_client import Letta
 
@@ -54,7 +54,7 @@ class PipelineWrapper(BasePipelineWrapper):
                         are not set.
         """
         # Removed settings instantiation
-        pipe = Pipeline()
+        pipe = AsyncPipeline()
 
         # Revert to using os.getenv
         letta_base_url = os.getenv("LETTA_BASE_URL")

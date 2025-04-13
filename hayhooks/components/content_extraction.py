@@ -1,4 +1,4 @@
-from haystack import Pipeline, SuperComponent
+from haystack import SuperComponent
 from haystack.components.converters import (
     MarkdownToDocument,
     PyPDFToDocument,
