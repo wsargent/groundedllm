@@ -20,6 +20,7 @@ import time
 
 name = "Letta Pipe"
 
+
 def setup_logger():
     logger = logging.getLogger(name)
     if not logger.handlers:
@@ -293,7 +294,9 @@ class Pipe:
         if isinstance(user_message, str):
             user_message = {"role": "user", "content": user_message}
 
-        await self.emit_status("info", f"{self.valves.Custom_Name} is thinking...", False)
+        await self.emit_status(
+            "info", f"{self.valves.Custom_Name} is thinking...", False
+        )
 
         try:
             response = await self.get_letta_response(user_message)

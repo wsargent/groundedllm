@@ -7,6 +7,7 @@ from haystack.utils import Secret
 
 logger = logging.getLogger("openwebui_setup")
 
+
 @component
 class CreateFunction:
     """Handles the setup and configuration of a (mostly) generic Open WebUI function pipe."""
@@ -33,7 +34,7 @@ class CreateFunction:
         function_name: str,
         function_description: str,
         function_content: str,
-        function_manifest: dict
+        function_manifest: dict,
     ) -> dict:
         """
         Orchestrates the setup of the configured function in Open WebUI.

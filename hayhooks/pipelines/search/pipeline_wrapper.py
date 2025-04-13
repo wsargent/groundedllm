@@ -62,11 +62,14 @@ class PipelineWrapper(BasePipelineWrapper):
 
         return pipe
 
-    def run_api(self, question: str,
-                max_results: int, 
-                search_depth: Literal["basic", "advanced"] = "basic", 
-                include_domains: Optional[list[str]] = None,
-                exclude_domains: Optional[list[str]] = None) -> str:
+    def run_api(
+        self,
+        question: str,
+        max_results: int,
+        search_depth: Literal["basic", "advanced"] = "basic",
+        include_domains: Optional[list[str]] = None,
+        exclude_domains: Optional[list[str]] = None,
+    ) -> str:
         """
         Runs the search pipeline to answer a given question using web search results.
 
@@ -102,14 +105,16 @@ class PipelineWrapper(BasePipelineWrapper):
         log.trace(f"Running answer pipeline with question: {question}")
 
         result = self.pipeline.run(
-            {"search": {
-                "query": question,
-                "search_depth": search_depth,
-                "max_results": max_results,
-                "include_domains": include_domains,
-                "exclude_domains": exclude_domains
-            },
-            "prompt_builder": {"query": question}}
+            {
+                "search": {
+                    "query": question,
+                    "search_depth": search_depth,
+                    "max_results": max_results,
+                    "include_domains": include_domains,
+                    "exclude_domains": exclude_domains,
+                },
+                "prompt_builder": {"query": question},
+            }
         )
 
         logger.info(f"answer: answer result from pipeline {result}")

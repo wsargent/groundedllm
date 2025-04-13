@@ -3,10 +3,18 @@ import logging
 from typing import Dict, List, Optional, Sequence
 
 from haystack import component
-from letta_client import ChildToolRule, ContinueToolRule, CreateAgentRequestToolRulesItem, CreateBlock, Letta, LlmConfig, McpTool, TerminalToolRule
+from letta_client import (
+    ChildToolRule,
+    ContinueToolRule,
+    CreateAgentRequestToolRulesItem,
+    CreateBlock,
+    Letta,
+    LlmConfig,
+    McpTool,
+    TerminalToolRule,
+)
 
 logger = logging.getLogger("letta_setup")
-
 
 
 @component
@@ -17,6 +25,7 @@ class LettaCreateAgent:
     """
 
     DEFAULT_RETURN_CHAR_LIMIT = 50000
+
     def __init__(self, letta: Letta):
         """
         Initializes the setup class with Letta connection details.
@@ -33,7 +42,7 @@ class LettaCreateAgent:
         embedding_model: str,
         human_block: str,
         persona_block: str,
-        requested_tools: Dict[str, List[str]]
+        requested_tools: Dict[str, List[str]],
     ) -> Dict[str, any]:
         """
         Finds an existing Letta agent by name or creates a new one with specified tools.
@@ -73,25 +82,31 @@ class LettaCreateAgent:
         # core_memory_replace or core_memory_append -- the continue tool rules are
         # already in place on archival memory tools but not on core memory tools.
         prepared_tool_rules: List[CreateAgentRequestToolRulesItem] = [
-            #ContinueToolRule("core_memory_replace"),
-            #ContinueToolRule("core_memory_append")
+            # ContinueToolRule("core_memory_replace"),
+            # ContinueToolRule("core_memory_append")
         ]
         try:
             logger.info(f"Starting setup for agent '{agent_name}'...")
 
-            self._process_requested_tools(requested_tools, prepared_tool_ids, prepared_tool_rules)
+            self._process_requested_tools(
+                requested_tools, prepared_tool_ids, prepared_tool_rules
+            )
 
             # --- Agent Existence Check ---
             agents = self.client.agents.list(name=agent_name)
             found_agent_id: Optional[str] = None
             if len(agents) == 1:
-                logger.info(f"Found existing agent '{agent_name}' with ID: {agents[0].id}")
+                logger.info(
+                    f"Found existing agent '{agent_name}' with ID: {agents[0].id}"
+                )
                 # Note: We don't currently verify if the existing agent has the requested tools.
                 found_agent_id = agents[0].id
 
             # --- Agent Creation (if needed) ---
             if found_agent_id is None:
-                logger.info(f"Agent '{agent_name}' not found, creating agent with prepared tools...")
+                logger.info(
+                    f"Agent '{agent_name}' not found, creating agent with prepared tools..."
+                )
                 agent_id = self._create_agent(
                     agent_name=agent_name,
                     human_block_content=human_block,
@@ -99,7 +114,7 @@ class LettaCreateAgent:
                     letta_embedding=embedding_model,
                     letta_model=chat_model,
                     tool_ids=prepared_tool_ids,
-                    tool_rules=prepared_tool_rules
+                    tool_rules=prepared_tool_rules,
                 )
                 logger.info(f"Created new agent '{agent_name}' with ID: {agent_id}")
             else:
@@ -112,12 +127,13 @@ class LettaCreateAgent:
             return {"agent_id": agent_id, "attached_tool_ids": prepared_tool_ids}
 
         except Exception as e:
-            logger.error(f"An unexpected error occurred during Letta agent setup for '{agent_name}': {e}", exc_info=True)
+            logger.error(
+                f"An unexpected error occurred during Letta agent setup for '{agent_name}': {e}",
+                exc_info=True,
+            )
             # Return agent_id if found, otherwise re-raise or return error structure?
             # For now, re-raise to indicate failure.
-            raise RuntimeError(
-                f"Failed Letta agent setup for '{agent_name}'"
-            ) from e
+            raise RuntimeError(f"Failed Letta agent setup for '{agent_name}'") from e
 
     def _create_agent(
         self,
@@ -127,7 +143,7 @@ class LettaCreateAgent:
         letta_model: str,
         letta_embedding: str,
         tool_ids: List[str],
-        tool_rules: Optional[Sequence[CreateAgentRequestToolRulesItem]] = None
+        tool_rules: Optional[Sequence[CreateAgentRequestToolRulesItem]] = None,
     ) -> str:
         """
         Creates a new Letta agent with the specified configuration and tools.
@@ -148,7 +164,7 @@ class LettaCreateAgent:
             A list of Letta tool IDs to attach to the agent during creation.
         tool_rules:
             An optional list of tool rules to attach to the agent during creation.
-            
+
         Returns:
         --------
         str:
@@ -163,8 +179,16 @@ class LettaCreateAgent:
         """
         try:
             memory_blocks = [
-                CreateBlock(value=human_block_content, label="human", limit=self._set_block_limit(human_block_content)),
-                CreateBlock(value=persona_block_content, label="persona", limit=self._set_block_limit(persona_block_content)),
+                CreateBlock(
+                    value=human_block_content,
+                    label="human",
+                    limit=self._set_block_limit(human_block_content),
+                ),
+                CreateBlock(
+                    value=persona_block_content,
+                    label="persona",
+                    limit=self._set_block_limit(persona_block_content),
+                ),
             ]
 
             available_llms: List[LlmConfig] = self.client.models.list_llms()
@@ -200,7 +224,7 @@ class LettaCreateAgent:
                 max_reasoning_tokens=max_reasoning_tokens,
                 max_tokens=max_tokens,
                 tool_ids=tool_ids,
-                tool_rules=tool_rules
+                tool_rules=tool_rules,
             )
             logger.info(
                 f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools."
@@ -221,7 +245,12 @@ class LettaCreateAgent:
             return 5000
         return len(block_content) + 1000
 
-    def _process_requested_tools(self, requested_tools: Dict[str, List[str]], prepared_tool_ids: List[str], prepared_tool_rules: List[CreateAgentRequestToolRulesItem]):
+    def _process_requested_tools(
+        self,
+        requested_tools: Dict[str, List[str]],
+        prepared_tool_ids: List[str],
+        prepared_tool_rules: List[CreateAgentRequestToolRulesItem],
+    ):
         """Processes the requested tools from MCP servers."""
         if requested_tools:
             # Iterate over each MCP server and its requested tools
@@ -249,7 +278,10 @@ class LettaCreateAgent:
                             if tool_id:
                                 prepared_tool_ids.append(tool_id)
                                 # XXX For now, hardcode requested rules...
-                                tool_rule = ChildToolRule(tool_name=mcp_tool.name, children=["archival_memory_insert"])
+                                tool_rule = ChildToolRule(
+                                    tool_name=mcp_tool.name,
+                                    children=["archival_memory_insert"],
+                                )
                                 prepared_tool_rules.append(tool_rule)
                             else:
                                 logger.warning(
@@ -295,7 +327,9 @@ class LettaCreateAgent:
                     mcp_tool_name=tool_name,
                 )
                 tool_id = tool.id
-                logger.info(f"Created Letta tool '{tool_name}' (ID: {tool_id}) from MCP.")
+                logger.info(
+                    f"Created Letta tool '{tool_name}' (ID: {tool_id}) from MCP."
+                )
 
             # Modify the return character limit (do this even for existing tools)
             # 6000 is a pokey function output size, we can do better
