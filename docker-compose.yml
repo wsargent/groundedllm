@@ -165,7 +165,7 @@ services:
       start_period: 5s
 
   letta-mcp-server:
-    build: mcp/letta-mcp-server/
+    image: ghcr.io/oculairmedia/letta-mcp-server:latest
     ports:
       - 9714:9714
     environment:
