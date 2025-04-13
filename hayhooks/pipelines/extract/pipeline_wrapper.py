@@ -18,6 +18,7 @@ from components.content_extraction import build_content_extraction_component
 
 logger = logging.getLogger("extract")
 
+
 class PipelineWrapper(BasePipelineWrapper):
     """
     This pipeline extracts content from a URL and sends it to a model that can
@@ -35,7 +36,9 @@ class PipelineWrapper(BasePipelineWrapper):
         self.pipeline = self.create_pipeline()
 
     def create_pipeline(self) -> AsyncPipeline:
-        prompt_builder = PromptBuilder(template=self.template, required_variables=["query", "documents"])
+        prompt_builder = PromptBuilder(
+            template=self.template, required_variables=["query", "documents"]
+        )
 
         # Ideally I'd like to get the model at pipeline execution but
         # that's not an option here
@@ -128,7 +131,6 @@ class PipelineWrapper(BasePipelineWrapper):
 
         return cleaned_urls
 
-
     def run_api(self, urls: List[str], question: str, verbatim: bool = False) -> str:
         """
         This tool fetches HTML, Markdown, PDF, or plain text web pages from URLs and sends them to an LLM model
@@ -165,9 +167,7 @@ class PipelineWrapper(BasePipelineWrapper):
         # is not async so there's no point in calling run_async or run_async_generator.
         result = self.pipeline.run(
             {
-                "content_extractor": {
-                    "urls": clean_urls
-                },
+                "content_extractor": {"urls": clean_urls},
                 "prompt_builder": {"query": question},
             }
         )

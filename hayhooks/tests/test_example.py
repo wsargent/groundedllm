@@ -1,6 +1,7 @@
 from haystack.components.routers import ConditionalRouter
 from typing import List
 
+
 def test_conditional_router():
     """Test conditional router works."""
 
@@ -22,4 +23,4 @@ def test_conditional_router():
     kwargs = {"streams": [1, 2, 3], "query": "Haystack"}
     result = router.run(**kwargs)
 
-    assert result["enough_streams"] == [1,2,3]
+    assert result["enough_streams"] == [1, 2, 3]
