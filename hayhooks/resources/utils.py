@@ -5,8 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 def read_resource_file(relative_path: str) -> str:
-    """
-    Reads content from a resource file located within the 'resources' package.
+    """Reads content from a resource file located within the 'resources' package.
 
     Uses importlib.resources for reliable access to package data files,
     making it suitable for use even when the application is packaged.
@@ -19,6 +18,7 @@ def read_resource_file(relative_path: str) -> str:
 
     Raises:
         RuntimeError: If the file cannot be found or read.
+
     """
     try:
         # Use importlib.resources to access package data files reliably
@@ -33,14 +33,10 @@ def read_resource_file(relative_path: str) -> str:
             f"Could not find resource file at relative path '{relative_path}' using package 'resources'. Full path attempted: {package_resources}/{relative_path}",
             exc_info=True,
         )
-        raise RuntimeError(
-            f"Could not find resource file '{relative_path}' within the 'resources' package."
-        ) from e
+        raise RuntimeError(f"Could not find resource file '{relative_path}' within the 'resources' package.") from e
     except Exception as e:
         logger.error(
             f"An error occurred while reading resource file '{relative_path}' using package 'resources'. Full path attempted: {package_resources}/{relative_path}",
             exc_info=True,
         )
-        raise RuntimeError(
-            f"An error occurred while reading '{relative_path}' from the 'resources' package."
-        ) from e
+        raise RuntimeError(f"An error occurred while reading '{relative_path}' from the 'resources' package.") from e

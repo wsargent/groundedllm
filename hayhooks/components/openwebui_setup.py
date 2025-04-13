@@ -1,7 +1,7 @@
-import requests
 import json
-
 import logging
+
+import requests
 from haystack import component
 from haystack.utils import Secret
 
@@ -13,13 +13,13 @@ class CreateFunction:
     """Handles the setup and configuration of a (mostly) generic Open WebUI function pipe."""
 
     def __init__(self, base_url: str, email: str, password: Secret):
-        """
-        Initializes the setup class with Open WebUI connection and function details.
+        """Initializes the setup class with Open WebUI connection and function details.
 
         Args:
             base_url (str): The base URL of the Open WebUI instance.
             email (str): Email for Open WebUI signin.
             password (str): Password for Open WebUI signin.
+
         """
         self.base_url = base_url
         self.email = email
@@ -36,11 +36,10 @@ class CreateFunction:
         function_content: str,
         function_manifest: dict,
     ) -> dict:
-        """
-        Orchestrates the setup of the configured function in Open WebUI.
+        """Orchestrates the setup of the configured function in Open WebUI.
 
-        Arguments
-        ----------
+        Arguments:
+        ---------
         agent_id: str
             The agent id (I should pass in a dict here but I don't know how)
         function_id: str
@@ -54,18 +53,17 @@ class CreateFunction:
         function_manifest: dict
             The function manifest
 
-        Returns
+        Returns:
         -------
         dict:
               the function state
+
         """
         logger.info(f"Starting setup for function ID {function_id}...")
         self._signin()
 
         existing_functions = self._get_functions()
-        function_exists = any(
-            func.get("id") == function_id for func in existing_functions
-        )
+        function_exists = any(func.get("id") == function_id for func in existing_functions)
 
         if not function_exists:
             self._create_function(
@@ -148,17 +146,13 @@ class CreateFunction:
         }
         response = self._make_request("post", endpoint, json=payload)
         new_function = response.json()
-        logger.debug(
-            f"Successfully created function: {json.dumps(new_function, indent=2)}"
-        )
+        logger.debug(f"Successfully created function: {json.dumps(new_function, indent=2)}")
 
     def _update_function_valve(self, function_id: str, valve_payload: dict):
         """Updates the valve settings for the specified function."""
         if not isinstance(valve_payload, dict):
             raise TypeError("valve_payload must be a dictionary.")
-        logger.debug(
-            f"Updating valve for function ID {function_id} with payload: {json.dumps(valve_payload)}"
-        )
+        logger.debug(f"Updating valve for function ID {function_id} with payload: {json.dumps(valve_payload)}")
         endpoint = f"/api/v1/functions/id/{function_id}/valves/update"
         response = self._make_request("post", endpoint, json=valve_payload)
         logger.debug(f"Valve update response: {json.dumps(response.json(), indent=2)}")
@@ -168,9 +162,7 @@ class CreateFunction:
         logger.debug(f"Getting function ID {function_id} toggle...")
         endpoint = f"/api/v1/functions/id/{function_id}"
         response = self._make_request("get", endpoint)
-        logger.debug(
-            f"_get_function_state response: {json.dumps(response.json(), indent=2)}"
-        )
+        logger.debug(f"_get_function_state response: {json.dumps(response.json(), indent=2)}")
         return response.json()
 
     def _toggle_function(

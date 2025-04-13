@@ -12,13 +12,13 @@ In addition to running as part of the docker compose stack, you can run hayhooks
 
 This project uses [uv](https://docs.astral.sh/uv/).  It requires Python 3.12.
 
-First, set up your uv environment.
+First, set up your uv environment with development dependencies (be aware that `uv sync` does not include dev tools):
 
 ```bash
 cp env.example .env
+uv pip install -e '.[dev]'
 uv venv
 source .venv/bin/activate
-uv sync
 ```
 
 And then start up Open WebUI and Letta:

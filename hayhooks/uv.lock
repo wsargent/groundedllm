@@ -371,7 +371,6 @@ test = [
 dev = [
     { name = "mypy" },
     { name = "pre-commit" },
-    { name = "pytest" },
     { name = "ruff" },
 ]
 
@@ -388,7 +387,7 @@ requires-dist = [
     { name = "openapi3", specifier = ">=1.8.2" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "pypdf", specifier = ">=5.4.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.3.5" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.12" },
     { name = "python-docx", specifier = ">=1.1.2" },
     { name = "rich", specifier = ">=13.7.1" },
@@ -401,7 +400,6 @@ provides-extras = ["test"]
 dev = [
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pre-commit", specifier = ">=4.2.0" },
-    { name = "pytest", specifier = ">=8.3.5" },
     { name = "ruff", specifier = ">=0.11.5" },
 ]
 

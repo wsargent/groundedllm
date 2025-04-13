@@ -1,26 +1,24 @@
+import json
 import logging
 import os
-from typing import List, Any
-import json
+from typing import Any, List
 from urllib.parse import urlparse
 
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
-
+from haystack import AsyncPipeline
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
-from haystack import AsyncPipeline
 
-from resources.utils import read_resource_file
 from components.content_extraction import build_content_extraction_component
+from resources.utils import read_resource_file
 
 logger = logging.getLogger("extract")
 
 
 class PipelineWrapper(BasePipelineWrapper):
-    """
-    This pipeline extracts content from a URL and sends it to a model that can
+    """This pipeline extracts content from a URL and sends it to a model that can
     summarize or answer questions on the content.
 
     Input: A list of URLs.
@@ -35,9 +33,7 @@ class PipelineWrapper(BasePipelineWrapper):
         self.pipeline = self.create_pipeline()
 
     def create_pipeline(self) -> AsyncPipeline:
-        prompt_builder = PromptBuilder(
-            template=self.template, required_variables=["query", "documents"]
-        )
+        prompt_builder = PromptBuilder(template=self.template, required_variables=["query", "documents"])
 
         # Ideally I'd like to get the model at pipeline execution but
         # that's not an option here
@@ -46,8 +42,24 @@ class PipelineWrapper(BasePipelineWrapper):
             raise ValueError("No model found in EXTRACT_MODEL environment variable!")
         llm = self.get_extract_generator(model)
 
+        default_user_agent = os.getenv(
+            "EXTRACT_USER_AGENT",
+            "SearchAgent.extract @ https://github.com/wsargent/groundedllm",
+        )
+        use_http2 = bool(os.getenv("EXTRACT_HTTP2", "True"))
+        retry_attempts = int(os.getenv("EXTRACT_RETRY_ATTEMPTS", "3"))
+        timeout = int(os.getenv("EXTRACT_TIMEOUT", "3"))
+        raise_on_failure = bool(os.getenv("EXTRACT_RAISE_ON_FAILURE", "False"))
+        content_extractor = build_content_extraction_component(
+            raise_on_failure=raise_on_failure,
+            user_agents=[default_user_agent],
+            retry_attempts=retry_attempts,
+            timeout=timeout,
+            http2=use_http2,
+        )
+
         pipe = AsyncPipeline()
-        pipe.add_component("content_extractor", build_content_extraction_component())
+        pipe.add_component("content_extractor", content_extractor)
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
 
@@ -64,8 +76,7 @@ class PipelineWrapper(BasePipelineWrapper):
         )
 
     def _clean_urls(self, urls: Any) -> List[str]:
-        """
-        Cleans the input URLs. Handles cases where input might be a single string,
+        """Cleans the input URLs. Handles cases where input might be a single string,
         a JSON string representation of a list, or a list containing non-URL strings.
 
         Args:
@@ -74,6 +85,7 @@ class PipelineWrapper(BasePipelineWrapper):
 
         Returns:
             A list of validated URL strings.
+
         """
         cleaned_urls: List[str] = []
         potential_urls: List[Any] = []
@@ -86,9 +98,7 @@ class PipelineWrapper(BasePipelineWrapper):
                     potential_urls = parsed_urls
                 else:
                     # If JSON parsed but not a list, treat original string as single URL
-                    logger.warning(
-                        f"Input string parsed as JSON but is not a list: {urls}. Treating as single URL."
-                    )
+                    logger.warning(f"Input string parsed as JSON but is not a list: {urls}. Treating as single URL.")
                     potential_urls = [urls]
             except json.JSONDecodeError:
                 # If not valid JSON, treat as a single URL string
@@ -97,9 +107,7 @@ class PipelineWrapper(BasePipelineWrapper):
             potential_urls = urls
         else:
             # If it's neither a string nor a list, return empty
-            logger.warning(
-                f"Invalid input type for URLs: {type(urls)}. Expected str or list. Input: {urls}"
-            )
+            logger.warning(f"Invalid input type for URLs: {type(urls)}. Expected str or list. Input: {urls}")
             return []
 
         for item in potential_urls:
@@ -122,45 +130,38 @@ class PipelineWrapper(BasePipelineWrapper):
                 logger.warning(f"Error parsing potential URL '{item}': {e}")
 
         if not cleaned_urls and potential_urls:
-            logger.warning(
-                f"No valid URLs found after cleaning. Original input: {urls}"
-            )
+            logger.warning(f"No valid URLs found after cleaning. Original input: {urls}")
         elif not cleaned_urls and not potential_urls:
             logger.warning(f"No URLs provided or input was invalid type: {urls}")
 
         return cleaned_urls
 
-    def run_api(self, urls: List[str], question: str, verbatim: bool = False) -> str:
-        """
-        This tool fetches HTML, Markdown, PDF, or plain text web pages from URLs and sends them to an LLM model
-        that can answer questions about the content of the web pages.
+    def run_api(self, urls: List[str], question: str) -> str:
+        """Extract pages from URLs and answers questions about the pages.
 
-        It cannot handle audio, video, or binary content.
+        This tool will fetch HTML, Markdown, PDF, or plain text web pages from URLs.
+        and sends them to an LLM model that can answer questions about the content of the
+        web pages. It cannot handle audio, video, or binary content.
 
         Parameters
         ----------
         urls: List[str]
             The URLs of the pages to extract.
         question: str
-            The instructions to give and questions to ask about the content of the web pages.
-            To get the full content of the webpage, say "Give me the contents verbatim" as the question.
-        verbatim: bool, optional
-            if true, renders the full content of the URLs as Markdown documents.
+            The instructions to give and questions to ask about the web pages.
+            For verbatim content, say "Give me the contents verbatim" as the question.
 
         Returns
         -------
         str
             The answer from the LLM model.
+
         """
         log.debug(f"Running Extract pipeline with URLs: {urls}")
         if not hasattr(self, "pipeline") or not self.pipeline:
             raise RuntimeError("Pipeline not initialized during setup.")
 
         clean_urls = self._clean_urls(urls)
-
-        # Dirty hack
-        if verbatim is True:
-            question = "Give me the documents verbatim."
 
         # async pipeline run still runs asynchronously under the hood, but run_api
         # is not async so there's no point in calling run_async or run_async_generator.

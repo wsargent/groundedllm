@@ -17,17 +17,14 @@ logger = logging.getLogger("letta_setup")
 
 @component
 class LettaCreateAgent:
-    """
-    A Haystack component that creates or retrieves a Letta agent by name,
+    """A Haystack component that creates or retrieves a Letta agent by name,
     attaching specified tools during creation if the agent doesn't exist.
     """
 
     DEFAULT_RETURN_CHAR_LIMIT = 50000
 
     def __init__(self, letta: Letta):
-        """
-        Initializes the setup class with Letta connection details.
-        """
+        """Initializes the setup class with Letta connection details."""
         if not letta:
             raise ValueError("letta must be provided and non-empty.")
         self.client = letta
@@ -42,14 +39,13 @@ class LettaCreateAgent:
         persona_block: str,
         requested_tools: Dict[str, List[str]],
     ) -> Dict[str, any]:
-        """
-        Finds an existing Letta agent by name or creates a new one with specified tools.
+        """Finds an existing Letta agent by name or creates a new one with specified tools.
 
         If the agent doesn't exist, it's created with the provided configuration
         and the requested tools are discovered from the MCP server and attached.
 
         Args:
-        -------
+        ----
         agent_name:
             The name of the agent to find or create.
         chat_model:
@@ -65,15 +61,16 @@ class LettaCreateAgent:
             These are used to attach tools to the agent upon creation.
 
         Returns:
-        --------
+        -------
         dict:
             A dictionary containing the agent_id and a list of attached_tool_ids
             (the IDs of the Letta tools corresponding to the requested MCP tools).
 
         Raises:
-        ----------
+        ------
         RuntimeError:
             If an unexpected error occurs during the setup process.
+
         """
         prepared_tool_ids: List[str] = []
         # Even Claude Sonnet 3.7 will occasional return heartbeat_status=false on
@@ -86,25 +83,19 @@ class LettaCreateAgent:
         try:
             logger.info(f"Starting setup for agent '{agent_name}'...")
 
-            self._process_requested_tools(
-                requested_tools, prepared_tool_ids, prepared_tool_rules
-            )
+            self._process_requested_tools(requested_tools, prepared_tool_ids, prepared_tool_rules)
 
             # --- Agent Existence Check ---
             agents = self.client.agents.list(name=agent_name)
             found_agent_id: Optional[str] = None
             if len(agents) == 1:
-                logger.info(
-                    f"Found existing agent '{agent_name}' with ID: {agents[0].id}"
-                )
+                logger.info(f"Found existing agent '{agent_name}' with ID: {agents[0].id}")
                 # Note: We don't currently verify if the existing agent has the requested tools.
                 found_agent_id = agents[0].id
 
             # --- Agent Creation (if needed) ---
             if found_agent_id is None:
-                logger.info(
-                    f"Agent '{agent_name}' not found, creating agent with prepared tools..."
-                )
+                logger.info(f"Agent '{agent_name}' not found, creating agent with prepared tools...")
                 agent_id = self._create_agent(
                     agent_name=agent_name,
                     human_block_content=human_block,
@@ -143,11 +134,10 @@ class LettaCreateAgent:
         tool_ids: List[str],
         tool_rules: Optional[Sequence[CreateAgentRequestToolRulesItem]] = None,
     ) -> str:
-        """
-        Creates a new Letta agent with the specified configuration and tools.
+        """Creates a new Letta agent with the specified configuration and tools.
 
         Args:
-        ----------
+        ----
         agent_name:
             The name for the new agent.
         human_block_content:
@@ -164,16 +154,17 @@ class LettaCreateAgent:
             An optional list of tool rules to attach to the agent during creation.
 
         Returns:
-        --------
+        -------
         str:
             The ID of the newly created agent.
 
         Raises:
-        --------
+        ------
         ValueError:
             If the specified chat model is not available.
         RuntimeError:
             If agent creation fails for other reasons.
+
         """
         try:
             memory_blocks = [
@@ -196,9 +187,7 @@ class LettaCreateAgent:
                 selected_model = letta_model
                 logger.info(f"Using configured LETTA_MODEL: {selected_model}")
             else:
-                raise ValueError(
-                    f"Model {letta_model} not found in available models: {available_model_names}"
-                )
+                raise ValueError(f"Model {letta_model} not found in available models: {available_model_names}")
 
             # Use reasoning model if we got it (gemini 2.5 pro does not support)
             enable_reasoner = None
@@ -224,9 +213,7 @@ class LettaCreateAgent:
                 tool_ids=tool_ids,
                 tool_rules=tool_rules,
             )
-            logger.info(
-                f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools."
-            )
+            logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
             # Add a note so we can see when it was created
             self.client.agents.passages.create(
                 agent_id=agent.id,
@@ -253,26 +240,18 @@ class LettaCreateAgent:
         if requested_tools:
             # Iterate over each MCP server and its requested tools
             for mcp_server_name, tool_names_to_request in requested_tools.items():
-                logger.info(
-                    f"Preparing tools {tool_names_to_request} from MCP server: {mcp_server_name}"
-                )
+                logger.info(f"Preparing tools {tool_names_to_request} from MCP server: {mcp_server_name}")
 
                 try:
                     # List all tools available on the current MCP server
-                    available_mcp_tools = self.client.tools.list_mcp_tools_by_server(
-                        mcp_server_name=mcp_server_name
-                    )
-                    logger.info(
-                        f"Found {len(available_mcp_tools)} tools on MCP server '{mcp_server_name}'."
-                    )
+                    available_mcp_tools = self.client.tools.list_mcp_tools_by_server(mcp_server_name=mcp_server_name)
+                    logger.info(f"Found {len(available_mcp_tools)} tools on MCP server '{mcp_server_name}'.")
 
                     # Process each available tool on the server
                     for mcp_tool in available_mcp_tools:
                         # Check if this specific tool was requested for this server
                         if mcp_tool.name in tool_names_to_request:
-                            tool_id = self._prepare_single_mcp_tool(
-                                mcp_server_name=mcp_server_name, mcp_tool=mcp_tool
-                            )
+                            tool_id = self._prepare_single_mcp_tool(mcp_server_name=mcp_server_name, mcp_tool=mcp_tool)
                             if tool_id:
                                 prepared_tool_ids.append(tool_id)
                                 # XXX For now, hardcode requested rules...
@@ -282,9 +261,7 @@ class LettaCreateAgent:
                                 )
                                 prepared_tool_rules.append(tool_rule)
                             else:
-                                logger.warning(
-                                    f"Could not prepare tool '{mcp_tool.name}' from server '{mcp_server_name}', it will not be attached during creation."
-                                )
+                                logger.warning(f"Could not prepare tool '{mcp_tool.name}' from server '{mcp_server_name}', it will not be attached during creation.")
                 except Exception as tool_prep_error:
                     logger.error(
                         f"Failed during MCP tool preparation for server '{mcp_server_name}': {tool_prep_error}",
@@ -294,11 +271,8 @@ class LettaCreateAgent:
                     prepared_tool_ids = []
                     prepared_tool_rules = []
 
-    def _prepare_single_mcp_tool(
-        self, mcp_server_name: str, mcp_tool: McpTool
-    ) -> Optional[str]:
-        """
-        Ensures a Letta tool exists for the given MCP tool and configures it.
+    def _prepare_single_mcp_tool(self, mcp_server_name: str, mcp_tool: McpTool) -> Optional[str]:
+        """Ensures a Letta tool exists for the given MCP tool and configures it.
 
         Checks if a Letta tool corresponding to the MCP tool name exists.
         If not, it creates one using `add_mcp_tool`.
@@ -310,6 +284,7 @@ class LettaCreateAgent:
 
         Returns:
             The Letta tool ID if preparation is successful, otherwise None.
+
         """
         try:
             tool_name = mcp_tool.name
@@ -325,9 +300,7 @@ class LettaCreateAgent:
                     mcp_tool_name=tool_name,
                 )
                 tool_id = tool.id
-                logger.info(
-                    f"Created Letta tool '{tool_name}' (ID: {tool_id}) from MCP."
-                )
+                logger.info(f"Created Letta tool '{tool_name}' (ID: {tool_id}) from MCP.")
 
             # Modify the return character limit (do this even for existing tools)
             # 6000 is a pokey function output size, we can do better
