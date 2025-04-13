@@ -11,7 +11,6 @@ from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
 from haystack import AsyncPipeline
-import asyncio
 
 from resources.utils import read_resource_file
 from components.content_extraction import build_content_extraction_component
