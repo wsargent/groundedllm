@@ -4,6 +4,13 @@ This is a pre-built, turnkey implementation of an AI agent grounded with search 
 
 If you have the API keys and Docker Compose, you should be able to go to http://localhost:3000 and have it Just Work.  It runs fine on a Macbook Pro with 8 GB memory.
 
+It does require accounts with Tavily and Google's Gemini API, but these are free for individuals (as of 4/13/2025) and I've only hit the tier limit for Gemini once.
+
+* [Tavily Pricing](https://tavily.com/#pricing)
+* [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing)
+
+Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows. 
+
 ## Who's Interested?
 
 This project may be of interest to you if:
@@ -49,12 +56,14 @@ This is useful when the search engine hasn't picked up information on the pages.
 You will need the following:
 
 * [Docker Compose](https://docs.docker.com/compose/install/).
-* [Tavily API key](https://app.tavily.com/home) (required for search) -- this is free up to a certain level.
-* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key) (very useful for searching documentation).  The docker-compose.yml file is set up for `Gemini 2.5 Pro Experimental` and `Gemini Embedding Experimental 03-07`, which are on the free tier, but has [lower rate limits](https://ai.google.dev/gemini-api/docs/rate-limits#current-rate-limits).
+* [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
+* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key).  The docker-compose.yml file is set up for `Gemini 2.5 Pro Experimental` and `Gemini Embedding Experimental 03-07`, which are on the free tier, but has [lower rate limits](https://ai.google.dev/gemini-api/docs/rate-limits#current-rate-limits).
 
 Optional:
 
-* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc) -- not free but often cheaper than the monthly subscription.  Commented out in LiteLLM and the docker compose file.
+* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  Commented out in LiteLLM and the docker compose file.
+
+If you do not have these accounts or API keys, it is *very* simple to set them up if you have a Google or Github account.  Gemini will ask you to sign in with your Google account, then give you a free key.  If you want to upgrade, you can set up a  [billing account](https://ai.google.dev/gemini-api/docs/billing) for PAYG.  Tavily is the same way; there's no [credit card required](https://docs.tavily.com/documentation/api-credits) and PAYG is opt in.
 
 To configure the API keys, start by creating an `.env` file from the `env.example` file:
 
