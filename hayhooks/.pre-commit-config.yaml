@@ -4,4 +4,6 @@ repos:
     hooks:
     -   id: ruff
         args: [--fix]
+        files: ^hayhooks/  # Target only files in the hayhooks directory
     -   id: ruff-format
+        files: ^hayhooks/  # Target only files in the hayhooks directory
