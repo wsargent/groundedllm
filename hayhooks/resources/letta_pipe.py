@@ -7,8 +7,9 @@ description: A pipe to connect with Letta agents, enabling seamless integration 
 """
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Callable, Awaitable
 from pydantic import BaseModel, Field
+from dataclasses import dataclass
 import aiohttp
 import json
 from open_webui.constants import TASKS
