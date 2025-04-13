@@ -7,10 +7,11 @@ from urllib.parse import urlparse
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
 
-from haystack import Pipeline
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
+from haystack import AsyncPipeline
+import asyncio
 
 from resources.utils import read_resource_file
 from components.content_extraction import build_content_extraction_component
@@ -33,7 +34,7 @@ class PipelineWrapper(BasePipelineWrapper):
     def setup(self) -> None:
         self.pipeline = self.create_pipeline()
 
-    def create_pipeline(self) -> Pipeline:
+    def create_pipeline(self) -> AsyncPipeline:
         prompt_builder = PromptBuilder(template=self.template, required_variables=["query", "documents"])
 
         # Ideally I'd like to get the model at pipeline execution but
@@ -43,7 +44,7 @@ class PipelineWrapper(BasePipelineWrapper):
             raise ValueError("No model found in EXTRACT_MODEL environment variable!")
         llm = self.get_extract_generator(model)
 
-        pipe = Pipeline()
+        pipe = AsyncPipeline()
         pipe.add_component("content_extractor", build_content_extraction_component())
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
@@ -127,6 +128,16 @@ class PipelineWrapper(BasePipelineWrapper):
 
         return cleaned_urls
 
+    async def _run_async(self, clean_urls, question):
+        return await self.pipeline.run_async(
+            {
+                "content_extractor": {
+                    "urls": clean_urls
+                },
+                "prompt_builder": {"query": question},
+            }
+        )
+
     def run_api(self, urls: List[str], question: str, verbatim: bool = False) -> str:
         """
         This tool fetches HTML, Markdown, PDF, or plain text web pages from URLs and sends them to an LLM model
@@ -159,14 +170,18 @@ class PipelineWrapper(BasePipelineWrapper):
         if verbatim is True:
             question = "Give me the documents verbatim."
 
-        result = self.pipeline.run(
-            {
-                "content_extractor": {
-                    "urls": clean_urls
-                },
-                "prompt_builder": {"query": question},
-            }
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # If no current event loop, create a new one
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        # Run the async method in the event loop
+        result = loop.run_until_complete(
+            self._run_async(clean_urls=clean_urls, question=question)
         )
+
         if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
             reply = result["llm"]["replies"][0]
             logger.info(f"answer: reply is {reply}")
