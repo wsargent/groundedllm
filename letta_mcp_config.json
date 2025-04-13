@@ -5,11 +5,6 @@
       "disabled": false,
       "autoApprove": []
     },
-    "aws-documentation-mcp-server": {
-      "url": "http://aws-documentation-mcp-server:9712/sse",
-      "disabled": false,
-      "autoApprove": []
-    },
     "wikipedia-mcp-server": {
       "url": "http://wikipedia-mcp-server:9713/sse",
       "disabled": false,

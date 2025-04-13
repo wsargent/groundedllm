@@ -1,4 +1,20 @@
 services:
+  # Nginx reverse proxy with HTTPS termination and caching
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - nginx_cache:/var/cache/nginx
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # LiteLLM can be enabled in Open WebUI if you want direct access to models
   litellm:
@@ -26,29 +42,33 @@ services:
       # Could probably use gemini-2.0-flash-lite here 
       - SEARCH_MODEL=gemini-2.0-flash
       - EXTRACT_MODEL=gemini-2.0-flash
-      - HAYHOOKS_PIPELINES_DIR=/pipelines
-      - HAYHOOKS_DISABLE_SSL=true
-      - HAYHOOKS_HOST=0.0.0.0
-      - HAYHOOKS_PORT=1416
-      - LOG_LEVEL=INFO
-      - HAYSTACK_LOG_LEVEL=INFO
-      - HAYHOOKS_SHOW_TRACEBACKS=true
       # Needed for search pipeline
       - TAVILY_API_KEY=$TAVILY_API_KEY
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283      
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 18
-      start_period: 5s
+      # App Settings
+      - LOG_LEVEL=INFO
+      #This isn't working :-/
+      #- HTTP_PROXY=http://nginx:8888
+      #- HTTPS_PROXY=http://nginx:8888
+      - NO_PROXY=letta,open-webui,litellm
+      # Hayhooks settings
+      - HAYHOOKS_PIPELINES_DIR=/pipelines
+      - HAYHOOKS_DISABLE_SSL=true      
+      - HAYHOOKS_HOST=0.0.0.0
+      - HAYHOOKS_PORT=1416  
+      - HAYHOOKS_SHOW_TRACEBACKS=true
+      # Haystack settings (we get calls to posthog if telemetry is enabled)
+      - HAYSTACK_LOG_LEVEL=INFO
+      - HAYSTACK_TELEMETRY_ENABLED=false      
+    depends_on:
+      - nginx   
 
   # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
   letta:
-    image: letta/letta:0.6.48
-    container_name: letta
+    image: letta:latest
+    container_name: groundedllm_letta
     ports:
       - 8283:8283
     volumes:
@@ -65,11 +85,11 @@ services:
       timeout: 5s
       retries: 18
       start_period: 1s
-    #depends_on:
-      #wikipedia-mcp-server:
-      #  condition: service_healthy
-      #aws-documentation-mcp-server:
-      #  condition: service_healthy
+    depends_on:
+      wikipedia-mcp-server:
+        condition: service_started
+      letta-mcp-server:
+        condition: service_started
 
   # Open WebUI is the front-end UI to Letta
   open-webui:
@@ -78,7 +98,7 @@ services:
     volumes:
      - open-webui:/app/backend/data
     ports:
-      - ${OPEN_WEBUI_PORT-3000}:8080
+      - "3000:8080"
     environment:
       # https://docs.openwebui.com/getting-started/env-configuration/
       - GLOBAL_LOG_LEVEL=WARNING
@@ -138,31 +158,37 @@ services:
       - CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
       - EMBEDDING_MODEL=google_ai/text-embedding-004
 
-  aws-documentation-mcp-server:
-    build: mcp/aws-documentation-mcp-server/
-    container_name: aws-documentation-mcp-server
-    ports:
-      - 9712:9712
-    environment:
-      - LOG_LEVEL=ERROR
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9712/sse"]
-      interval: 10s
-      timeout: 5s
-      retries: 18
-      start_period: 5s
+  # aws-documentation-mcp-server:
+  #   build: mcp/aws-documentation-mcp-server/
+  #   container_name: aws-documentation-mcp-server
+  #   ports:
+  #     - 9712:9712
+  #   environment:
+  #     - LOG_LEVEL=ERROR
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://127.0.0.1:9712/sse"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 18
+  #     start_period: 5s
 
   wikipedia-mcp-server:
     build: mcp/wikipedia-mcp-server/
     container_name: wikipedia-mcp-server
     ports:
       - 9713:9713
+    #environment:
+      # - HTTP_PROXY=http://nginx:80
+      # - HTTPS_PROXY=http://nginx:80
+      # - NO_PROXY=hayhooks,letta,open-webui,nginx,litellm
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:9713/sse"]
       interval: 10s
       timeout: 5s
       retries: 18
       start_period: 5s
+    depends_on:
+      - nginx
 
   letta-mcp-server:
     build: mcp/letta-mcp-server/
@@ -181,3 +207,4 @@ services:
 
 volumes:
   open-webui:
+  nginx_cache:
