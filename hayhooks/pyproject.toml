@@ -40,5 +40,12 @@ dev = [
     "ruff>=0.11.5",
 ]
 
+[tool.ruff]
+# Enable rules that check for unused imports (F401)
+lint.select = ["F401"]  # Or add F401 to your existing selection
+
+# To automatically remove unused imports when fixing
+fix = true
+
 [tool.ruff.lint.isort]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
