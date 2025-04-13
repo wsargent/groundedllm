@@ -128,15 +128,6 @@ class PipelineWrapper(BasePipelineWrapper):
 
         return cleaned_urls
 
-    async def _run_async(self, clean_urls, question):
-        return await self.pipeline.run_async(
-            {
-                "content_extractor": {
-                    "urls": clean_urls
-                },
-                "prompt_builder": {"query": question},
-            }
-        )
 
     def run_api(self, urls: List[str], question: str, verbatim: bool = False) -> str:
         """
@@ -170,16 +161,15 @@ class PipelineWrapper(BasePipelineWrapper):
         if verbatim is True:
             question = "Give me the documents verbatim."
 
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            # If no current event loop, create a new one
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-
-        # Run the async method in the event loop
-        result = loop.run_until_complete(
-            self._run_async(clean_urls=clean_urls, question=question)
+        # async pipeline run still runs asynchronously under the hood, but run_api
+        # is not async so there's no point in calling run_async or run_async_generator.
+        result = self.pipeline.run(
+            {
+                "content_extractor": {
+                    "urls": clean_urls
+                },
+                "prompt_builder": {"query": question},
+            }
         )
 
         if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
