@@ -34,3 +34,13 @@ packages = ["components", "pipelines", "resources"]
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "autoflake>=2.3.1",
+]
+
+[tool.autoflake]
+remove-all-unused-imports = true
+remove-duplicate-keys = true
+ignore-init-module-imports = true
