@@ -37,6 +37,7 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
+    "mypy>=1.15.0",
     "pre-commit>=4.2.0",
     "ruff>=0.11.5",
 ]
@@ -50,3 +51,11 @@ fix = true
 
 [tool.ruff.lint.isort]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+# https://mypy.readthedocs.io/en/stable/config_file.html#example-pyproject-toml
+[tool.mypy]
+python_version = "3.12"
+# https://mypy.readthedocs.io/en/stable/existing_code.html
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
