@@ -31,7 +31,7 @@ def build_content_extraction_component() -> SuperComponent:
     # "Introduced asynchronous functionality and HTTP/2 support in the LinkContentFetcher component,
     # thus improving content fetching in several aspects."
     # Not clear if this needs some config options to use async functionality.
-    fetcher = LinkContentFetcher()
+    fetcher = LinkContentFetcher(http2=True)
     document_cleaner = DocumentCleaner()
 
     # Also see MultiFileConverter
