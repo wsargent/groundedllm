@@ -15,23 +15,24 @@ Even if you use a paid model from Anthropic or OpenAI, it's more cost effective 
 
 This project may be of interest to you if:
 
-* **You don't want to mess around.**  You just want a search engine that knows what you want and gets smarter over time with very little effort on your part, and if that means you wait for 30 seconds to get the right answer, you're okay with that.
+* **You don't want to mess around.**  You want a search engine that knows what you want and gets smarter over time with very little effort on your part, and if that means you wait for 30 seconds to get the right answer, you're okay with that.
 * **You are interested in AI agents.** This project is a low effort way to play with [Letta](https://docs.letta.com/letta-platform), and see a [stateful agent](https://docs.letta.com/stateful-agents) that can remember and learn.
-* **You are interested in RAG pipelines.**  [Haystack](https://haystack.deepset.ai/) toolkit has several options to deal with document conversion, cleaning, and extraction.  The [Hayhooks](https://docs.haystack.deepset.ai/docs/hayhooks) deployment system is nice, and the project includes several pipelines and has custom components.
-* **You're interested in [Open WebUI](https://github.com/open-webui/open-webui) tooling.** this project goes to some lengths to work through OWUI's environment variables and REST API to provision Letta.
-* **You are interested in tool calling and management.** Hayhooks exposes an MCP server, and there's a lot you can do with a tool server to play around with MCP and Open API -- it has [OpenAPIServiceToFunctions](https://docs.haystack.deepset.ai/docs/openapiservicetofunctions), [OpenAPIConnector](https://docs.haystack.deepset.ai/docs/openapiconnector), [MCPTool](https://docs.haystack.deepset.ai/docs/mcptool), and more.
+* **You are interested in RAG pipelines.**  [Haystack](https://haystack.deepset.ai/) toolkit has several options to deal with document conversion, cleaning, and extraction.  The search and extract tools plug into these.
+* **You're interested in [Open WebUI](https://github.com/open-webui/open-webui).** Unlike [Perplexity](https://www.perplexity.ai) and [Perplexica](https://github.com/ItzCrazyKns/Perplexica), this project doesn't give you a new front end UI to deal with when you want to find things. Open WebUI is powerful and popular, so let's use that.
+* **You are interested in adding MCP servers.**  In addition to the search and extract tools, this project comes with [Wikipedia MCP server](https://github.com/scotthelm/wikipedia-mcp-server).
+* [AWS documentation MCP server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/) and can be set up with more tools to help the agent with search.
 
 ## Description
 
-This project makes [Claude](http://claude.ai) or [ChatGPT](https://chatgpt.com) (large language models or LLM) dramatically more useful, by [grounding](https://ai.google.dev/gemini-api/docs/grounding?lang=python) your LLM through [Letta](https://docs.letta.com/letta-platform), an agent framework with memory and tool capabilities.  
+This project helps ground your LLM from hallucination by providing it with search and page extraction tools and the ability to remember things through [Letta](https://docs.letta.com/letta-platform), an agent framework with memory and tool capabilities.  Every time it searches or extracts a web page, it will save a summary of the search and the results into archival memory, and can refer back to them.
 
-Because a Letta agent has memory, it is teachable.  If you tell it your location, it will not only sort out timezone and locale for all subsequent queries, but it can also learn your preferences, websites to avoid, and will gather additional context  from previous searches.  It's like a better [Claude Projects](https://simonwillison.net/2024/Dec/19/one-shot-python-tools/).
-
-Unlike other models, a Letta agent is a stateful agent.  It doesn't matter if you bring up a new chat, the agent will continue the conversation from where you left off and remembers details (like your name and location) so that it can answer new questions.
+Because a Letta agent is a stateful agent, it doesn't matter if you bring up a new chat.  The agent will continue the conversation from where you left off and remembers details (like your name and location) so that it can answer new questions.
 
 ![Sunset](./images/sunset.png)
 
-Letta will dig down into search results if it thinks it's not detailed enough.  For example, it performed three searches in response to the question "Please give me history and background about the increased traffic to sites from AI bots scraping, and the countermeasures involved.  When did this start, why is it a problem, and why is it happening?"
+Because a Letta agent has memory, it is teachable.  If you tell it your location, it will not only sort out timezone and locale for all subsequent queries, but it can also learn your preferences, websites to avoid, and even pick up new strategies for searching.  
+
+The main advantage of an agent is that it's capable of recognizing and acting when a tool has not returned the correct results.  Letta will dig down into search results if it thinks it's not detailed enough.  For example, it performed three searches in response to the question "Please give me history and background about the increased traffic to sites from AI bots scraping, and the countermeasures involved.  When did this start, why is it a problem, and why is it happening?"
 
 * "History and background of increased web traffic from AI bots scraping websites, when it started becoming a major issue, why it's a problem, and why it's happening. Include information about countermeasures websites use against AI scraping."
 * "When did AI bots scraping websites first become a significant issue? What specific countermeasures have websites implemented against AI scraping bots? Include historical timeline and details about robots.txt, legal cases, and technical measures."
