@@ -24,7 +24,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest>=8.0",
+    "pytest>=8.3.5",
     "pytest-mock>=3.12",
 ]
 
@@ -45,6 +45,7 @@ dev = [
 [tool.ruff]
 # Enable rules that check for unused imports (F401)
 lint.select = ["F401"]  # Or add F401 to your existing selection
+select = ["E", "F", "I", "D"]  # Add "D" for docstring checks
 
 # To automatically remove unused imports when fixing
 fix = true
@@ -59,3 +60,9 @@ python_version = "3.12"
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
