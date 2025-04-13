@@ -23,10 +23,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = [
-    "pytest>=8.3.5",
-    "pytest-mock>=3.12",
-]
+# Test dependencies moved to [dependency-groups].dev
+test = []
 
 [tool.setuptools]
 packages = ["components", "pipelines", "resources"]
@@ -40,12 +38,20 @@ dev = [
     "mypy>=1.15.0",
     "pre-commit>=4.2.0",
     "ruff>=0.11.5",
+    "pytest>=8.3.5",
+    "pytest-mock>=3.12",
 ]
 
 [tool.ruff]
-# Enable rules that check for unused imports (F401)
-lint.select = ["F401"]  # Or add F401 to your existing selection
-select = ["E", "F", "I", "D"]  # Add "D" for docstring checks
+# https://docs.astral.sh/ruff/linter/#rule-selection
+lint.select = [
+    "E", # pycodestyle
+    "F", # Pyflakes
+    "I", # isort
+    #"B",  # flake8-bugbear
+    #"SIM", # flake8-simplify
+]
+line-length = 250
 
 # To automatically remove unused imports when fixing
 fix = true

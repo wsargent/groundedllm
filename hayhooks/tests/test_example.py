@@ -1,10 +1,10 @@
-from haystack.components.routers import ConditionalRouter
 from typing import List
+
+from haystack.components.routers import ConditionalRouter
 
 
 def test_conditional_router():
     """Test conditional router works."""
-
     routes = [
         {
             "condition": "{{streams|length > 2}}",

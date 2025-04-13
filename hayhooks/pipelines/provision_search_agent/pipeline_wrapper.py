@@ -17,8 +17,7 @@ logger = logging.getLogger("provision_search_agent")
 
 # Provision Search Agent
 class PipelineWrapper(BasePipelineWrapper):
-    """
-    A Haystack pipeline wrapper that orchestrates the creation and configuration
+    """A Haystack pipeline wrapper that orchestrates the creation and configuration
     of a new Letta agent, attaches necessary tools, and provisions a corresponding
     Letta Pipe function within OpenWebUI.
 
@@ -38,8 +37,7 @@ class PipelineWrapper(BasePipelineWrapper):
     """
 
     def setup(self) -> None:
-        """
-        Initializes and configures the Haystack pipeline components.
+        """Initializes and configures the Haystack pipeline components.
 
         This method sets up the necessary components:
         - LettaCreateAgent: To create the agent in Letta.
@@ -52,6 +50,7 @@ class PipelineWrapper(BasePipelineWrapper):
         Raises:
             ValueError: If required environment variables (LETTA_BASE_URL, OPENWEBUI_BASE_URL)
                         are not set.
+
         """
         # Removed settings instantiation
         pipe = Pipeline()
@@ -82,9 +81,7 @@ class PipelineWrapper(BasePipelineWrapper):
         pipe.add_component("create_agent", create_agent)
         pipe.add_component("create_function", create_open_webui_function)
 
-        pipe.connect(
-            sender="create_agent.agent_id", receiver="create_function.agent_id"
-        )
+        pipe.connect(sender="create_agent.agent_id", receiver="create_function.agent_id")
 
         self.pipeline = pipe
 
@@ -94,12 +91,11 @@ class PipelineWrapper(BasePipelineWrapper):
         chat_model: str,
         embedding_model: str,
     ) -> dict:
-        """
-        Runs the configured Haystack pipeline to create a Letta agent, attach tools,
+        """Runs the configured Haystack pipeline to create a Letta agent, attach tools,
         and provision the corresponding OpenWebUI pipe function.
 
         Args:
-        -------------
+        ----
         agent_name: str
             The name for the new Letta agent. This will also be used to generate the function ID and name in OpenWebUI.
         chat_model: (str, optional)
@@ -108,13 +104,13 @@ class PipelineWrapper(BasePipelineWrapper):
             The embedding model identifier for the Letta agent.
 
         Returns:
-        -----------
+        -------
         dict:
             A dictionary containing the 'agent_id' of the newly created Letta agent
             and the 'create_function_result' dictionary from the OpenWebUI
             function creation component.
-        """
 
+        """
         # Run the pipeline providing inputs for components that need them at runtime
         # agent_id is passed internally via connections
         create_agent_args = {

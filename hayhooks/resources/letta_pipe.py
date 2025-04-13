@@ -1,21 +1,21 @@
-"""
-title: Letta_Agent_Connector
+"""title: Letta_Agent_Connector
 author: Haervwe
 author_url: https://github.com/Haervwe/open-webui-tools
 version: 0.2.4
 description: A pipe to connect with Letta agents, enabling seamless integration of autonomous agents into Open WebUI conversations. Supports task-specific processing and maintains conversation context while communicating with the agent API.
 """
 
-import logging
-from typing import Dict, List
-from pydantic import BaseModel, Field
-import aiohttp
+import asyncio
 import json
+import logging
+import time
+from typing import Dict, List
+
+import aiohttp
 from open_webui.constants import TASKS
 from open_webui.main import generate_chat_completions
 from open_webui.models.users import User
-import asyncio
-import time
+from pydantic import BaseModel, Field
 
 name = "Letta Pipe"
 
@@ -26,9 +26,7 @@ def setup_logger():
         logger.setLevel(logging.INFO)
         handler = logging.StreamHandler()
         handler.set_name(name)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         logger.propagate = False
@@ -80,9 +78,7 @@ class Pipe:
         ]
 
     async def emit_message(self, message: str):
-        await self.__current_event_emitter__(
-            {"type": "message", "data": {"content": message}}
-        )
+        await self.__current_event_emitter__({"type": "message", "data": {"content": message}})
 
     async def emit_status(self, level: str, message: str, done: bool):
         await self.__current_event_emitter__(
@@ -97,9 +93,7 @@ class Pipe:
             }
         )
 
-    async def format_messages(
-        self, messages: List[Dict[str, str]]
-    ) -> List[Dict[str, str]]:
+    async def format_messages(self, messages: List[Dict[str, str]]) -> List[Dict[str, str]]:
         """Format messages according to the Letta API specification."""
         formatted_messages = []
         for msg in messages:
@@ -121,8 +115,7 @@ class Pipe:
         return formatted_messages
 
     async def get_letta_response(self, message: Dict[str, str]) -> str:
-        """
-        Send the user message and wait for the full response.
+        """Send the user message and wait for the full response.
         Aggregate reasoning messages and the final response into one combined output.
         This version uses aiohttp for asynchronous HTTP calls.
         """
@@ -147,9 +140,7 @@ class Pipe:
                 logger.debug(f"Initial API response: {result}")
 
             # URL for checking message status
-            status_url = (
-                f"{self.valves.API_URL}/v1/agents/{self.valves.Agent_ID}/messages"
-            )
+            status_url = f"{self.valves.API_URL}/v1/agents/{self.valves.Agent_ID}/messages"
 
             def find_last_user_message_index(messages):
                 """Find the index of the last user message in the list."""
@@ -162,11 +153,7 @@ class Pipe:
                 final_response = ""
                 reasoning_details = []
                 # Handle both list and dictionary responses
-                messages = (
-                    messages_data
-                    if isinstance(messages_data, list)
-                    else messages_data.get("messages", [])
-                )
+                messages = messages_data if isinstance(messages_data, list) else messages_data.get("messages", [])
 
                 # Find last user message and filter subsequent messages
                 last_user_idx = find_last_user_message_index(messages)
@@ -179,12 +166,7 @@ class Pipe:
                         reasoning = msg.get("reasoning", "").strip()
                         if reasoning:
                             header = f"Thought for {elapsed} seconds"
-                            details = (
-                                f'<details type="reasoning" done="true" duration="{elapsed}">\n'
-                                f"<summary>{header}</summary>\n"
-                                f"> {reasoning}\n"
-                                "</details>"
-                            )
+                            details = f'<details type="reasoning" done="true" duration="{elapsed}">\n<summary>{header}</summary>\n> {reasoning}\n</details>'
                             # Only keep the latest reasoning
                             reasoning_details = [details]
                     elif msg_type == "assistant_message":
@@ -220,11 +202,7 @@ class Pipe:
                     result = await response.json()
                     logger.debug(f"Polling API response: {result}")
                     final_response, new_reasoning = process_messages(
-                        (
-                            result
-                            if isinstance(result, list)
-                            else result.get("messages", [])
-                        ),
+                        (result if isinstance(result, list) else result.get("messages", [])),
                         elapsed,
                     )
                     reasoning_details.extend(new_reasoning)
@@ -251,10 +229,7 @@ class Pipe:
         # Store event_emitter in instance variable for future use
         if __event_emitter__:
             self.__current_event_emitter__ = __event_emitter__
-        elif (
-            not hasattr(self, "__current_event_emitter__")
-            or not self.__current_event_emitter__
-        ):
+        elif not hasattr(self, "__current_event_emitter__") or not self.__current_event_emitter__:
             logger.error("Event emitter not provided")
             return ""
         print(__user__)
@@ -265,9 +240,7 @@ class Pipe:
         # Handle task-specific processing
         if __task__ and __task__ != TASKS.DEFAULT:
             try:
-                task_model = (
-                    self.valves.Task_Model if self.valves.Task_Model else self.__model__
-                )
+                task_model = self.valves.Task_Model if self.valves.Task_Model else self.__model__
                 response = await generate_chat_completions(
                     self.__request__,
                     {
@@ -293,9 +266,7 @@ class Pipe:
         if isinstance(user_message, str):
             user_message = {"role": "user", "content": user_message}
 
-        await self.emit_status(
-            "info", f"{self.valves.Custom_Name} is thinking...", False
-        )
+        await self.emit_status("info", f"{self.valves.Custom_Name} is thinking...", False)
 
         try:
             response = await self.get_letta_response(user_message)
