@@ -4,7 +4,7 @@ from typing import Literal, Optional
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
 
-from haystack import AsyncPipeline, logging
+from haystack import Pipeline, logging
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
@@ -32,7 +32,7 @@ class PipelineWrapper(BasePipelineWrapper):
         self.template = read_resource_file("search_prompt.md")
         self.pipeline = self.create_pipeline()
 
-    def create_pipeline(self) -> AsyncPipeline:
+    def create_pipeline(self) -> Pipeline:
         search = TavilyWebSearch()
         prompt_builder = PromptBuilder(
             template=self.template, required_variables=["query"]
@@ -51,7 +51,7 @@ class PipelineWrapper(BasePipelineWrapper):
             model=os.getenv("SEARCH_MODEL"),
         )
 
-        pipe = AsyncPipeline()
+        pipe = Pipeline()
         pipe.add_component("search", search)
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
