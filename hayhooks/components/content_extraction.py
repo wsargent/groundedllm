@@ -10,6 +10,7 @@ from haystack.components.fetchers import LinkContentFetcher
 from haystack.components.preprocessors import DocumentCleaner
 from haystack.components.joiners import DocumentJoiner
 from haystack.components.routers import FileTypeRouter
+from haystack import AsyncPipeline
 
 def build_content_extraction_component() -> SuperComponent:
     """
@@ -23,9 +24,8 @@ def build_content_extraction_component() -> SuperComponent:
         Output: documents (List[Document])
     """
 
-    # Can this be AsyncPipeline?
     # https://docs.haystack.deepset.ai/reference/pipeline-api#asyncpipeline
-    preprocessing_pipeline = Pipeline()
+    preprocessing_pipeline = AsyncPipeline()
 
     # There is a note in the 2.12 highlights
     # "Introduced asynchronous functionality and HTTP/2 support in the LinkContentFetcher component,
