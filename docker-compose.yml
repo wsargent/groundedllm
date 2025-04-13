@@ -73,7 +73,7 @@ services:
 
   # Open WebUI is the front-end UI to Letta
   open-webui:
-    image: ghcr.io/open-webui/open-webui:0.6.2
+    image: ghcr.io/open-webui/open-webui:0.6.4
     container_name: open-webui
     volumes:
      - open-webui:/app/backend/data
