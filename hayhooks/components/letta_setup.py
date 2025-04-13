@@ -5,13 +5,11 @@ from typing import Dict, List, Optional, Sequence
 from haystack import component
 from letta_client import (
     ChildToolRule,
-    ContinueToolRule,
     CreateAgentRequestToolRulesItem,
     CreateBlock,
     Letta,
     LlmConfig,
     McpTool,
-    TerminalToolRule,
 )
 
 logger = logging.getLogger("letta_setup")
