@@ -19,8 +19,7 @@ This project may be of interest to you if:
 * **You are interested in AI agents.** This project is a low effort way to play with [Letta](https://docs.letta.com/letta-platform), and see a [stateful agent](https://docs.letta.com/stateful-agents) that can remember and learn.
 * **You are interested in RAG pipelines.**  [Haystack](https://haystack.deepset.ai/) toolkit has several options to deal with document conversion, cleaning, and extraction.  The search and extract tools plug into these.
 * **You're interested in [Open WebUI](https://github.com/open-webui/open-webui).** Unlike [Perplexity](https://www.perplexity.ai) and [Perplexica](https://github.com/ItzCrazyKns/Perplexica), this project doesn't give you a new front end UI to deal with when you want to find things. Open WebUI is powerful and popular, so let's use that.
-* **You are interested in adding MCP servers.**  In addition to the search and extract tools, this project comes with [Wikipedia MCP server](https://github.com/scotthelm/wikipedia-mcp-server).
-* [AWS documentation MCP server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/) and can be set up with more tools to help the agent with search.
+* **You are interested in adding MCP servers.**  In addition to the search and extract tools, this project comes with [Wikipedia MCP server](https://github.com/scotthelm/wikipedia-mcp-server), [AWS documentation MCP server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/) and [Letta MCP Server](https://github.com/oculairmedia/Letta-MCP-server) and can be set up with more tools to help the agent with search.
 
 ## Description
 
