@@ -114,6 +114,7 @@ The search agent is configured with tools through Letta's MCP support with some 
 * [wikipedia-mcp-server](https://github.com/scotthelm/wikipedia-mcp-server).
 * [aws-documentation-mcp-server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/).
 * Hayhooks itself provides the `search` and `extract` tools for fine-grained control over Tavily.
+* [letta-mcp-server](https://github.com/oculairmedia/Letta-MCP-server) is configured but not attached to the search agent (you'll have to do that yourself through Letta Desktop).
 
 The search will use these as appropriate, but you can prompt it by asking, i.e. "Use the recommend tool to recommend documentation for <sample AWS doc url>" and it will use the `recommend` tool.
 
@@ -190,11 +191,11 @@ The search technique is pulled from this academic paper on [DeepRAG](https://arx
 
 #### Picking a Model Provider
 
-The model is set up with Claude Sonnet 3.7 as it is much more proactive about calling tools until it gets a good answer.  You can use OpenAI for the same effect.  Gemini 2.0 models have been inconsistent and less proactive than Claude Sonnet.
+The model is set up with Claude Sonnet 3.7 as it is much more proactive about calling tools until it gets a good answer.  You can use OpenAI for the same effect.  Gemini 2.0 models have been inconsistent and less proactive than Claude Sonnet, although Gemini 2.5 Pro is *very* smart at interpreting existing data.
 
 If you are going to use Ollama with Letta you will need a powerful model, at least 13B and preferably 70B.
 
-Some reasoning models have difficulty interacting with Letta's reasoning step.  Deepseek and Gemini 2.5 Pro will attempt to reply in the reasoning step, so avoid using them in Letta.
+Some reasoning models have difficulty interacting with Letta's reasoning step.  Deepseek and Gemini 2.5 Pro will attempt to reply in the reasoning step, although that may be fixed in the latest version.
 
 #### Letta Desktop
 
@@ -242,5 +243,5 @@ Tavily's [privacy policy](https://tavily.com/privacy) is that they do store quer
 
 ### Google
 
-Google's [privacy policy](https://support.google.com/gemini/answer/13594961) states that your conversations with Gemini may be used to improve and develop their products and services, including machine learning technologies.  They do use human reviewers and there is a note saying **Please don’t enter confidential information in your conversations or any data you wouldn’t want a reviewer to see or Google to use to improve our products, services, and machine-learning technologies.**
+Google's [privacy policy](https://support.google.com/gemini/answer/13594961) states that your conversations with Gemini may be used to improve and develop their products and services, including machine learning technologies.  The [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing) page says the free tier does your conversations to train their models. They do use human reviewers and there is a note saying **Please don’t enter confidential information in your conversations or any data you wouldn’t want a reviewer to see or Google to use to improve our products, services, and machine-learning technologies.**
 
