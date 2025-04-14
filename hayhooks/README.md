@@ -50,7 +50,7 @@ All pipelines start off in the undeployed directory, as Letta can easily get rat
 
 Searches using Tavily, and uses a model to read the summary and return an answer.  Gemini 2.0 Flash is perfect for this, as it's cheap, fast, and has a large context window.
 
-Using a distinct model for searches also protects the agent against itself; giving an agent a tool that can search and telling it to search unti it knows what's going on can result in rate limiting errors in some models, especially Claude Sonnet 3.7.  
+Using a distinct model for searches also protects the agent against itself; giving an agent a tool that can search and telling it to search until it knows what's going on can result in rate limiting errors in some models, especially Claude Sonnet 3.7.  
 
 ```bash
 hayhooks pipeline run search \
