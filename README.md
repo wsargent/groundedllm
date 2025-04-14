@@ -107,17 +107,6 @@ Because Letta doesn't always store conversations in archival memory, you also wa
 
 Grounding with search can reduce hallucinations, but *will not eliminate them*.  You will still need to check the sources and validate that what Letta is telling you is accurate, especially if you are doing anything critical.  Also, do your own searches!  Search engines are free for humans, and Letta will be happy to give you its reference material.
 
-## MCP Servers
-
-The search agent is configured with tools through Letta's MCP support with some MCP servers.
-
-* [wikipedia-mcp-server](https://github.com/scotthelm/wikipedia-mcp-server).
-* [aws-documentation-mcp-server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/).
-* Hayhooks itself provides the `search` and `extract` tools for fine-grained control over Tavily.
-* [letta-mcp-server](https://github.com/oculairmedia/Letta-MCP-server) is configured but not attached to the search agent (you'll have to do that yourself through Letta Desktop).
-
-The search will use these as appropriate, but you can prompt it by asking, i.e. "Use the recommend tool to recommend documentation for <sample AWS doc url>" and it will use the `recommend` tool.
-
 ## Management
 
 When you want it to run in the background, you can run it as a daemon:
@@ -140,26 +129,6 @@ docker compose down -v --remove-orphans && docker compose up --build
 
 If you want to modify functionality, see the Hayhooks [README](./hayhooks/README.md).
 
-## MCP Servers
-
-The search agent is configured with tools through Letta's MCP support with some MCP servers.  There are a couple of good reasons for putting MCP servers in Docker containers.  The first is that Letta will not work with stdio MCP servers, and so SSE is required.  The second is that many MCP servers benefit from the isolation provided by containers -- they can have exactly the required environment and version they need without impacting other MCP servers or the OS itself.  It also makes it much easier to add and remove servers.
-
-* Hayhooks itself provides the `search` and `extract` tools for fine-grained control over Tavily.
-* Wikipedia search is provided by [wikipedia-mcp-server](https://github.com/scotthelm/wikipedia-mcp-server).
-* AWS documentation is provided by [aws-documentation-mcp-server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/).
-* Letta MCP Server is from [letta-mcp-server](https://github.com/oculairmedia/Letta-MCP-server) but is not provisioned automatically.
-
-The search will use these as appropriate, but you can prompt it by asking, i.e. "Use the recommend tool to recommend documentation for <sample AWS doc url>" and it will use the `recommend` tool.
-
-You can add your own MCP servers.  To do this is a four step process:
-
-1. Find the MCP server you want, and create an `mcp/my-mcp-server` directory, then set up the `Dockerfile` to encapsulate it with a proxy that exposes it over SSE.
-2. Add the MCP docker container to `docker-compose.yml`.
-3. Add the URL to the docker container's endpoint in `letta_mcp_config.json`.
-4. Add the MCP tools that you want the search agent provisioned with in the `hayhooks/provision_search_agent/pipeline_wrapper.py` file.
-
-It can be some work to set up credentials and work out how to set up the proxy for any given MCP server, so you should be technically comfortable with some futzing here.  You can ask Cline to use the existing instances as templates.
-
 ## Composition
 
 The docker compose file integrates several key components:
@@ -168,7 +137,6 @@ The docker compose file integrates several key components:
 * **Letta:** An agent framework with built-in memory and tooling capabilities.
 * **Hayhooks:** A tool server for use by Letta.
 * **LiteLLM Proxy Server:**  Makes all providers "OpenAI style" for Hayhooks.
-* **Initializer:** A container that calls the 'provision' pipeline to create agent if necessary.
 * **MCP Servers:** Various MCP servers in docker containers.
 
 Note that if you delete or rename the Letta agent or the Open WebUI pipe, the initializer will provision a new one with the same name automatically.
@@ -215,7 +183,7 @@ There is no vector/embeddings/database RAG involved in this project, although yo
 
 See the [README](./hayhooks/README.md) for details of the tools provided by Hayhooks.
 
-### LiteLLM
+### LiteLLM Proxy Server
 
 The [LiteLLM proxy server](https://docs.litellm.ai/docs/proxy/deploy) that provides an OpenAI compatible layer on top of several different providers. It is provided to Open WebUI (commented out) and to Hayhooks.
 
@@ -224,6 +192,30 @@ LiteLLM is mostly commented out here to focus attention on Letta.  However, it i
 * It provides a way to point to a conceptual model rather than a concrete one (you can point to "claude-sonnet" and change the model from 3.5 to 3.7).  
 * It insulates Open WebUI from the underlying providers.  You don't have to worry about changing your API key or other configuration settings when switching providers.  You also don't have to worry about Open WebUI timing out for 30 seconds while it tries to reach an unreachable provider.
 * It lets you specify the same model with different parameters, so you can use `extra-headers` to experiment with [token-efficient tool use](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/token-efficient-tool-use), for example.
+
+### MCP Servers
+
+The search agent is configured with tools through Letta's MCP support with some MCP servers.  There are a couple of good reasons for putting MCP servers in Docker containers.  The first is that Letta will not work with stdio MCP servers, and so SSE is required.  The second is that many MCP servers benefit from the isolation provided by containers -- they can have exactly the required environment and version they need without impacting other MCP servers or the OS itself.  It also makes it much easier to add and remove servers.
+
+* Hayhooks itself provides the `search` and `extract` tools for fine-grained control over Tavily.
+* Wikipedia search is provided by [wikipedia-mcp-server](https://github.com/scotthelm/wikipedia-mcp-server).
+* AWS documentation is provided by [aws-documentation-mcp-server](https://awslabs.github.io/mcp/servers/aws-documentation-mcp-server/).
+* Letta MCP Server is from [letta-mcp-server](https://github.com/oculairmedia/Letta-MCP-server) is configured but not attached to the search agent (you'll have to do that yourself through Letta Desktop).
+
+The search will use these as appropriate, but you can prompt it by asking, i.e. "Use the recommend tool to recommend documentation for <sample AWS doc url>" and it will use the `recommend` tool.
+
+The search will use these as appropriate, but you can prompt it to use a specific tool by asking, i.e. "Use the recommend tool to recommend documentation for <sample AWS doc url>" and it will use the `recommend` tool.
+
+You can add your own MCP servers.  To do this is a four step process:
+
+1. Find the MCP server you want, and create an `mcp/my-mcp-server` directory, then set up the `Dockerfile` to encapsulate it with a proxy that exposes it over SSE.
+2. Add the MCP docker container to `docker-compose.yml`.
+3. Add the URL to the docker container's endpoint in `letta_mcp_config.json`.
+4. Add the MCP tools that you want the search agent provisioned with in the `hayhooks/provision_search_agent/pipeline_wrapper.py` file.
+
+MCP is a pain in the butt [security wise](https://blog.sshh.io/p/everything-wrong-with-mcp) so wrapping them in docker containers at least limits the blast radius a bit.
+
+It can be some work to set up credentials and work out how to set up the proxy for any given MCP server, so you should be technically comfortable with some futzing here.  You can ask Cline to use the existing instances as templates.
 
 ## Privacy Concerns
 
