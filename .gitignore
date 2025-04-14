@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 .idea/
+.roo/
 
 .DS_Store
 .vscode/

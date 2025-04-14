@@ -5,6 +5,7 @@ from haystack.components.converters import (
     CSVToDocument,
     HTMLToDocument,
     MarkdownToDocument,
+    OutputAdapter,
     PyPDFToDocument,
     TextFileToDocument,
 )
@@ -12,6 +13,58 @@ from haystack.components.fetchers import LinkContentFetcher
 from haystack.components.joiners import DocumentJoiner
 from haystack.components.preprocessors import DocumentCleaner
 from haystack.components.routers import FileTypeRouter
+
+
+def build_search_extraction_component(
+    raise_on_failure: bool = True,
+    user_agents: Optional[list[str]] = None,
+    retry_attempts: int = 2,
+    timeout: int = 3,
+    http2: bool = False,
+) -> SuperComponent:
+    """Fetches URLs from a list of documents and extract the contents of the pages"""
+
+    pipe = Pipeline()
+
+    content_extraction_component = build_content_extraction_component(raise_on_failure=raise_on_failure, user_agents=user_agents, retry_attempts=retry_attempts, timeout=timeout, http2=http2)
+
+    # Use OutputAdapter
+    # https://docs.haystack.deepset.ai/docs/jinja-templates
+
+    # Extract all the URLs from the documents, pass it to content extraction component.
+    # content extraction returns documents, we pull the content field out and
+    # stuff it into the documents we have (make sure to copy them).
+    # This is a Jinja
+    extract_urls_template = """
+    {{
+      # for each document in documents
+      # call document.url
+    }}
+    """
+    extract_urls_adapter = OutputAdapter(template=extract_urls_template, output_type=str)
+
+    # Now once the content extractor has returned documents, we need to get the contents out.
+    extract_content_template = """
+    {{
+      # for each document in documents
+      # call document.content
+    }}
+    """
+    extract_content_adapter = OutputAdapter(template=extract_content_template, output_type=str)
+
+    pipe.add_component("extract_urls_adapter", extract_urls_adapter)
+    pipe.add_component("content_extractor", content_extraction_component)
+    pipe.add_component("extract_content_adapter", extract_content_adapter)
+
+    pipe.connect("extract_url_adapter.urls", "content_extractor.urls")
+    pipe.connect("content_extractor.documents", "extract_content_adapter.documents")
+
+    extraction_component = SuperComponent(
+        pipeline=pipe,
+        input_mapping={"documents": ["extract_urls_adapter.documents"]},
+        output_mapping={"extract_content_adapter.contents": "contents"},
+    )
+    return extraction_component
 
 
 def build_content_extraction_component(
@@ -27,7 +80,7 @@ def build_content_extraction_component(
 
     Returns:
         A SuperComponent ready to be added to a pipeline.
-        Input: urls (List[str])
+        Input: urls (List[str]) or documents (List[documents])
         Output: documents (List[Document])
 
     """
