@@ -65,46 +65,6 @@ class TavilyWebSearch:
         output = self._process_response(query, response)
         return output
 
-    # "Opt into async"
-    # https://haystack.deepset.ai/cookbook/async_pipeline#custom-asynchronous-components
-    @component.output_types(documents=List[Document], links=List[str])
-    async def run_async(
-        self,
-        query: str,
-        search_depth: str = DEFAULT_SEARCH_DEPTH,
-        max_results: int = DEFAULT_MAX_RESULTS,
-        include_domains: Optional[list[str]] = None,
-        exclude_domains: Optional[list[str]] = None,
-    ) -> Dict[str, Union[List[Document], List[str]]]:
-        """Uses [Tavily](https://docs.tavily.com/welcome) to search the web for relevant documents.
-
-        Parameters
-        ----------
-        query: str
-            The query.
-        search_depth: str
-            The string "basic" or "advanced", "basic" by default.
-            Advanced search looks for the most relevant content snippets and sources,
-            and uses more sophisticated techniques to filter and rank search results,
-            aiming for higher accuracy and relevance compared to the basic search option.
-            An advanced search costs 2 API Credits, compared to the lower cost of a basic search.
-        max_results: int
-            The maximum number of results to return.  5 by default.
-        include_domains: Optional[list[str]]
-            The only website domains that should be searched, None by default.
-        exclude_domains: Optional[list[str]]
-            The website domains that should not be searched, None by default.
-
-        Returns
-        -------
-        Dict[str, Union[List[Document], List[str]]]
-            A dict of {"documents": documents, "urls": urls}
-
-        """
-        response = await self._call_tavily_async(query, search_depth, max_results, include_domains, exclude_domains)
-        output = self._process_response(query, response)
-        return output
-
     @staticmethod
     def _process_response(query, response):
         documents = []
@@ -143,16 +103,6 @@ class TavilyWebSearch:
             search_depth=self._validate_search_depth(search_depth),
             time_range=None,
         )
-
-    async def _call_tavily_async(
-        self,
-        query: str,
-        search_depth: str,
-        max_results: int,
-        include_domains: Optional[list[str]],
-        exclude_domains: Optional[list[str]],
-    ):
-        return self._call_tavily(query, search_depth, max_results, include_domains, exclude_domains)
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes the component to a dictionary.
