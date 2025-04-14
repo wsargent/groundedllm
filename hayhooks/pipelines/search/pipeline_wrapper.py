@@ -1,7 +1,7 @@
 import os
 
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
-from haystack import AsyncPipeline, logging
+from haystack import Pipeline, logging
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
@@ -33,7 +33,7 @@ class PipelineWrapper(BasePipelineWrapper):
         search_model = os.getenv("SEARCH_MODEL")
         llm = OpenAIGenerator(api_key=search_api_key, api_base_url=api_base_url, model=search_model)
 
-        pipe = AsyncPipeline()
+        pipe = Pipeline()
         pipe.add_component("search", search)
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)

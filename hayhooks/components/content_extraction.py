@@ -1,6 +1,6 @@
 from typing import Optional
 
-from haystack import AsyncPipeline, SuperComponent
+from haystack import Pipeline, SuperComponent
 from haystack.components.converters import (
     CSVToDocument,
     HTMLToDocument,
@@ -31,8 +31,7 @@ def build_content_extraction_component(
         Output: documents (List[Document])
 
     """
-    # https://docs.haystack.deepset.ai/reference/pipeline-api#asyncpipeline
-    preprocessing_pipeline = AsyncPipeline()
+    preprocessing_pipeline = Pipeline()
 
     # There is a note in the 2.12 highlights
     # "Introduced asynchronous functionality and HTTP/2 support in the LinkContentFetcher component,
