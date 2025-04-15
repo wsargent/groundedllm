@@ -8,7 +8,7 @@ Here is the context from the search engine:
 <document>
 <title>{{ doc.meta.title }}</title>
 <score>{{ doc.score }}</score>
-<url>{{ doc.meta.link }}</url>
+<url>{{ doc.meta.url }}</url>
 <content> 
 {{ doc.content }}
 </content>

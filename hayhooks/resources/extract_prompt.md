@@ -49,7 +49,7 @@ Here is the content from the URLs:
 {% for doc in documents %}
 <document>
 <title>{{ doc.meta.title }}</title>
-<url>{{ doc.meta.link }}</url>
+<url>{{ doc.meta.url }}</url>
 <content> 
 {{ doc.content }}
 </content>

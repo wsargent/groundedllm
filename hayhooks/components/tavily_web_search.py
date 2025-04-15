@@ -77,7 +77,7 @@ class TavilyWebSearch:
             doc_dict = {
                 "title": result["title"],
                 "content": result["content"],
-                "link": result["url"],
+                "url": result["url"],
                 "score": result["score"],
             }
             urls.append(result["url"])
