@@ -6,7 +6,6 @@ from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
 
-import components.content_extraction
 from components.tavily_web_search import TavilyWebSearch
 from resources.utils import read_resource_file
 
@@ -19,21 +18,21 @@ class PipelineWrapper(BasePipelineWrapper):
     def setup(self) -> None:
         search = TavilyWebSearch()
 
-        default_user_agent = os.getenv(
-            "SEARCH_USER_AGENT",
-            "SearchAgent.extract @ https://github.com/wsargent/groundedllm",
-        )
-        use_http2 = bool(os.getenv("SEARCH_HTTP2", "True"))
-        retry_attempts = int(os.getenv("SEARCH_RETRY_ATTEMPTS", "3"))
-        timeout = int(os.getenv("SEARCH_TIMEOUT", "3"))
-        raise_on_failure = bool(os.getenv("SEARCH_RAISE_ON_FAILURE", "False"))
-        content_extractor = components.content_extraction.build_search_extraction_component(
-            raise_on_failure=raise_on_failure,
-            user_agents=[default_user_agent],
-            retry_attempts=retry_attempts,
-            timeout=timeout,
-            http2=use_http2,
-        )
+        # default_user_agent = os.getenv(
+        #     "SEARCH_USER_AGENT",
+        #     "SearchAgent.extract @ https://github.com/wsargent/groundedllm",
+        # )
+        # use_http2 = bool(os.getenv("SEARCH_HTTP2", "True"))
+        # retry_attempts = int(os.getenv("SEARCH_RETRY_ATTEMPTS", "3"))
+        # timeout = int(os.getenv("SEARCH_TIMEOUT", "3"))
+        # raise_on_failure = bool(os.getenv("SEARCH_RAISE_ON_FAILURE", "False"))
+        # content_extractor = components.content_extraction.build_search_extraction_component(
+        #     raise_on_failure=raise_on_failure,
+        #     user_agents=[default_user_agent],
+        #     retry_attempts=retry_attempts,
+        #     timeout=timeout,
+        #     http2=use_http2,
+        # )
 
         template = read_resource_file("search_prompt.md")
         prompt_builder = PromptBuilder(template=template, required_variables=["query"])
@@ -53,13 +52,14 @@ class PipelineWrapper(BasePipelineWrapper):
 
         pipe = Pipeline()
         pipe.add_component("search", search)
-        pipe.add_component("content_extractor", content_extractor)
+        # pipe.add_component("content_extractor", content_extractor)
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
 
         # Connect components
-        pipe.connect("search.documents", "search_extractor.documents")
-        pipe.connect("search_extractor.documents", "prompt_builder.documents")
+        # pipe.connect("search.documents", "search_extractor.documents")
+        # pipe.connect("search_extractor.documents", "prompt_builder.documents")
+        pipe.connect("search.documents", "prompt_builder.documents")
         pipe.connect("prompt_builder", "llm")
 
         self.pipeline = pipe
