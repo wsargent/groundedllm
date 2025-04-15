@@ -21,7 +21,7 @@ logger = getLogger("haystack.content_extraction")
 class ExtractUrls:
     @component.output_types(urls=list[str])
     def run(self, documents: list[Document]):
-        return {"urls": [doc.meta["link"] for doc in documents]}
+        return {"urls": [doc.meta["url"] for doc in documents]}
 
 
 @component
@@ -29,20 +29,26 @@ class JoinWithContent:
     @component.output_types(documents=list[Document])
     def run(self, scored_documents: list[Document], content_documents: list[Document]):
         joined_documents = []
-        for index, scored_document in enumerate(scored_documents):
-            logger.debug(f"run: processing document {index} with score {scored_document.score}")
-            if len(content_documents) > index:
-                content = content_documents[index].content
+        extracted_content: dict[str, str] = {}
+        for content_doc in content_documents:
+            url = content_doc.meta["url"]
+            extracted_content[url] = content_doc.content
+
+        for scored_document in scored_documents:
+            url = scored_document.meta["url"]
+            score = scored_document.score
+            logger.debug(f"run: processing document {url} with score {score}")
+            if url in extracted_content:
+                content = extracted_content[url]
             else:
-                logger.warning(f"run: length = {len(content_documents)}, using snippet")
                 content = scored_document.content
 
             doc = Document.from_dict(
                 {
                     "title": scored_document.meta["title"],
                     "content": content,
-                    "link": scored_document.meta["link"],
-                    "score": scored_document.score,
+                    "url": url,
+                    "score": score,
                 }
             )
             joined_documents.append(doc)
