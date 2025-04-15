@@ -28,11 +28,10 @@ docker compose -f '../docker-compose.yml' up -d 'open-webui'
 docker compose -f '../docker-compose.yml' up -d 'letta'
 ```
 
-And then start the hayhooks server:
+Copy your `env.example` to `.env` to set up the environment variables, and then start the hayhooks server:
 
 ```
-export OPENWEBUI_BASE_URL=http://localhost:3000
-export LETTA_BASE_URL=http://localhost:8382
+# cp env.example .env 
 python app.py
 ```
 
@@ -54,7 +53,8 @@ Using a distinct model for searches also protects the agent against itself; givi
 
 ```bash
 hayhooks pipeline run search \
-    --param 'query="What does Haystack do?"'
+    --param 'question="What does Haystack do?"' \
+    --param 'search_depth="advanced"'
 ```
 
 ### Extract Pipeline

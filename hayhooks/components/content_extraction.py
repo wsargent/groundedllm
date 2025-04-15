@@ -1,11 +1,10 @@
 from typing import Optional
 
-from haystack import Pipeline, SuperComponent
+from haystack import Document, Pipeline, SuperComponent, component
 from haystack.components.converters import (
     CSVToDocument,
     HTMLToDocument,
     MarkdownToDocument,
-    OutputAdapter,
     PyPDFToDocument,
     TextFileToDocument,
 )
@@ -13,6 +12,41 @@ from haystack.components.fetchers import LinkContentFetcher
 from haystack.components.joiners import DocumentJoiner
 from haystack.components.preprocessors import DocumentCleaner
 from haystack.components.routers import FileTypeRouter
+from haystack.logging import getLogger
+
+logger = getLogger("haystack.content_extraction")
+
+
+@component
+class ExtractUrls:
+    @component.output_types(urls=list[str])
+    def run(self, documents: list[Document]):
+        return {"urls": [doc.meta["link"] for doc in documents]}
+
+
+@component
+class JoinWithContent:
+    @component.output_types(documents=list[Document])
+    def run(self, scored_documents: list[Document], content_documents: list[Document]):
+        joined_documents = []
+        for index, scored_document in enumerate(scored_documents):
+            logger.debug(f"run: processing document {index} with score {scored_document.score}")
+            if len(content_documents) > index:
+                content = content_documents[index].content
+            else:
+                logger.warning(f"run: length = {len(content_documents)}, using snippet")
+                content = scored_document.content
+
+            doc = Document.from_dict(
+                {
+                    "title": scored_document.meta["title"],
+                    "content": content,
+                    "link": scored_document.meta["link"],
+                    "score": scored_document.score,
+                }
+            )
+            joined_documents.append(doc)
+        return {"documents": joined_documents}
 
 
 def build_search_extraction_component(
@@ -28,27 +62,21 @@ def build_search_extraction_component(
 
     content_extraction_component = build_content_extraction_component(raise_on_failure=raise_on_failure, user_agents=user_agents, retry_attempts=retry_attempts, timeout=timeout, http2=http2)
 
-    extract_urls_template = """[{% for doc in documents %}"{{ doc.meta.link }}"{% if not loop.last %},{% endif %}{% endfor %}]"""
-    extract_content_template = """[{% for doc in documents %}"{{ doc.content }}"{% if not loop.last %},{% endif %}{% endfor %}]"""
-
-    extract_urls_adapter = OutputAdapter(template=extract_urls_template, output_type=list[str])
-    extract_content_adapter = OutputAdapter(
-        template=extract_content_template,
-        output_type=list[str],
-    )
+    extract_urls_adapter = ExtractUrls()
+    content_joiner = JoinWithContent()
 
     pipe.add_component("extract_urls_adapter", extract_urls_adapter)
     pipe.add_component("content_extractor", content_extraction_component)
-    pipe.add_component("extract_content_adapter", extract_content_adapter)
+    pipe.add_component("content_joiner", content_joiner)
 
     # OutputAdapter always has dict with "output" as the key
-    pipe.connect("extract_urls_adapter.output", "content_extractor.urls")
-    pipe.connect("content_extractor.documents", "extract_content_adapter.documents")
+    pipe.connect("extract_urls_adapter.urls", "content_extractor.urls")
+    pipe.connect("content_extractor.documents", "content_joiner.content_documents")
 
     extraction_component = SuperComponent(
         pipeline=pipe,
-        input_mapping={"documents": ["extract_urls_adapter.documents"]},
-        output_mapping={"extract_content_adapter.output": "contents"},
+        input_mapping={"documents": ["extract_urls_adapter.documents", "content_joiner.scored_documents"]},
+        output_mapping={"content_joiner.documents": "documents"},
     )
     return extraction_component
 
