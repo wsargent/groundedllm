@@ -57,6 +57,12 @@ hayhooks pipeline run search \
     --param 'search_depth="advanced"'
 ```
 
+Note that the `time_range` does not take quotes:
+
+```bash
+hayhooks pipeline run search --param 'question="When was the last full moon?"' --param 'time_range=month'
+```
+
 ### Extract Pipeline
 
 This pipeline takes URLs, scrapes the contents, and feeds it to an LLM with a large context window.

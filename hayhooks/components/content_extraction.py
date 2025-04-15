@@ -94,7 +94,7 @@ def build_content_extraction_component(
 
     Returns:
         A SuperComponent ready to be added to a pipeline.
-        Input: urls (List[str]) or documents (List[documents])
+        Input: urls (List[str])
         Output: documents (List[Document])
 
     """

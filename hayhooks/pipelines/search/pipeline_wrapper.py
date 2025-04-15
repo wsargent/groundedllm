@@ -77,6 +77,7 @@ class PipelineWrapper(BasePipelineWrapper):
         question: str,
         max_results: int = 5,
         search_depth: str = "basic",
+        time_range: str = "",
         include_domains: str = "",
         exclude_domains: str = "",
     ) -> str:
@@ -97,6 +98,9 @@ class PipelineWrapper(BasePipelineWrapper):
             The depth of the web search: "basic" or "advanced".
             Using "basic" provides standard results.
             Using "advanced" is higher relevance at a higher cost (2 API credits vs 1).
+        time_range: str
+            The range of time to search for: "day", "week", "month", "year", or "" to ignore.
+            Use this when recent results are desired.
         include_domains : str
             A list of domains to specifically include in the search results.
             Use "" to ignore this argument.
@@ -123,6 +127,7 @@ class PipelineWrapper(BasePipelineWrapper):
                     "query": question,
                     "search_depth": search_depth,
                     "max_results": max_results,
+                    "time_range": time_range if time_range != "" else None,
                     "include_domains": include_domains if include_domains != "" else None,
                     "exclude_domains": exclude_domains if exclude_domains != "" else None,
                 },
