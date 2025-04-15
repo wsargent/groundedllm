@@ -31,7 +31,8 @@ class TavilyWebSearch:
     def run(
         self,
         query: str,
-        search_depth: str = DEFAULT_SEARCH_DEPTH,
+        search_depth: Literal["basic", "advanced"] = DEFAULT_SEARCH_DEPTH,
+        time_range: Optional[Literal["day", "week", "month", "year"]] = None,
         max_results: int = DEFAULT_MAX_RESULTS,
         include_domains: Optional[list[str]] = None,
         exclude_domains: Optional[list[str]] = None,
@@ -48,6 +49,9 @@ class TavilyWebSearch:
             and uses more sophisticated techniques to filter and rank search results,
             aiming for higher accuracy and relevance compared to the basic search option.
             An advanced search costs 2 API Credits, compared to the lower cost of a basic search.
+        time_range: str
+            The string "day", "week", "month", "year", or None.  None by default.
+            Returns only results that match inside the given time range.
         max_results: int
             The maximum number of results to return.  5 by default.
         include_domains: Optional[list[str]]
@@ -61,7 +65,7 @@ class TavilyWebSearch:
             A dict of {"documents": documents, "urls": urls}
 
         """
-        response = self._call_tavily(query, search_depth, max_results, include_domains, exclude_domains)
+        response = self._call_tavily(query=query, search_depth=search_depth, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains, time_range=time_range)
         output = self._process_response(query, response)
         return output
 
@@ -91,18 +95,12 @@ class TavilyWebSearch:
         query: str,
         search_depth: str,
         max_results: int,
+        time_range: Optional[Literal["day", "week", "month", "year"]],
         include_domains: Optional[list[str]],
         exclude_domains: Optional[list[str]],
     ):
         # https://github.com/tavily-ai/tavily-python?tab=readme-ov-file#api-methods
-        return self.tavily_client.search(
-            query,
-            max_results=max_results,
-            include_domains=include_domains,
-            exclude_domains=exclude_domains,
-            search_depth=self._validate_search_depth(search_depth),
-            time_range=None,
-        )
+        return self.tavily_client.search(query, max_results=max_results, time_range=time_range, include_domains=include_domains, exclude_domains=exclude_domains, search_depth=self._validate_search_depth(search_depth))
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes the component to a dictionary.
