@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
-from haystack import AsyncPipeline
+from haystack import Pipeline
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
@@ -32,7 +32,7 @@ class PipelineWrapper(BasePipelineWrapper):
     def setup(self) -> None:
         self.pipeline = self.create_pipeline()
 
-    def create_pipeline(self) -> AsyncPipeline:
+    def create_pipeline(self) -> Pipeline:
         prompt_builder = PromptBuilder(template=self.template, required_variables=["query", "documents"])
 
         # Ideally I'd like to get the model at pipeline execution but
@@ -46,7 +46,7 @@ class PipelineWrapper(BasePipelineWrapper):
             "EXTRACT_USER_AGENT",
             "SearchAgent.extract @ https://github.com/wsargent/groundedllm",
         )
-        use_http2 = bool(os.getenv("EXTRACT_HTTP2", "True"))
+        use_http2 = bool(os.getenv("EXTRACT_HTTP2", "true"))
         retry_attempts = int(os.getenv("EXTRACT_RETRY_ATTEMPTS", "3"))
         timeout = int(os.getenv("EXTRACT_TIMEOUT", "3"))
         raise_on_failure = bool(os.getenv("EXTRACT_RAISE_ON_FAILURE", "False"))
@@ -58,7 +58,7 @@ class PipelineWrapper(BasePipelineWrapper):
             http2=use_http2,
         )
 
-        pipe = AsyncPipeline()
+        pipe = Pipeline()
         pipe.add_component("content_extractor", content_extractor)
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
@@ -163,8 +163,6 @@ class PipelineWrapper(BasePipelineWrapper):
 
         clean_urls = self._clean_urls(urls)
 
-        # async pipeline run still runs asynchronously under the hood, but run_api
-        # is not async so there's no point in calling run_async or run_async_generator.
         result = self.pipeline.run(
             {
                 "content_extractor": {"urls": clean_urls},
