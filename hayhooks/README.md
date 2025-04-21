@@ -16,8 +16,8 @@ First, set up your uv environment with development dependencies (be aware that `
 
 ```bash
 cp env.example .env
-uv pip install -e '.[dev]'
 uv venv
+uv sync
 source .venv/bin/activate
 ```
 
