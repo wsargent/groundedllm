@@ -12,8 +12,6 @@ dependencies = [
     "letta-client>=0.1.91",
     "markdown-it-py>=3.0.0",
     "mdit-plain>=1.0.1",
-    "openapi-llm>=0.4.2",
-    "openapi3>=1.8.2",
     "pydantic-settings>=2.8.1",
     "pypdf>=5.4.0",
     "python-docx>=1.1.2",
@@ -21,10 +19,6 @@ dependencies = [
     "tavily-python>=0.5.3",
     "trafilatura>=2.0.0",
 ]
-
-[project.optional-dependencies]
-# Test dependencies moved to [dependency-groups].dev
-test = []
 
 [tool.setuptools]
 packages = ["components", "pipelines", "resources"]
@@ -40,6 +34,7 @@ dev = [
     "ruff>=0.11.5",
     "pytest>=8.3.5",
     "pytest-mock>=3.12",
+    "pytest-asyncio>=0.26.0",
 ]
 
 [tool.ruff]

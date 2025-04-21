@@ -36,6 +36,8 @@ class PipelineWrapper(BasePipelineWrapper):
             which holds the response from the OpenWebUI function creation process.
     """
 
+    skip_mcp = True
+
     def setup(self) -> None:
         """Initializes and configures the Haystack pipeline components.
 
