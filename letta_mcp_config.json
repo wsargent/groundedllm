@@ -7,7 +7,7 @@
     },
     "aws-documentation-mcp-server": {
       "url": "http://aws-documentation-mcp-server:9712/sse",
-      "disabled": false,
+      "disabled": true,
       "autoApprove": []
     },
     "wikipedia-mcp-server": {
@@ -17,6 +17,11 @@
     },
     "letta-mcp-server": {
       "url": "http://letta-mcp-server:9714/sse",
+      "disabled": false,
+      "autoApprove": []
+    },
+    "github-mcp-server": {
+      "url": "http://github-mcp-server:9720/sse",
       "disabled": false,
       "autoApprove": []
     }
