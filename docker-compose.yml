@@ -1,3 +1,6 @@
+include:
+  - mcp/docker-compose.yml
+
 services:
 
   # LiteLLM can be enabled in Open WebUI if you want direct access to models
@@ -36,7 +39,7 @@ services:
       # Needed for search pipeline
       - TAVILY_API_KEY=$TAVILY_API_KEY
       - OPENWEBUI_BASE_URL=http://open-webui:8080
-      - LETTA_BASE_URL=http://letta:8283      
+      - LETTA_BASE_URL=http://letta:8283
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
       interval: 10s
@@ -152,47 +155,6 @@ services:
       # This embedding model is likewise free (for now), you can also use letta/letta-free
       #EMBEDDING_MODEL=letta/letta-free
       - EMBEDDING_MODEL=google_ai/gemini-embedding-exp-03-07
-
-  aws-documentation-mcp-server:
-    build: mcp/aws-documentation-mcp-server/
-    container_name: aws-documentation-mcp-server
-    ports:
-      - 9712:9712
-    environment:
-      - LOG_LEVEL=ERROR
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9712/sse"]
-      interval: 10s
-      timeout: 5s
-      retries: 18
-      start_period: 5s
-
-  wikipedia-mcp-server:
-    build: mcp/wikipedia-mcp-server/
-    container_name: wikipedia-mcp-server
-    ports:
-      - 9713:9713
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9713/sse"]
-      interval: 10s
-      timeout: 5s
-      retries: 18
-      start_period: 5s
-
-  letta-mcp-server:
-    build: mcp/letta-mcp-server/
-    ports:
-      - 9714:9714
-    environment:
-      - LETTA_BASE_URL=http://letta:8283
-      - PORT=9714
-      - NODE_ENV=production
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9714/sse"]
-      interval: 10s
-      timeout: 5s
-      retries: 18
-      start_period: 5s
 
 volumes:
   open-webui:
