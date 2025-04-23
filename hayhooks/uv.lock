@@ -196,6 +196,15 @@ wheels = [
 ]
 
 [[package]]
+name = "exceptiongroup"
+version = "1.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/09/35/2495c4ac46b980e4ca1f6ad6db102322ef3ad2410b79fdde159a4b0f3b92/exceptiongroup-1.2.2.tar.gz", hash = "sha256:47c2edf7c6738fafb49fd34290706d1a1a2f4d1c6df275526b62cbb4aa5393cc", size = 28883 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl", hash = "sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b", size = 16453 },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.112.1"
 source = { registry = "https://pypi.org/simple" }
@@ -272,6 +281,7 @@ dependencies = [
     { name = "httpx", extra = ["http2"] },
     { name = "letta-client" },
     { name = "markdown-it-py" },
+    { name = "mcp-haystack" },
     { name = "mdit-plain" },
     { name = "pydantic-settings" },
     { name = "pypdf" },
@@ -286,7 +296,6 @@ dev = [
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
-    { name = "pytest-asyncio" },
     { name = "pytest-mock" },
     { name = "ruff" },
 ]
@@ -294,11 +303,12 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "gdown", specifier = ">=5.2.0" },
-    { name = "hayhooks", extras = ["mcp"], specifier = ">=0.6.0" },
-    { name = "haystack-ai", specifier = ">=2.12.0" },
+    { name = "hayhooks", extras = ["mcp"], specifier = ">=0.7.0" },
+    { name = "haystack-ai", specifier = ">=2.13.0" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.27.0" },
     { name = "letta-client", specifier = ">=0.1.91" },
     { name = "markdown-it-py", specifier = ">=3.0.0" },
+    { name = "mcp-haystack", specifier = ">=0.1.0" },
     { name = "mdit-plain", specifier = ">=1.0.1" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "pypdf", specifier = ">=5.4.0" },
@@ -313,7 +323,6 @@ dev = [
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "pytest", specifier = ">=8.3.5" },
-    { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-mock", specifier = ">=3.12" },
     { name = "ruff", specifier = ">=0.11.5" },
 ]
@@ -342,7 +351,7 @@ wheels = [
 
 [[package]]
 name = "hayhooks"
-version = "0.6.0"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
@@ -356,9 +365,9 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/85/7ca4e905ec2f2dcb27f36801c896b8009f44269e0329c3a64094e44f2915/hayhooks-0.6.0.tar.gz", hash = "sha256:e8b518eb8c0498b8810dc329cfd9357d707cfa450dc8b087fbf4d38ca15fbd9d", size = 1761580 }
+sdist = { url = "https://files.pythonhosted.org/packages/69/a7/e4bed1e3c9962e2750f3f35bd927c93410b7a9157f9ac6eec0430a6289ce/hayhooks-0.7.0.tar.gz", hash = "sha256:d16186995720a54f3d67e81d8edd8698a8f67b55f48e3a79b4b8e7e28781f6d3", size = 5733332 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/ef/da070013a1caf96c68509adf0b79ffcd68412ae63cde8a47850a4e3c184b/hayhooks-0.6.0-py3-none-any.whl", hash = "sha256:2962baf94c00d4236ffdc2dc7a56029f22f02623fbf59fd4c51ccdecbf473ecf", size = 41819 },
+    { url = "https://files.pythonhosted.org/packages/b3/96/08c7dcfb2bb4ebdb51bc6774e30257bd8a621f642d7e4105d66c7f84e5a1/hayhooks-0.7.0-py3-none-any.whl", hash = "sha256:9509df6c59109f0b3de67525649ea00fa3e4b841774c31961bc4f39487402787", size = 44900 },
 ]
 
 [package.optional-dependencies]
@@ -368,7 +377,7 @@ mcp = [
 
 [[package]]
 name = "haystack-ai"
-version = "2.12.0"
+version = "2.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "haystack-experimental" },
@@ -388,9 +397,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/30/90/f639b6570e9c0792710d3f3b59ec6f13b4bf781e53c6e03fcc15ec4555f6/haystack_ai-2.12.0.tar.gz", hash = "sha256:bf8f6abbd1640fcbbdc2ed88883645f449ac98423a52474b3c5f278d32733dc2", size = 318701 }
+sdist = { url = "https://files.pythonhosted.org/packages/13/38/f2443dc041af08fc4cefe5d8f5ad35559628109bb2409861736a369b37c7/haystack_ai-2.13.0.tar.gz", hash = "sha256:83f508786b87e934a18c63abe1636b8dbd21832c527fb7b219a972578226ca4c", size = 326813 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/ff/6f74daab1512021ba7f61e5be21b36998ae78d49c6a5ce80b12fb451254d/haystack_ai-2.12.0-py3-none-any.whl", hash = "sha256:d30ff8e950ded87e52ed41a3a8744b328565d27b02c6bfce7fb1d448d4f2ca42", size = 482753 },
+    { url = "https://files.pythonhosted.org/packages/e1/6b/d349f2a121592ad38869fc20e7b1d43a5cb29d8911bc75bff7b188b0688e/haystack_ai-2.13.0-py3-none-any.whl", hash = "sha256:adce343926fc06adbef854976f307cd5bc43ff4a7139787dec51961221be29fe", size = 493269 },
 ]
 
 [[package]]
@@ -726,6 +735,21 @@ wheels = [
 ]
 
 [[package]]
+name = "mcp-haystack"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "exceptiongroup" },
+    { name = "haystack-ai" },
+    { name = "httpx" },
+    { name = "mcp" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5e/00/e6513f2b3287b211dea8cd122be45fcb998522fe4634cd6edda84d482351/mcp_haystack-0.1.0.tar.gz", hash = "sha256:2ee19aed3263424680e6121f9933e13a26857342f0623bd657fb8575dafab305", size = 26391 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/59/16/db359287217f3b640322686dfe6c50de2c9e1220cd62bcbce6a30be7de57/mcp_haystack-0.1.0-py3-none-any.whl", hash = "sha256:ca0aeecc3b5e5fb8e41e058e88b60e0e78b53d8fcabfcd269037be19cc800718", size = 17044 },
+]
+
+[[package]]
 name = "mdit-plain"
 version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -994,18 +1018,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ae/3c/c9d525a414d506893f0cd8a8d0de7706446213181570cdbd766691164e40/pytest-8.3.5.tar.gz", hash = "sha256:f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845", size = 1450891 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/30/3d/64ad57c803f1fa1e963a7946b6e0fea4a70df53c1a7fed304586539c2bac/pytest-8.3.5-py3-none-any.whl", hash = "sha256:c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820", size = 343634 },
-]
-
-[[package]]
-name = "pytest-asyncio"
-version = "0.26.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8e/c4/453c52c659521066969523e87d85d54139bbd17b78f09532fb8eb8cdb58e/pytest_asyncio-0.26.0.tar.gz", hash = "sha256:c4df2a697648241ff39e7f0e4a73050b03f123f760673956cf0d72a4990e312f", size = 54156 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/7f/338843f449ace853647ace35870874f69a764d251872ed1b4de9f234822c/pytest_asyncio-0.26.0-py3-none-any.whl", hash = "sha256:7b51ed894f4fbea1340262bdae5135797ebbe21d8638978e35d31c6d19f72fb0", size = 19694 },
 ]
 
 [[package]]

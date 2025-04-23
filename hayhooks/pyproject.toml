@@ -6,11 +6,12 @@ readme = "README.md"
 requires-python = "==3.12.*"
 dependencies = [
     "gdown>=5.2.0",
-    "hayhooks[mcp]>=0.6.0",
+    "hayhooks[mcp]>=0.7.0",
     "haystack-ai>=2.13.0",
     "httpx[http2]>=0.27.0",
     "letta-client>=0.1.91",
     "markdown-it-py>=3.0.0",
+    "mcp-haystack>=0.1.0",
     "mdit-plain>=1.0.1",
     "pydantic-settings>=2.8.1",
     "pypdf>=5.4.0",
