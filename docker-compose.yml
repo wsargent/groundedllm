@@ -50,7 +50,7 @@ services:
   # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
   letta:
-    image: letta/letta:0.6.54
+    image: letta/letta:0.7.3
     container_name: letta
     ports:
       - 8283:8283
@@ -61,6 +61,8 @@ services:
       # https://docs.letta.com/guides/server/docker#setting-environment-variables
       ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
       GEMINI_API_KEY: $GEMINI_API_KEY
+      # Adding Ollama just in case it's running
+      OLLAMA_BASE_URL: http://host.docker.internal:11434/
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8283/v1/health/"]
