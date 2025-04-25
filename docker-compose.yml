@@ -83,7 +83,7 @@ services:
       # Disable admin login
       - WEBUI_AUTH=false
       # Enable the /docs endpoint for OpenAPI viewing
-      - ENV=dev
+      #- ENV=dev
       # Prevent a langchain warning
       - USER_AGENT=openwebui
       # Disable sneaky calls to LLMs by all methods possible (use Ollama or Flash-Lite if desired)
@@ -92,8 +92,8 @@ services:
       - ENABLE_EVALUATION_ARENA_MODELS=false
       - ENABLE_AUTOCOMPLETE_GENERATION=false
       - ENABLE_RETRIEVAL_QUERY_GENERATION=false
-      # Disable Ollama (focus attention on Letta Pipe)
-      - ENABLE_OLLAMA_API=false
+      # Enable Ollama (it may need tweaking to work with Letta)
+      - ENABLE_OLLAMA_API=true
       - OLLAMA_BASE_URL=$OLLAMA_BASE_URL
       # Point the RAG at Gemini to disable giant downloads
       - RAG_EMBEDDING_ENGINE=openai
@@ -108,7 +108,7 @@ services:
       #- OPENAI_API_BASE_URLS=http://litellm:4000
       #- OPENAI_API_KEY=$LITELLM_MASTER_KEY
       # Disable giant downloads
-      - AUDIO_STT_ENGINE=openai
+      - AUDIO_STT_ENGINE=
     restart: unless-stopped
     # https://docs.openwebui.com/getting-started/advanced-topics/monitoring/#basic-health-check-endpoint
     healthcheck:
