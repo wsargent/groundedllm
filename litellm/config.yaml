@@ -25,6 +25,15 @@ model_list:
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
+  # https://docs.litellm.ai/docs/providers/ollama
+  - model_name: "gemma3:27b-it-qat"             
+    litellm_params:
+      model: "ollama_chat/gemma3:27b-it-qat"
+      keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
+      api_base: "os.environ/OLLAMA_BASE_URL"
+    model_info:
+      supports_function_calling: true
+      
   # - model_name: claude-3-7-sonnet
   #   litellm_params:
   #     model: anthropic/claude-3-7-sonnet-20250219

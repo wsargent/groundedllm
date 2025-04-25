@@ -60,7 +60,7 @@ services:
       ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
       GEMINI_API_KEY: $GEMINI_API_KEY
       # Adding Ollama just in case it's running
-      OLLAMA_BASE_URL: http://host.docker.internal:11434/
+      OLLAMA_BASE_URL: $OLLAMA_BASE_URL
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8283/v1/health/"]
@@ -68,11 +68,6 @@ services:
       timeout: 5s
       retries: 18
       start_period: 1s
-    #depends_on:
-      #wikipedia-mcp-server:
-      #  condition: service_healthy
-      #aws-documentation-mcp-server:
-      #  condition: service_healthy
 
   # Open WebUI is the front-end UI to Letta
   open-webui:
@@ -99,6 +94,7 @@ services:
       - ENABLE_RETRIEVAL_QUERY_GENERATION=false
       # Disable Ollama (focus attention on Letta Pipe)
       - ENABLE_OLLAMA_API=false
+      - OLLAMA_BASE_URL=$OLLAMA_BASE_URL
       # Point the RAG at Gemini to disable giant downloads
       - RAG_EMBEDDING_ENGINE=openai
       - RAG_OPENAI_API_BASE_URL=http://litellm:4000
