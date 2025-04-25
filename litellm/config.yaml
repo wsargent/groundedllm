@@ -26,11 +26,22 @@ model_list:
       tags: ["gemini"]
 
   # https://docs.litellm.ai/docs/providers/ollama
+  - model_name: "gemma3:12b-it-qat"             
+    litellm_params:
+      model: "ollama_chat/gemma3:12b-it-qat"
+      keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
+      api_base: "os.environ/OLLAMA_BASE_URL"
+      tags: ["gemma"]
+    model_info:
+      supports_function_calling: true
+      
+  # https://docs.litellm.ai/docs/providers/ollama
   - model_name: "gemma3:27b-it-qat"             
     litellm_params:
       model: "ollama_chat/gemma3:27b-it-qat"
       keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
       api_base: "os.environ/OLLAMA_BASE_URL"
+      tags: ["gemma"]
     model_info:
       supports_function_calling: true
       
