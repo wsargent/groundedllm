@@ -123,15 +123,7 @@ class PipelineWrapper(BasePipelineWrapper):
                 "hayhooks": [  # internal mcp tools
                     "search",
                     "extract",
-                ],
-                "aws-documentation-mcp-server": [  # typescript docker
-                    "read_documentation",
-                    "search_documentation",
-                ],
-                "wikipedia-mcp-server": [  # python docker
-                    "findPage",
-                    "getPage",
-                ],
+                ]
             },
         }
 
