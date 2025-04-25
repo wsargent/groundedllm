@@ -175,7 +175,7 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 
 To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  Google Flash 2.0 also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.
 
-The extract tool converts HTML to Markdown and does some document cleanup before sending it to Google Flash 2.0.  Only HTML is processed for now, although there are [many converters](https://docs.haystack.deepset.ai/docs/converters) available, and PDF support through [docling-haystack](https://haystack.deepset.ai/integrations/docling) or [docling-serve](https://github.com/docling-project/docling-serve) should be easy.
+The extract tool converts documents in many formats to Markdown and does some document cleanup before sending it to Google Flash 2.0.  It's all internal to Haystack and comes for free.
 
 There is no vector/embeddings/database RAG involved in this project, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is technically a RAG implementation based on pgvector.
 
