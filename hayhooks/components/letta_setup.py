@@ -180,7 +180,7 @@ class LettaCreateAgent:
                 ),
             ]
 
-            available_llms: List[LlmConfig] = self.client.models.list_llms()
+            available_llms: List[LlmConfig] = self.client.models.list()
             available_model_names = {llm.handle for llm in available_llms}
 
             if letta_model in available_model_names:
