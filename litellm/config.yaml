@@ -34,6 +34,17 @@ model_list:
       tags: ["gemma"]
     model_info:
       supports_function_calling: true
+
+  # These don't work in Letta yet
+  - model_name: "qwen3:14b"             
+    litellm_params:
+      model: "ollama_chat/qwen:14b"
+      keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
+      api_base: "os.environ/OLLAMA_BASE_URL"
+      tags: ["qwen"]
+    model_info:
+      supports_function_calling: true
+      
       
   # https://docs.litellm.ai/docs/providers/ollama
   - model_name: "gemma3:27b-it-qat"             
