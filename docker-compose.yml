@@ -24,9 +24,8 @@ services:
     environment:
       - OPENAI_API_BASE=http://litellm:4000
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
-      # Could probably use gemini-2.0-flash-lite here 
-      - SEARCH_MODEL=gemini-2.0-flash
-      - EXTRACT_MODEL=gemini-2.0-flash
+      - SEARCH_MODEL=$SEARCH_MODEL
+      - EXTRACT_MODEL=$EXTRACT_MODEL
       - HAYHOOKS_PIPELINES_DIR=/pipelines
       - HAYHOOKS_DISABLE_SSL=true
       - HAYHOOKS_HOST=0.0.0.0
@@ -48,7 +47,7 @@ services:
   # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
   letta:
-    image: letta/letta:0.7.3
+    image: letta/letta:0.6.53
     container_name: letta
     ports:
       - 8283:8283
@@ -99,7 +98,7 @@ services:
       - RAG_EMBEDDING_ENGINE=openai
       - RAG_OPENAI_API_BASE_URL=http://litellm:4000
       - RAG_OPENAI_API_KEY=$LITELLM_MASTER_KEY
-      - RAG_EMBEDDING_MODEL=text-embedding-005
+      - RAG_EMBEDDING_MODEL=$RAG_EMBEDDING_MODEL
       # Enable Tavily Web Search in Open WebUI (commented out as Letta does a better job)
       #- ENABLE_RAG_WEB_SEARCH=true
       #- RAG_WEB_SEARCH_ENGINE=tavily
@@ -132,25 +131,8 @@ services:
       - OPEN_WEBUI_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - HAYHOOKS_BASE_URL=http://hayhooks:1416
-      #if you prefer using Anthropic, be warned that it has *very* low rate limits
-      #- CHAT_MODEL=anthropic/claude-3-7-sonnet-20250219
-      #
-      # If you don't have a google api key at all, you can always use letta/letta-free
-      #- CHAT_MODEL=letta/letta-free
-      #
-      # Priced competitively, this gives developers access to increased rate limits to use with 2.5 Pro. 
-      # The experimental version of Gemini 2.5 Pro remains available for free with lower rate limits. 
-      #   -- https://blog.google/products/gemini/gemini-preview-model-billing-update/
-      #
-      # Note: 'gemini-2.5-pro-preview-03-25' is a billed model,
-      # you can continue to use 'gemini-2.5-pro-exp-03-25' on the free tier.
-      #   -- https://ai.google.dev/gemini-api/docs/thinking
-      #
-      #- CHAT_MODEL=google_ai/gemini-2.5-pro-preview-03-25
-      - CHAT_MODEL=google_ai/gemini-2.5-pro-exp-03-25
-      # This embedding model is likewise free (for now), you can also use letta/letta-free
-      #EMBEDDING_MODEL=letta/letta-free
-      - EMBEDDING_MODEL=google_ai/gemini-embedding-exp-03-07
+      - CHAT_MODEL=$CHAT_MODEL
+      - EMBEDDING_MODEL=$EMBEDDING_MODEL
 
 volumes:
   open-webui:
