@@ -11,6 +11,9 @@ services:
       - LITELLM_LOG=WARN
       - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
       - GEMINI_API_KEY=$GEMINI_API_KEY
+      - OLLAMA_BASE_URL=$OLLAMA_BASE_URL
+      - LM_STUDIO_API_BASE=$LM_STUDIO_API_BASE
+      - LM_STUDIO_API_KEY=$LM_STUDIO_API_KEY
       #- ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
       
   # This is the tool server and also provisions Letta & Open WebUI
@@ -60,6 +63,11 @@ services:
       GEMINI_API_KEY: $GEMINI_API_KEY
       # Adding Ollama just in case it's running
       OLLAMA_BASE_URL: $OLLAMA_BASE_URL
+      # Expose the LiteLLM mappings as well, in case there are providers that
+      # aren't mapped locally (you will need to manually set the context window)
+      OPENAI_API_BASE: http://litellm:4000
+      OPENAI_API_KEY: $LITELLM_MASTER_KEY
+      LMSTUDIO_BASE_URL: $LM_STUDIO_API_BASE
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8283/v1/health/"]
@@ -104,8 +112,8 @@ services:
       #- RAG_WEB_SEARCH_ENGINE=tavily
       #- TAVILY_API_KEY=$TAVILY_API_KEY
       # Add models from LiteLLM (commented out to focus attention on Letta)
-      #- OPENAI_API_BASE_URLS=http://litellm:4000
-      #- OPENAI_API_KEY=$LITELLM_MASTER_KEY
+      - OPENAI_API_BASE_URLS=http://litellm:4000
+      - OPENAI_API_KEY=$LITELLM_MASTER_KEY
       # Disable giant downloads
       - AUDIO_STT_ENGINE=
     restart: unless-stopped

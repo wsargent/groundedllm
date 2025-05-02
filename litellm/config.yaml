@@ -25,37 +25,24 @@ model_list:
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
-  # https://docs.litellm.ai/docs/providers/ollama
-  - model_name: "gemma3:12b-it-qat"             
+  - model_name: "ollama_chat/qwen3:14b"
     litellm_params:
-      model: "ollama_chat/gemma3:12b-it-qat"
+      model: "ollama_chat/qwen3:14b"
       keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
       api_base: "os.environ/OLLAMA_BASE_URL"
-      tags: ["gemma"]
-    model_info:
-      supports_function_calling: true
+      tags: ["qwen3"]
+      
+  # If you are on Mac, you'll want to use LM Studio with MLX
+  # https://lmstudio.ai/docs/app/api
+  # https://docs.litellm.ai/docs/providers/lm_studio
+  # https://huggingface.co/collections/mlx-community/qwen3-680ff3bcb446bdba2c45c7c4
+  - model_name: "lm_studio/qwen3-8b-mlx@4bit"
+    litellm_params:
+      model: "lm_studio/qwen3-8b-mlx@4bit"
+      api_base: "os.environ/LM_STUDIO_API_BASE"
+      api_key: "os.environ/LM_STUDIO_API_KEY"
+      tags: ["qwen3"]
 
-  # These don't work in Letta yet
-  - model_name: "qwen3:14b"             
-    litellm_params:
-      model: "ollama_chat/qwen:14b"
-      keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
-      api_base: "os.environ/OLLAMA_BASE_URL"
-      tags: ["qwen"]
-    model_info:
-      supports_function_calling: true
-      
-      
-  # https://docs.litellm.ai/docs/providers/ollama
-  - model_name: "gemma3:27b-it-qat"             
-    litellm_params:
-      model: "ollama_chat/gemma3:27b-it-qat"
-      keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
-      api_base: "os.environ/OLLAMA_BASE_URL"
-      tags: ["gemma"]
-    model_info:
-      supports_function_calling: true
-      
   # - model_name: claude-3-7-sonnet
   #   litellm_params:
   #     model: anthropic/claude-3-7-sonnet-20250219
@@ -86,4 +73,5 @@ model_list:
       tags: ["gemini"]
 
 litellm_settings:
-  request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
+  request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds.
+  drop_params: true       # not all models support all the parameters
