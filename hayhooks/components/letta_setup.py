@@ -193,6 +193,7 @@ class LettaCreateAgent:
             enable_reasoner = None
             max_reasoning_tokens = None
             max_tokens = None
+            enable_sleeptime = True
 
             # Still not sure if reasoning model is an advantage here
             # if "claude-3-7-sonnet" in selected_model:
@@ -212,6 +213,7 @@ class LettaCreateAgent:
                 max_tokens=max_tokens,
                 tool_ids=tool_ids,
                 tool_rules=tool_rules,
+                enable_sleeptime=enable_sleeptime,
             )
             logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
             # Add a note so we can see when it was created
