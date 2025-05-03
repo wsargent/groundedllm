@@ -2,60 +2,45 @@ model_list:
 
   ######################################
   # Chat Models
+  # https://docs.litellm.ai/docs/providers/
 
-  # A full list of providers is here: https://docs.litellm.ai/docs/providers/
-  - model_name: gemini-2.5-pro
+  - model_name: "gemini/gemini-2.5-pro-exp-03-25"
     litellm_params:
-      model: gemini/gemini-2.5-pro-exp-03-25
+      model: "gemini/gemini-2.5-pro-exp-03-25"
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
     model_info:
       max_input_tokens: 1048576
       max_output_tokens: 8192
 
-  - model_name: gemini-2.0-flash
+  - model_name: "gemini/gemini-2.0-flash"
     litellm_params:
-      model: gemini/gemini-2.0-flash
+      model: "gemini/gemini-2.0-flash"
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
-  - model_name: gemini-2.0-flash-lite
+  - model_name: "gemini/gemini-2.0-flash-lite"
     litellm_params:
-      model: gemini/gemini-2.0-flash-lite
+      model: "gemini/gemini-2.0-flash-lite"
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
-  # https://docs.litellm.ai/docs/providers/ollama
-  - model_name: "gemma3:12b-it-qat"             
+  # Include all Ollama models to Open WebUI (Letta does not see wildcards)
+  - model_name: "ollama_chat/*"
     litellm_params:
-      model: "ollama_chat/gemma3:12b-it-qat"
-      keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
+      model: "ollama_chat/*"
       api_base: "os.environ/OLLAMA_BASE_URL"
-      tags: ["gemma"]
+      tags: ["ollama"]
+
+  # Set up mistral-small as a fallback to gemini-2.5-pro
+  # Very few openrouter models have free + tools, mistral-small is one of them 
+  - model_name: "openrouter/mistralai/mistral-small-3.1-24b-instruct:free"
+    litellm_params:
+      model: "openrouter/mistralai/mistral-small-3.1-24b-instruct:free"
+      api_key: "os.environ/OPENROUTER_API_KEY"
     model_info:
       supports_function_calling: true
 
-  # These don't work in Letta yet
-  - model_name: "qwen3:14b"             
-    litellm_params:
-      model: "ollama_chat/qwen:14b"
-      keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
-      api_base: "os.environ/OLLAMA_BASE_URL"
-      tags: ["qwen"]
-    model_info:
-      supports_function_calling: true
-      
-      
-  # https://docs.litellm.ai/docs/providers/ollama
-  - model_name: "gemma3:27b-it-qat"             
-    litellm_params:
-      model: "ollama_chat/gemma3:27b-it-qat"
-      keep_alive: "8m" # Optional: Overrides default keep_alive, use -1 for Forever
-      api_base: "os.environ/OLLAMA_BASE_URL"
-      tags: ["gemma"]
-    model_info:
-      supports_function_calling: true
-      
   # - model_name: claude-3-7-sonnet
   #   litellm_params:
   #     model: anthropic/claude-3-7-sonnet-20250219
@@ -66,24 +51,25 @@ model_list:
   ######################################
   # Embedding Models
 
-  - model_name: text-embedding-004
+  - model_name: "gemini/text-embedding-004"
     litellm_params:
-      model: gemini/text-embedding-004
+      model: "gemini/text-embedding-004"
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
-  - model_name: text-embedding-005
+  - model_name: "gemini/text-embedding-005"
     litellm_params:
-      model: gemini/text-embedding-005
+      model: "gemini/text-embedding-005"
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
   # https://ai.google.dev/gemini-api/docs/embeddings
-  - model_name: gemini-embedding-exp-03-07
+  - model_name: "gemini/gemini-embedding-exp-03-07"
     litellm_params:
-      model: gemini/gemini-embedding-exp-03-07
+      model: "gemini/gemini-embedding-exp-03-07"
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
 litellm_settings:
-  request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds. Default value is 6000seconds if not set
+  request_timeout: 600    # raise Timeout error if call takes longer than 600 seconds.
+  drop_params: true  # Useful when we have ollama models that don't take full params

@@ -11,7 +11,11 @@ services:
       - LITELLM_LOG=WARN
       - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
       - GEMINI_API_KEY=$GEMINI_API_KEY
-      #- ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+      - OPENROUTER_API_KEY=$OPENROUTER_API_KEY
+      - ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
+      - OLLAMA_BASE_URL=$OLLAMA_BASE_URL
+      - LM_STUDIO_API_BASE=$LM_STUDIO_API_BASE
+      - LM_STUDIO_API_KEY=$LM_STUDIO_API_KEY
       
   # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
@@ -55,11 +59,22 @@ services:
       # Mount the MCP configuration file (this points to Hayhooks)
       - ./letta_mcp_config.json:/root/.letta/mcp_config.json
     environment:
-      # https://docs.letta.com/guides/server/docker#setting-environment-variables
+      # https://docs.letta.com/guides/server/providers/anthropic
       ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
+      # https://docs.letta.com/guides/server/providers/google
       GEMINI_API_KEY: $GEMINI_API_KEY
+      # Note that Letta does not like going through a proxy and it is not recommended
+      # Using LiteLLM gives you control over what Ollama and OpenRouter models are visible.
+      # https://docs.letta.com/guides/server/providers/openai-proxy
+      OPENAI_API_BASE: http://litellm:4000
+      OPENAI_API_KEY: $LITELLM_MASTER_KEY
       # Adding Ollama just in case it's running
+      # https://docs.letta.com/guides/server/providers/ollama
       OLLAMA_BASE_URL: $OLLAMA_BASE_URL
+      # Adding LM Studio
+      # https://docs.letta.com/guides/server/providers/lmstudio
+      LMSTUDIO_BASE_URL: $LM_STUDIO_API_BASE
+      LMSTUDIO_API_KEY: $LM_STUDIO_API_KEY
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8283/v1/health/"]
@@ -85,29 +100,34 @@ services:
       #- ENV=dev
       # Prevent a langchain warning
       - USER_AGENT=openwebui
-      # Disable sneaky calls to LLMs by all methods possible (use Ollama or Flash-Lite if desired)
-      - ENABLE_TAGS_GENERATION=false
-      - ENABLE_TITLE_GENERATION=false
+      # Set tags and titles explictly
+      - ENABLE_TAGS_GENERATION=$ENABLE_TAGS_GENERATION
+      - ENABLE_TITLE_GENERATION=ENABLE_TITLE_GENERATION
+      - TASK_MODEL=$TASK_MODEL
+      - TASK_MODEL_EXTERNAL=$TASK_MODEL_EXTERNAL
+      # Disable some meaningless options
       - ENABLE_EVALUATION_ARENA_MODELS=false
       - ENABLE_AUTOCOMPLETE_GENERATION=false
       - ENABLE_RETRIEVAL_QUERY_GENERATION=false
-      # Enable Ollama (it may need tweaking to work with Letta)
-      - ENABLE_OLLAMA_API=true
+      # OpenAI selection should go to LiteLLM
+      - ENABLE_OPENAI_API=$ENABLE_OPENAI_API
+      - OPENAI_API_BASE_URL=http://litellm:4000
+      - OPENAI_API_KEY=$LITELLM_MASTER_KEY
+      # Ollama Options
+      - ENABLE_OLLAMA_API=$ENABLE_OLLAMA_API
       - OLLAMA_BASE_URL=$OLLAMA_BASE_URL
-      # Point the RAG at Gemini to disable giant downloads
-      - RAG_EMBEDDING_ENGINE=openai
+      # RAG options can be transformers, ollama, or openai 
+      - RAG_EMBEDDING_ENGINE=$RAG_EMBEDDING_ENGINE
+      - RAG_EMBEDDING_MODEL=$RAG_EMBEDDING_MODEL
       - RAG_OPENAI_API_BASE_URL=http://litellm:4000
       - RAG_OPENAI_API_KEY=$LITELLM_MASTER_KEY
-      - RAG_EMBEDDING_MODEL=$RAG_EMBEDDING_MODEL
-      # Enable Tavily Web Search in Open WebUI (commented out as Letta does a better job)
-      #- ENABLE_RAG_WEB_SEARCH=true
-      #- RAG_WEB_SEARCH_ENGINE=tavily
-      #- TAVILY_API_KEY=$TAVILY_API_KEY
-      # Add models from LiteLLM (commented out to focus attention on Letta)
-      #- OPENAI_API_BASE_URLS=http://litellm:4000
-      #- OPENAI_API_KEY=$LITELLM_MASTER_KEY
-      # Disable giant downloads
-      - AUDIO_STT_ENGINE=
+      - RAG_OLLAMA_BASE_URL=$OLLAMA_BASE_URL
+      # Tavily Web Search in Open WebUI
+      - ENABLE_WEB_SEARCH=$ENABLE_WEB_SEARCH
+      - WEB_SEARCH_ENGINE=$WEB_SEARCH_ENGINE
+      - TAVILY_API_KEY=$TAVILY_API_KEY
+      # Audio options
+      - AUDIO_STT_ENGINE=$AUDIO_STT_ENGINE
     restart: unless-stopped
     # https://docs.openwebui.com/getting-started/advanced-topics/monitoring/#basic-health-check-endpoint
     healthcheck:
@@ -131,8 +151,8 @@ services:
       - OPEN_WEBUI_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - HAYHOOKS_BASE_URL=http://hayhooks:1416
-      - CHAT_MODEL=$CHAT_MODEL
-      - EMBEDDING_MODEL=$EMBEDDING_MODEL
+      - CHAT_MODEL=$LETTA_CHAT_MODEL
+      - EMBEDDING_MODEL=$LETTA_EMBEDDING_MODEL
 
 volumes:
   open-webui:
