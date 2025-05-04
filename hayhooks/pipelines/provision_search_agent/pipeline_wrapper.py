@@ -119,12 +119,7 @@ class PipelineWrapper(BasePipelineWrapper):
             "embedding_model": embedding_model,
             "human_block": "",
             "persona_block": self._read_persona_block_content(),
-            "requested_tools": {
-                "hayhooks": [  # internal mcp tools
-                    "search",
-                    "extract",
-                ]
-            },
+            "requested_tools": ["search", "extract"],
         }
 
         create_open_webui_function_args = {
