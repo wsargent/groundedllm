@@ -26,10 +26,8 @@ services:
     volumes:
       - ./hayhooks/pipelines:/pipelines
     environment:
-      - OPENAI_API_BASE=http://litellm:4000
-      - OPENAI_API_KEY=$LITELLM_MASTER_KEY
-      - SEARCH_MODEL=$SEARCH_MODEL
-      - EXTRACT_MODEL=$EXTRACT_MODEL
+      - HAYHOOKS_SEARCH_MODEL=$HAYHOOKS_SEARCH_MODEL
+      - HAYHOOKS_EXTRACT_MODEL=$HAYHOOKS_EXTRACT_MODEL
       - HAYHOOKS_PIPELINES_DIR=/pipelines
       - HAYHOOKS_DISABLE_SSL=true
       - HAYHOOKS_HOST=0.0.0.0
@@ -41,6 +39,8 @@ services:
       - TAVILY_API_KEY=$TAVILY_API_KEY
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
+      - OPENAI_API_BASE=http://litellm:4000
+      - OPENAI_API_KEY=$LITELLM_MASTER_KEY
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
       interval: 10s
@@ -63,18 +63,9 @@ services:
       ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
       # https://docs.letta.com/guides/server/providers/google
       GEMINI_API_KEY: $GEMINI_API_KEY
-      # Note that Letta does not like going through a proxy and it is not recommended
-      # Using LiteLLM gives you control over what Ollama and OpenRouter models are visible.
-      # https://docs.letta.com/guides/server/providers/openai-proxy
-      OPENAI_API_BASE: http://litellm:4000
-      OPENAI_API_KEY: $LITELLM_MASTER_KEY
-      # Adding Ollama just in case it's running
-      # https://docs.letta.com/guides/server/providers/ollama
       OLLAMA_BASE_URL: $OLLAMA_BASE_URL
-      # Adding LM Studio
-      # https://docs.letta.com/guides/server/providers/lmstudio
-      LMSTUDIO_BASE_URL: $LM_STUDIO_API_BASE
-      LMSTUDIO_API_KEY: $LM_STUDIO_API_KEY
+      # Do not attempt to use Ollama, LM Studio or OpenRouter chat models with Letta.
+      # Letta is *very* picky and will only reliably work with the major cloud providers.
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8283/v1/health/"]
@@ -102,7 +93,7 @@ services:
       - USER_AGENT=openwebui
       # Set tags and titles explictly
       - ENABLE_TAGS_GENERATION=$ENABLE_TAGS_GENERATION
-      - ENABLE_TITLE_GENERATION=ENABLE_TITLE_GENERATION
+      - ENABLE_TITLE_GENERATION=$ENABLE_TITLE_GENERATION
       - TASK_MODEL=$TASK_MODEL
       - TASK_MODEL_EXTERNAL=$TASK_MODEL_EXTERNAL
       # Disable some meaningless options
