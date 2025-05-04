@@ -1,16 +1,15 @@
 import datetime
-import logging
-from typing import Dict, List, Optional, Sequence
+from typing import Dict, List, Optional
 
-from haystack import component
+from haystack import component, logging
 from letta_client import (
-    ChildToolRule,
-    CreateAgentRequestToolRulesItem,
     CreateBlock,
     Letta,
     LlmConfig,
-    McpTool,
 )
+from letta_client.types import Tool
+
+from resources.utils import read_resource_file
 
 logger = logging.getLogger("letta_setup")
 
@@ -37,7 +36,7 @@ class LettaCreateAgent:
         embedding_model: str,
         human_block: str,
         persona_block: str,
-        requested_tools: Dict[str, List[str]],
+        requested_tools: List[str],
     ) -> Dict[str, any]:
         """Finds an existing Letta agent by name or creates a new one with specified tools.
 
@@ -57,14 +56,12 @@ class LettaCreateAgent:
         persona_block:
             Content for the 'persona' memory block.
         requested_tools:
-            A dictionary of mcp server names to a list of tool names.
-            These are used to attach tools to the agent upon creation.
+            A list of tools to attach.
 
         Returns:
         -------
         dict:
-            A dictionary containing the agent_id and a list of attached_tool_ids
-            (the IDs of the Letta tools corresponding to the requested MCP tools).
+            A dictionary containing the "agent_id".
 
         Raises:
         ------
@@ -72,18 +69,8 @@ class LettaCreateAgent:
             If an unexpected error occurs during the setup process.
 
         """
-        prepared_tool_ids: List[str] = []
-        # Even Claude Sonnet 3.7 will occasional return heartbeat_status=false on
-        # core_memory_replace or core_memory_append -- the continue tool rules are
-        # already in place on archival memory tools but not on core memory tools.
-        prepared_tool_rules: List[CreateAgentRequestToolRulesItem] = [
-            # ContinueToolRule("core_memory_replace"),
-            # ContinueToolRule("core_memory_append")
-        ]
         try:
             logger.info(f"Starting setup for agent '{agent_name}'...")
-
-            self._process_requested_tools(requested_tools, prepared_tool_ids, prepared_tool_rules)
 
             # --- Agent Existence Check ---
             agents = self.client.agents.list(name=agent_name)
@@ -96,24 +83,13 @@ class LettaCreateAgent:
             # --- Agent Creation (if needed) ---
             if found_agent_id is None:
                 logger.info(f"Agent '{agent_name}' not found, creating agent with prepared tools...")
-                agent_id = self._create_agent(
-                    agent_name=agent_name,
-                    human_block_content=human_block,
-                    persona_block_content=persona_block,
-                    letta_embedding=embedding_model,
-                    letta_model=chat_model,
-                    tool_ids=prepared_tool_ids,
-                    tool_rules=prepared_tool_rules,
-                )
+                agent_id = self._create_agent(agent_name=agent_name, human_block_content=human_block, persona_block_content=persona_block, letta_embedding=embedding_model, letta_model=chat_model, requested_tools=requested_tools)
                 logger.info(f"Created new agent '{agent_name}' with ID: {agent_id}")
             else:
                 agent_id = found_agent_id
-                # If agent exists, we return the prepared_tool_ids list based on requested_tools,
-                # even though they weren't necessarily attached in *this* run.
-                # Callers should be aware of this distinction.
 
             logger.info(f"Letta Agent setup complete. Agent ID: {agent_id}")
-            return {"agent_id": agent_id, "attached_tool_ids": prepared_tool_ids}
+            return {"agent_id": agent_id}
 
         except Exception as e:
             logger.error(
@@ -124,16 +100,7 @@ class LettaCreateAgent:
             # For now, re-raise to indicate failure.
             raise RuntimeError(f"Failed Letta agent setup for '{agent_name}'") from e
 
-    def _create_agent(
-        self,
-        agent_name: str,
-        human_block_content: str,
-        persona_block_content: str,
-        letta_model: str,
-        letta_embedding: str,
-        tool_ids: List[str],
-        tool_rules: Optional[Sequence[CreateAgentRequestToolRulesItem]] = None,
-    ) -> str:
+    def _create_agent(self, agent_name: str, human_block_content: str, persona_block_content: str, letta_model: str, letta_embedding: str, requested_tools: List[str]) -> str:
         """Creates a new Letta agent with the specified configuration and tools.
 
         Args:
@@ -148,10 +115,8 @@ class LettaCreateAgent:
             The identifier for the chat model.
         letta_embedding:
             The identifier for the embedding model.
-        tool_ids:
-            A list of Letta tool IDs to attach to the agent during creation.
-        tool_rules:
-            An optional list of tool rules to attach to the agent during creation.
+        requested_tools:
+            The requested tools to attach to the agent upon creation.
 
         Returns:
         -------
@@ -180,6 +145,7 @@ class LettaCreateAgent:
                 ),
             ]
 
+            tool_ids = self._find_tools_id(requested_tools)
             available_llms: List[LlmConfig] = self.client.models.list()
             available_model_names = {llm.handle for llm in available_llms}
 
@@ -212,7 +178,6 @@ class LettaCreateAgent:
                 max_reasoning_tokens=max_reasoning_tokens,
                 max_tokens=max_tokens,
                 tool_ids=tool_ids,
-                tool_rules=tool_rules,
                 enable_sleeptime=enable_sleeptime,
             )
             logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
@@ -232,90 +197,38 @@ class LettaCreateAgent:
             return 5000
         return len(block_content) + 1000
 
-    def _process_requested_tools(
-        self,
-        requested_tools: Dict[str, List[str]],
-        prepared_tool_ids: List[str],
-        prepared_tool_rules: List[CreateAgentRequestToolRulesItem],
-    ):
-        """Processes the requested tools from MCP servers."""
-        if requested_tools:
-            # Iterate over each MCP server and its requested tools
-            for mcp_server_name, tool_names_to_request in requested_tools.items():
-                logger.info(f"Preparing tools {tool_names_to_request} from MCP server: {mcp_server_name}")
+    def _get_search_tool(self) -> Tool:
+        """Returns the search tool from the Letta server."""
+        tool = self._find_tool("search")
+        if tool is None:
+            tool = self._create_tool("search_tool.py")
 
-                try:
-                    # List all tools available on the current MCP server
-                    available_mcp_tools = self.client.tools.list_mcp_tools_by_server(mcp_server_name=mcp_server_name)
-                    logger.info(f"Found {len(available_mcp_tools)} tools on MCP server '{mcp_server_name}'.")
+        return tool
 
-                    # Process each available tool on the server
-                    for mcp_tool in available_mcp_tools:
-                        # Check if this specific tool was requested for this server
-                        if mcp_tool.name in tool_names_to_request:
-                            tool_id = self._prepare_single_mcp_tool(mcp_server_name=mcp_server_name, mcp_tool=mcp_tool)
-                            if tool_id:
-                                prepared_tool_ids.append(tool_id)
-                                # XXX For now, hardcode requested rules...
-                                tool_rule = ChildToolRule(
-                                    tool_name=mcp_tool.name,
-                                    children=["archival_memory_insert"],
-                                )
-                                prepared_tool_rules.append(tool_rule)
-                            else:
-                                logger.warning(f"Could not prepare tool '{mcp_tool.name}' from server '{mcp_server_name}', it will not be attached during creation.")
-                except Exception as tool_prep_error:
-                    logger.error(
-                        f"Failed during MCP tool preparation for server '{mcp_server_name}': {tool_prep_error}",
-                        exc_info=True,
-                    )
-                    # Decide if this is fatal? For now, log and continue without tools.
-                    prepared_tool_ids = []
-                    prepared_tool_rules = []
+    def _get_extract_tool(self) -> Tool:
+        """Returns the extract tool from the Letta server."""
+        tool = self._find_tool("extract")
+        if tool is None:
+            tool = self._create_tool("extract_tool.py")
 
-    def _prepare_single_mcp_tool(self, mcp_server_name: str, mcp_tool: McpTool) -> Optional[str]:
-        """Ensures a Letta tool exists for the given MCP tool and configures it.
+        return tool
 
-        Checks if a Letta tool corresponding to the MCP tool name exists.
-        If not, it creates one using `add_mcp_tool`.
-        It then modifies the tool's return character limit.
+    def _create_tool(self, resource_file: str, return_char_limit: int = DEFAULT_RETURN_CHAR_LIMIT) -> Tool:
+        """Creates a new Letta tool with the specified configuration."""
+        tool_content = read_resource_file(resource_file)
+        tool = self.client.tools.create(source_code=tool_content, return_char_limit=return_char_limit)
+        return tool
 
-        Args:
-            mcp_server_name: The name of the MCP server the tool belongs to.
-            mcp_tool: The MCP tool object (containing name, etc.).
+    def _find_tool(self, name: str) -> Optional[Tool]:
+        tool_list = self.client.tools.list(name=name, limit=1)
+        return tool_list[0] if tool_list else None
 
-        Returns:
-            The Letta tool ID if preparation is successful, otherwise None.
-
-        """
-        try:
-            tool_name = mcp_tool.name
-            # Check if the Letta tool already exists
-            existing_tools = self.client.tools.list(name=tool_name)
-            if len(existing_tools) > 0:
-                tool_id = existing_tools[0].id
-                logger.info(f"Found existing Letta tool '{tool_name}' (ID: {tool_id})")
-            else:
-                # Create a Letta tool from the MCP tool if it doesn't exist
-                tool = self.client.tools.add_mcp_tool(
-                    mcp_server_name=mcp_server_name,
-                    mcp_tool_name=tool_name,
-                )
-                tool_id = tool.id
-                logger.info(f"Created Letta tool '{tool_name}' (ID: {tool_id}) from MCP.")
-
-            # Modify the return character limit (do this even for existing tools)
-            # 6000 is a pokey function output size, we can do better
-            self.client.tools.modify(
-                tool_id=tool_id,
-                return_char_limit=self.DEFAULT_RETURN_CHAR_LIMIT,
-            )
-            logger.info(f"Set return char limit for tool '{tool_name}' (ID: {tool_id})")
-            return tool_id
-
-        except Exception as e:
-            logger.error(
-                f"Failed to prepare Letta tool for MCP tool '{mcp_tool.name}' from server '{mcp_server_name}': {e}",
-                exc_info=True,
-            )
-            return None
+    def _find_tools_id(self, requested_tools: List[str]) -> List[str]:
+        found_tools = []
+        if "search" in requested_tools:
+            search_tool = self._get_search_tool()
+            found_tools.append(search_tool.id)
+        if "extract" in requested_tools:
+            extract_tool = self._get_extract_tool()
+            found_tools.append(extract_tool.id)
+        return found_tools
