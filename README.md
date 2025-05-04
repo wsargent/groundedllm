@@ -18,7 +18,7 @@ This project may be of interest to you if:
 * **You don't want to mess around.**  You want a search engine that knows what you want and gets smarter over time with very little effort on your part, and if that means you wait for 30 seconds to get the right answer, you're okay with that.
 * **You are interested in AI agents.** This project is a low effort way to play with [Letta](https://docs.letta.com/letta-platform), and see a [stateful agent](https://docs.letta.com/stateful-agents) that can remember and learn.
 * **You are interested in RAG pipelines.**  [Haystack](https://haystack.deepset.ai/) toolkit has several options to deal with document conversion, cleaning, and extraction.  The search and extract tools plug into these.
-* **You're interested in [Open WebUI](https://github.com/open-webui/open-webui).** Unlike [Perplexity](https://www.perplexity.ai) and [Perplexica](https://github.com/ItzCrazyKns/Perplexica), this project doesn't give you a new front end UI to deal with when you want to find things. Open WebUI is powerful and popular, so let's use that.
+* **You're interested in [Open WebUI](https://github.com/open-webui/open-webui).** You shouldn't need to use a different UI when you ask questions that require searching.  Open WebUI is powerful and popular, so let's keep using that.
 
 ## Other Options?
 
@@ -26,8 +26,9 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 
 * [Khoj](https://docs.khoj.dev) has a self-hosting option and appears pretty sane.
 * [Phind](https://www.phind.com) is clearly a bootstrap option but has some thought put into it.
-* [Perplexica](https://github.com/ItzCrazyKns/Perplexica): a self hosted search engine, less focused on quality.
+* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) is a self hosted search engine, less focused on quality.
 * [Jina Deepsearch](https://search.jina.ai) seems pretty legit.
+* [Exa](https://exa.ai) is another AI-focused search engine.
 
 I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).
 
