@@ -29,6 +29,7 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 * [Perplexica](https://github.com/ItzCrazyKns/Perplexica) is a self hosted search engine, less focused on quality.
 * [Jina Deepsearch](https://search.jina.ai) seems pretty legit.
 * [Exa](https://exa.ai) is another AI-focused search engine.
+* [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
 
 I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).
 
