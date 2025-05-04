@@ -52,10 +52,11 @@ class PipelineWrapper(BasePipelineWrapper):
         if api_base_url is None:
             raise ValueError("OPENAI_API_BASE environment variable is not set!")
 
-        search_model = os.getenv("SEARCH_MODEL")
-        if search_model is None:
-            raise ValueError("SEARCH_MODEL environment variable is not set!")
+        search_model = os.getenv("HAYHOOKS_SEARCH_MODEL")
+        if search_model is None or search_model == "":
+            raise ValueError("HAYHOOKS_SEARCH_MODEL environment variable is not set!")
 
+        logger.info(f"Using search model: {search_model}")
         llm = OpenAIGenerator(api_key=search_api_key, api_base_url=api_base_url, model=search_model)
 
         pipe = Pipeline()

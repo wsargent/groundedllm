@@ -37,10 +37,12 @@ class PipelineWrapper(BasePipelineWrapper):
 
         # Ideally I'd like to get the model at pipeline execution but
         # that's not an option here
-        model = os.getenv("EXTRACT_MODEL")
-        if model is None:
-            raise ValueError("No model found in EXTRACT_MODEL environment variable!")
+        model = os.getenv("HAYHOOKS_EXTRACT_MODEL")
+        if model is None or model == "":
+            raise ValueError("No model found in HAYHOOKS_EXTRACT_MODEL environment variable!")
         llm = self.get_extract_generator(model)
+
+        logger.info(f"Using extract model: {model}")
 
         default_user_agent = os.getenv(
             "EXTRACT_USER_AGENT",
