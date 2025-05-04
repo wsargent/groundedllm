@@ -68,7 +68,9 @@ You will need the following:
 
 * [Docker Compose](https://docs.docker.com/compose/install/).
 * [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
-* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key).  The docker-compose.yml file is set up for `Gemini 2.5 Pro Experimental` and `Gemini Embedding Experimental 03-07`, which are on the free tier, but has [lower rate limits](https://ai.google.dev/gemini-api/docs/rate-limits#current-rate-limits).
+* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key).
+
+See the env.example file for more details.
 
 Optional:
 
@@ -157,7 +159,7 @@ Note that if you delete or rename the Letta agent or the Open WebUI pipe, the in
 
 There are a number of tweaks to [improve performance](https://docs.openwebui.com/tutorials/tips/improve-performance-local) and minimize the time to get started.
 
-For example, this instance is configured to use Gemini embedding so that it doesn't download 900MB of embedding model for its local RAG.
+For example, this instance is configured to use Gemini embedding so that it doesn't download 900MB of embedding model for its local RAG.  You can configure it to use `nomic-embed-text` through Ollama if you want a local embedding model.
 
 It is not possible to upload files into Letta through the Open WebUI interface right now.  The functionality does exist in Letta through the [data sources](https://docs.letta.com/guides/agents/sources) feature, but it might be easier to use a OWUI plugin to send it to Hayhooks and keep it in a document store.
 
@@ -169,11 +171,9 @@ The search technique is pulled from this academic paper on [DeepRAG](https://arx
 
 #### Picking a Model Provider
 
-The model is set up with Claude Sonnet 3.7 as it is much more proactive about calling tools until it gets a good answer.  You can use OpenAI for the same effect.  Gemini 2.0 models have been inconsistent and less proactive than Claude Sonnet, although Gemini 2.5 Pro is *very* smart at interpreting existing data.
+The model is set up with Gemini 2.5 Pro Preview, although Claude Sonnet 3.7 is recommended as it is much more proactive about calling tools until it gets a good answer.
 
-If you are going to use Ollama with Letta you will need a powerful model, at least 13B and preferably 70B.
-
-Some reasoning models have difficulty interacting with Letta's reasoning step.  Deepseek and Gemini 2.5 Pro will attempt to reply in the reasoning step, although that may be fixed in the latest version.
+Letta does not work reliably with local models (Ollama, LM Studio) or OpenAI-compatible proxies (LiteLLM, OpenRouter).  Stick to the major cloud providers and you'll be fine.
 
 #### Letta Desktop
 
@@ -185,9 +185,11 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 
 [Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs. It's primarily used for RAG, but it's also a great way to make tools available in general as it has MCP and OpenAPI support.
 
-To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  Google Flash 2.0 also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.
+To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  Hayhooks has the most flexibility in using different models, and you can swap to Ollama or OpenRouter models like Gemma3 or Qwen3 if that works better for you.
 
-The extract tool converts documents in many formats to Markdown and does some document cleanup before sending it to Google Flash 2.0.  It's all internal to Haystack and comes for free.
+The search tool extracts the full text of each search result and adds it as context to the search model following [search best practices](https://docs.tavily.com/documentation/best-practices/best-practices-search).  It also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.
+
+The extract tool converts documents in many formats to Markdown and does some document cleanup before sending it to the extract model.  It's all internal to Haystack and comes for free.  It does not attempt any kind of bot evasion.
 
 There is no vector/embeddings/database RAG involved in this project, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is technically a RAG implementation based on pgvector.
 
