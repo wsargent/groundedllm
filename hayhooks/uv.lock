@@ -280,6 +280,7 @@ dependencies = [
     { name = "haystack-ai" },
     { name = "httpx", extra = ["http2"] },
     { name = "letta-client" },
+    { name = "linkup-sdk" },
     { name = "markdown-it-py" },
     { name = "mcp-haystack" },
     { name = "mdit-plain" },
@@ -307,6 +308,7 @@ requires-dist = [
     { name = "haystack-ai", specifier = ">=2.13.1" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.27.0" },
     { name = "letta-client", specifier = ">=0.1.137" },
+    { name = "linkup-sdk", specifier = ">=0.2.4" },
     { name = "markdown-it-py", specifier = ">=3.0.0" },
     { name = "mcp-haystack", specifier = ">=0.1.0" },
     { name = "mdit-plain", specifier = ">=1.0.1" },
@@ -628,6 +630,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/fd/3f/9c907aa9fc2a5c9d538e69598f8b7feccf6b57e96f28297a9cd36497f585/letta_client-0.1.137.tar.gz", hash = "sha256:74b73b2ebe3a206a567ba90461eb3dba0df04472eae6e1a8f0eb96f0a9287490", size = 105812 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a4/8e/60bcea37be4af37e0b93bdbd41d1cff769cd26997364ced8666aa8156283/letta_client-0.1.137-py3-none-any.whl", hash = "sha256:ac1d96bf7c6d0fd11b574c8656f855ebd7c034fc60594506fbc9bdcdd62dac81", size = 278709 },
+]
+
+[[package]]
+name = "linkup-sdk"
+version = "0.2.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c2/c7/d9a85331bf2611ecac67f1ad92a6ced641b2e2e93eea26b17a9af701b3d1/linkup_sdk-0.2.4.tar.gz", hash = "sha256:2b8fd1894b9b4715bc14aabcbf53df6def9024f2cc426f234cc59e1807ec4c12", size = 9392 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/18/d8/bb9e01328fe5ad979e3e459c0f76321d295663906deef56eeaa5ce0cf269/linkup_sdk-0.2.4-py3-none-any.whl", hash = "sha256:8bc4c4f34de93529136a14e42441d803868d681c2bf3fd59be51923e44f1f1d4", size = 8325 },
 ]
 
 [[package]]
