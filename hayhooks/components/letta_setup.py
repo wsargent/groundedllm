@@ -159,7 +159,7 @@ class LettaCreateAgent:
             enable_reasoner = None
             max_reasoning_tokens = None
             max_tokens = None
-            enable_sleeptime = False  # if this is true, MCP server stops working
+            enable_sleeptime = True
 
             # Still not sure if reasoning model is an advantage here
             # if "claude-3-7-sonnet" in selected_model:
