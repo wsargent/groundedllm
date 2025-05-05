@@ -113,13 +113,14 @@ class PipelineWrapper(BasePipelineWrapper):
         """
         # Run the pipeline providing inputs for components that need them at runtime
         # agent_id is passed internally via connections
+        requested_tools = ["search", "extract", "excerpt"]
         create_agent_args = {
             "agent_name": agent_name,
             "chat_model": chat_model,
             "embedding_model": embedding_model,
             "human_block": "",
             "persona_block": self._read_persona_block_content(),
-            "requested_tools": ["search", "extract"],
+            "requested_tools": requested_tools,
         }
 
         create_open_webui_function_args = {

@@ -197,19 +197,11 @@ class LettaCreateAgent:
             return 5000
         return len(block_content) + 1000
 
-    def _get_search_tool(self) -> Tool:
+    def _get_tool(self, name) -> Tool:
         """Returns the search tool from the Letta server."""
-        tool = self._find_tool("search")
+        tool = self._find_tool(name)
         if tool is None:
-            tool = self._create_tool("search_tool.py")
-
-        return tool
-
-    def _get_extract_tool(self) -> Tool:
-        """Returns the extract tool from the Letta server."""
-        tool = self._find_tool("extract")
-        if tool is None:
-            tool = self._create_tool("extract_tool.py")
+            tool = self._create_tool(f"{name}_tool.py")
 
         return tool
 
@@ -225,10 +217,10 @@ class LettaCreateAgent:
 
     def _find_tools_id(self, requested_tools: List[str]) -> List[str]:
         found_tools = []
-        if "search" in requested_tools:
-            search_tool = self._get_search_tool()
-            found_tools.append(search_tool.id)
-        if "extract" in requested_tools:
-            extract_tool = self._get_extract_tool()
-            found_tools.append(extract_tool.id)
+        for tool_name in requested_tools:
+            tool = self._get_tool(tool_name)
+            if tool is not None:
+                found_tools.append(tool.id)
+            else:
+                logger.warning(f"Could not find tool '{tool_name}'")
         return found_tools
