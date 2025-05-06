@@ -10,6 +10,7 @@ from haystack.utils import Secret
 
 from components.content_extraction import build_search_extraction_component
 from components.linkup_web_search import LinkupWebSearch
+from components.searxng_web_search import SearXNGWebSearch
 from components.tavily_web_search import TavilyWebSearch
 from resources.utils import read_resource_file
 
@@ -20,6 +21,7 @@ class PipelineWrapper(BasePipelineWrapper):
     def setup(self) -> None:
         tavily_search = TavilyWebSearch()
         linkup_search = LinkupWebSearch()
+        searxng_search = SearXNGWebSearch()
 
         default_user_agent = os.getenv(
             "SEARCH_USER_AGENT",
@@ -66,6 +68,7 @@ class PipelineWrapper(BasePipelineWrapper):
         pipe = Pipeline()
         pipe.add_component("tavily_search", tavily_search)
         pipe.add_component("linkup_search", linkup_search)
+        pipe.add_component("searxng_search", searxng_search)
         pipe.add_component("document_joiner", document_joiner)
         pipe.add_component("content_extractor", content_extractor)
         pipe.add_component("prompt_builder", prompt_builder)
@@ -74,6 +77,7 @@ class PipelineWrapper(BasePipelineWrapper):
         # Connect components
         pipe.connect("tavily_search.documents", "document_joiner.documents")
         pipe.connect("linkup_search.documents", "document_joiner.documents")
+        pipe.connect("searxng_search.documents", "document_joiner.documents")
         pipe.connect("document_joiner.documents", "content_extractor.documents")
         pipe.connect("content_extractor.documents", "prompt_builder.documents")
         # pipe.connect("search.documents", "prompt_builder.documents")
@@ -144,6 +148,9 @@ class PipelineWrapper(BasePipelineWrapper):
                     "query": question,
                     "search_depth": search_depth,
                 },
+                # https://docs.searxng.org/user/configured_engines.html
+                # we probably want "general"
+                "searxng_search": {"query": question, "safesearch": 1},
                 "prompt_builder": {"query": question},
             }
         )
