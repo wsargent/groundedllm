@@ -1,8 +1,8 @@
-import logging
 import os
 import re
 
 import yaml
+from hayhooks import log as logger
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
 from haystack import Pipeline
 from haystack.utils import Secret
@@ -11,8 +11,6 @@ from letta_client import Letta
 from components.letta_setup import LettaCreateAgent
 from components.openwebui_setup import CreateFunction
 from resources.utils import read_resource_file
-
-logger = logging.getLogger("provision_search_agent")
 
 
 # Provision Search Agent

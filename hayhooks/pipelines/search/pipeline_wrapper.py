@@ -1,7 +1,8 @@
 import os
 
+from hayhooks import log as logger
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
-from haystack import Pipeline, logging
+from haystack import Pipeline
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.components.joiners import DocumentJoiner
@@ -11,8 +12,6 @@ from components.content_extraction import build_search_extraction_component
 from components.linkup_web_search import LinkupWebSearch
 from components.tavily_web_search import TavilyWebSearch
 from resources.utils import read_resource_file
-
-logger = logging.getLogger(__name__)
 
 
 class PipelineWrapper(BasePipelineWrapper):

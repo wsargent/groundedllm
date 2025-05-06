@@ -1,7 +1,8 @@
 import datetime
 from typing import Dict, List, Optional
 
-from haystack import component, logging
+from hayhooks import log as logger
+from haystack import component
 from letta_client import (
     CreateBlock,
     Letta,
@@ -10,8 +11,6 @@ from letta_client import (
 from letta_client.types import Tool
 
 from resources.utils import read_resource_file
-
-logger = logging.getLogger("letta_setup")
 
 
 @component

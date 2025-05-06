@@ -1,11 +1,9 @@
 import json
-import logging
 
 import requests
+from hayhooks import log as logger
 from haystack import component
 from haystack.utils import Secret
-
-logger = logging.getLogger("openwebui_setup")
 
 
 @component

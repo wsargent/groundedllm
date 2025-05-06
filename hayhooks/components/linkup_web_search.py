@@ -1,12 +1,11 @@
 from datetime import date
 from typing import Any, Dict, List, Literal, Union
 
-from haystack import Document, component, default_from_dict, default_to_dict, logging
+from hayhooks import log as logger
+from haystack import Document, component, default_from_dict, default_to_dict
 from haystack.utils import Secret, deserialize_secrets_inplace
 from linkup import LinkupClient
 from linkup.types import LinkupSearchResults, LinkupSearchTextResult
-
-logger = logging.getLogger(__name__)
 
 DEFAULT_MAX_RESULTS = 5
 DEFAULT_SEARCH_DEPTH = "basic"
@@ -61,15 +60,15 @@ class LinkupWebSearch:
         for index, result in enumerate(results):
             # Linkup does not have a score associated with it.
             logger.debug(f"Linkup result {result.url}")
-            score = 1.0 - (index * 0.1)
+            score: float = 1 - (index * 0.1)
             doc_dict = {"title": result.name, "score": score, "content": result.content, "url": result.url}
             urls.append(result.url)
             documents.append(Document.from_dict(doc_dict))
-        logger.debug(
-            "Linkup returned {number_documents} results for the query '{query}'",
-            number_documents=len(documents),
-            query=query,
-        )
+        number_documents = len(documents)
+        if number_documents == 0:
+            logger.warning(f"Linkup returned 0 results for the query '{query}'")
+        else:
+            logger.debug(f"Linkup returned {number_documents} results for the query '{query}'")
         output = {"documents": documents, "urls": urls}
         return output
 

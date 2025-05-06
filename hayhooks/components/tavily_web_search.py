@@ -1,10 +1,9 @@
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from haystack import Document, component, default_from_dict, default_to_dict, logging
+from hayhooks import log as logger
+from haystack import Document, component, default_from_dict, default_to_dict
 from haystack.utils import Secret, deserialize_secrets_inplace
 from tavily import TavilyClient
-
-logger = logging.getLogger(__name__)
 
 TAVILY_BASE_URL = "https://api.tavily.com/search"
 
@@ -70,9 +69,10 @@ class TavilyWebSearch:
         return output
 
     @staticmethod
-    def _process_response(query, response):
+    def _process_response(query: str, response: dict):
         documents = []
         urls = []
+        logger.debug(f"Tavily response: {response}")
         for result in response["results"]:
             doc_dict = {
                 "title": result["title"],
@@ -82,11 +82,12 @@ class TavilyWebSearch:
             }
             urls.append(result["url"])
             documents.append(Document.from_dict(doc_dict))
-        logger.debug(
-            "Tavily returned {number_documents} results for the query '{query}'",
-            number_documents=len(documents),
-            query=query,
-        )
+
+        number_documents = len(documents)
+        if number_documents == 0:
+            logger.warning(f"Tavily returned 0 results for the query '{query}'")
+        else:
+            logger.debug(f"Tavily returned {number_documents} results for the query '{query}'")
         output = {"documents": documents, "urls": urls}
         return output
 
@@ -98,7 +99,7 @@ class TavilyWebSearch:
         time_range: Optional[Literal["day", "week", "month", "year"]],
         include_domains: Optional[list[str]],
         exclude_domains: Optional[list[str]],
-    ):
+    ) -> dict:
         # https://github.com/tavily-ai/tavily-python?tab=readme-ov-file#api-methods
         return self.tavily_client.search(query, max_results=max_results, time_range=time_range, include_domains=include_domains, exclude_domains=exclude_domains, search_depth=self._validate_search_depth(search_depth))
 
