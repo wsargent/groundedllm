@@ -4,11 +4,12 @@ from typing import Any, Dict, List, Literal, Union
 from haystack import Document, component, default_from_dict, default_to_dict, logging
 from haystack.utils import Secret, deserialize_secrets_inplace
 from linkup import LinkupClient
+from linkup.types import LinkupSearchResults, LinkupSearchTextResult
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_MAX_RESULTS = 5
-DEFAULT_SEARCH_DEPTH = "standard"
+DEFAULT_SEARCH_DEPTH = "basic"
 
 
 @component
@@ -27,7 +28,7 @@ class LinkupWebSearch:
         _ = self.api_key.resolve_value()
 
     @component.output_types(documents=List[Document], links=List[str])
-    def run(self, query: str, search_depth: Literal["standard", "deep"] = DEFAULT_SEARCH_DEPTH) -> Dict[str, Union[List[Document], List[str]]]:
+    def run(self, query: str, search_depth: str = DEFAULT_SEARCH_DEPTH) -> Dict[str, Union[List[Document], List[str]]]:
         """Use Linkup to search the web for relevant documents.
 
         Bad: "Tell me about AI companies"
@@ -38,7 +39,7 @@ class LinkupWebSearch:
         query: str
             The query.
         search_depth: str
-            The string "standard" or "deep", "standard" by default.
+            The string "basic" or "advanced", "basic" by default.
 
         Returns
         -------
@@ -46,23 +47,23 @@ class LinkupWebSearch:
             A dict of {"documents": documents, "urls": urls}
 
         """
-        response = self._call_linkup(query=query, search_depth=search_depth)
+        valid_search_option = self._validate_search_depth(search_depth)
+
+        response = self._call_linkup(query=query, search_depth=valid_search_option)
         output = self._process_response(query, response)
         return output
 
     @staticmethod
-    def _process_response(query, response):
+    def _process_response(query, response: LinkupSearchResults):
         documents = []
         urls = []
-        for result in response["results"]:
-            doc_dict = {
-                "name": result["name"],
-                "type": result["type"],
-                "content": result["content"],
-                "url": result["url"],
-                "score": result["score"],
-            }
-            urls.append(result["url"])
+        results: List[LinkupSearchTextResult] = response.results
+        for index, result in enumerate(results):
+            # Linkup does not have a score associated with it.
+            logger.debug(f"Linkup result {result.url}")
+            score = 1.0 - (index * 0.1)
+            doc_dict = {"title": result.name, "score": score, "content": result.content, "url": result.url}
+            urls.append(result.url)
             documents.append(Document.from_dict(doc_dict))
         logger.debug(
             "Linkup returned {number_documents} results for the query '{query}'",
@@ -78,7 +79,7 @@ class LinkupWebSearch:
         search_depth: Literal["standard", "deep"],
         from_date: Union[date, None] = None,
         to_date: Union[date, None] = None,
-    ):
+    ) -> LinkupSearchResults:
         return self.linkup_client.search(query=query, output_type="searchResults", depth=search_depth, from_date=from_date, to_date=to_date)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -106,7 +107,7 @@ class LinkupWebSearch:
 
     @staticmethod
     def _validate_search_depth(search_depth: str) -> Literal["standard", "deep"]:
-        if search_depth == "standard":
+        if search_depth == "standard" or search_depth == "basic":
             return "standard"
         else:
             return "deep"

@@ -4,20 +4,23 @@ from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
 from haystack import Pipeline, logging
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
+from haystack.components.joiners import DocumentJoiner
 from haystack.utils import Secret
 
 from components.content_extraction import build_search_extraction_component
+from components.linkup_web_search import LinkupWebSearch
 from components.tavily_web_search import TavilyWebSearch
 from resources.utils import read_resource_file
 
-logger = logging.getLogger("answer")
+logger = logging.getLogger(__name__)
 
 
 class PipelineWrapper(BasePipelineWrapper):
     """A Haystack pipeline wrapper that runs a search query."""
 
     def setup(self) -> None:
-        search = TavilyWebSearch()
+        tavily_search = TavilyWebSearch()
+        linkup_search = LinkupWebSearch()
 
         default_user_agent = os.getenv(
             "SEARCH_USER_AGENT",
@@ -59,14 +62,20 @@ class PipelineWrapper(BasePipelineWrapper):
         logger.info(f"Using search model: {search_model}")
         llm = OpenAIGenerator(api_key=search_api_key, api_base_url=api_base_url, model=search_model)
 
+        document_joiner = DocumentJoiner()
+
         pipe = Pipeline()
-        pipe.add_component("search", search)
+        pipe.add_component("tavily_search", tavily_search)
+        pipe.add_component("linkup_search", linkup_search)
+        pipe.add_component("document_joiner", document_joiner)
         pipe.add_component("content_extractor", content_extractor)
         pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
 
         # Connect components
-        pipe.connect("search.documents", "content_extractor.documents")
+        pipe.connect("tavily_search.documents", "document_joiner.documents")
+        pipe.connect("linkup_search.documents", "document_joiner.documents")
+        pipe.connect("document_joiner.documents", "content_extractor.documents")
         pipe.connect("content_extractor.documents", "prompt_builder.documents")
         # pipe.connect("search.documents", "prompt_builder.documents")
         pipe.connect("prompt_builder", "llm")
@@ -124,7 +133,7 @@ class PipelineWrapper(BasePipelineWrapper):
 
         result = self.pipeline.run(
             {
-                "search": {
+                "tavily_search": {
                     "query": question,
                     "search_depth": search_depth,
                     "max_results": max_results,
@@ -132,11 +141,15 @@ class PipelineWrapper(BasePipelineWrapper):
                     "include_domains": include_domains if include_domains != "" else None,
                     "exclude_domains": exclude_domains if exclude_domains != "" else None,
                 },
+                "linkup_search": {
+                    "query": question,
+                    "search_depth": search_depth,
+                },
                 "prompt_builder": {"query": question},
             }
         )
 
-        # logger.debug(f"answer: answer result from pipeline {result}")
+        logger.debug(f"search: answer result from pipeline {result}")
         if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
             reply = result["llm"]["replies"][0]
             logger.info(f"answer: reply is {reply}")

@@ -21,11 +21,10 @@ uv sync
 source .venv/bin/activate
 ```
 
-And then start up Open WebUI and Letta:
+And then start up LiteLLM as Hayhooks will use it:
 
 ```
-docker compose -f '../docker-compose.yml' up -d 'open-webui'
-docker compose -f '../docker-compose.yml' up -d 'letta'
+docker compose -f '../docker-compose.yml' up -d 'litellm'
 ```
 
 Copy your `env.example` to `.env` to set up the environment variables, and then start the hayhooks server:
@@ -63,12 +62,12 @@ Note that the `time_range` does not take quotes:
 hayhooks pipeline run search --param 'question="When was the last full moon?"' --param 'time_range=month'
 ```
 
-### Extract Pipeline
+### Excerpt Pipeline
 
 This pipeline takes URLs, scrapes the contents, and feeds it to an LLM with a large context window.
 
 ```bash
-hayhooks pipeline run extract \
+hayhooks pipeline run excerpt \
     --param 'urls=["https://docs.letta.com/guides/server/providers/openai-proxy.mdx"]' \
     --param 'question="What are the contents of this URL?  Provide a detailed summary."'
 ```
@@ -76,9 +75,18 @@ hayhooks pipeline run extract \
 CSV and PDF are also supported:
 
 ```bash
-hayhooks pipeline run extract \
+hayhooks pipeline run excerpt \
     --param 'urls=["https://arxiv.org/pdf/2410.11782"]' \
     --param 'question="Explain this paper to me like I am five years old."'
+```
+
+### Extract Pipeline
+
+The Extract pipeline takes a URL, scrapes the contents, and feeds it to an LLM with a large context window.  It then extracts the text from the URL and returns it.
+
+```bash
+hayhooks pipeline run extract \
+    --param 'url=https://docs.letta.com/guides/agents/sleep-time-agents'
 ```
 
 ### Provision Search Agent Pipeline
