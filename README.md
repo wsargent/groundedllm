@@ -4,9 +4,10 @@ This is a pre-built, turnkey implementation of an AI agent grounded with search 
 
 If you have the API keys and Docker Compose, you should be able to go to http://localhost:3000 and have it Just Work.  It runs fine on a Macbook Air with 8 GB memory.
 
-It does require accounts with Tavily and Google's Gemini API, but these are free for individuals (as of 4/13/2025) and I've only hit the tier limit for Gemini once.
+It does require accounts with Tavily, Linkup, and Google's Gemini API, but these are free for individuals (as of 4/13/2025) and I've only hit the tier limit for Gemini once.
 
 * [Tavily Pricing](https://tavily.com/#pricing)
+* [Linkup Pricing](https://www.linkup.so/#pricing)
 * [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing)
 
 Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows. 
@@ -28,7 +29,7 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 * [Phind](https://www.phind.com) is clearly a bootstrap option but has some thought put into it.
 * [Perplexica](https://github.com/ItzCrazyKns/Perplexica) is a self hosted search engine, less focused on quality.
 * [Jina Deepsearch](https://search.jina.ai) seems pretty legit.
-* [Exa](https://exa.ai) is another AI-focused search engine.
+* [Exa](https://exa.ai) is another AI-focused search engine, [chat.exa.ai](https://chat.exa.ai).
 * [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
 
 I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).
@@ -69,6 +70,7 @@ You will need the following:
 
 * [Docker Compose](https://docs.docker.com/compose/install/).
 * [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
+* [Linkup API key](https://app.linkup.so/home) -- you get [5 euros every month](https://docs.linkup.so/pages/documentation/development/pricing).
 * [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key).
 
 See the env.example file for more details.
