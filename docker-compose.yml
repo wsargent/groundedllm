@@ -42,6 +42,7 @@ services:
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - OPENAI_API_BASE=http://litellm:4000
+      - SEARXNG_BASE_URL=http://searxng:8080
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
@@ -49,6 +50,19 @@ services:
       timeout: 5s
       retries: 18
       start_period: 5s
+
+  searxng:
+    container_name: searxng
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
+      - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
+      - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}
 
   # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
@@ -139,6 +153,10 @@ services:
       open-webui:
         condition: service_healthy
       letta:
+        condition: service_healthy
+      hayhooks:
+        condition: service_started
+      searxng:
         condition: service_healthy
     environment:
       - OPEN_WEBUI_URL=http://open-webui:8080
