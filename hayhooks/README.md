@@ -31,7 +31,7 @@ Copy your `env.example` to `.env` to set up the environment variables, and then 
 
 ```
 # cp env.example .env 
-python app.py
+LOG=DEBUG python app.py
 ```
 
 You can see the OpenAPI routes at http://localhost:1416/docs to see what pipelines are available.

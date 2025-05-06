@@ -1,5 +1,6 @@
 from typing import Optional
 
+from hayhooks import log as logger
 from haystack import Document, Pipeline, SuperComponent, component
 from haystack.components.converters import (
     CSVToDocument,
@@ -12,9 +13,6 @@ from haystack.components.fetchers import LinkContentFetcher
 from haystack.components.joiners import DocumentJoiner
 from haystack.components.preprocessors import DocumentCleaner
 from haystack.components.routers import FileTypeRouter
-from haystack.logging import getLogger
-
-logger = getLogger("haystack.content_extraction")
 
 
 @component

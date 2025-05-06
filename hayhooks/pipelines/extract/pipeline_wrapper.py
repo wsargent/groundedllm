@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import List
 
@@ -10,8 +9,6 @@ from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
 
 from components.content_extraction import build_content_extraction_component
-
-logger = logging.getLogger("extract")
 
 
 class PipelineWrapper(BasePipelineWrapper):

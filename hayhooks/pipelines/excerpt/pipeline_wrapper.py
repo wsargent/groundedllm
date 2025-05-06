@@ -1,10 +1,9 @@
 import json
-import logging
 import os
 from typing import Any, List
 from urllib.parse import urlparse
 
-from hayhooks.server.logger import log
+from hayhooks import log as logger
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
 from haystack import Pipeline
 from haystack.components.builders.prompt_builder import PromptBuilder
@@ -13,8 +12,6 @@ from haystack.utils import Secret
 
 from components.content_extraction import build_content_extraction_component
 from resources.utils import read_resource_file
-
-logger = logging.getLogger("extract")
 
 
 class PipelineWrapper(BasePipelineWrapper):
@@ -158,7 +155,7 @@ class PipelineWrapper(BasePipelineWrapper):
             The answer from the LLM model.
 
         """
-        log.debug(f"Running EXCERPT pipeline with URLs: {urls}")
+        logger.debug(f"Running EXCERPT pipeline with URLs: {urls}")
         if not hasattr(self, "pipeline") or not self.pipeline:
             raise RuntimeError("Pipeline not initialized during setup.")
 
