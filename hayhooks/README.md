@@ -23,13 +23,13 @@ source .venv/bin/activate
 
 And then start up LiteLLM as Hayhooks will use it:
 
-```
+```bash
 docker compose -f '../docker-compose.yml' up -d 'litellm'
 ```
 
 Copy your `env.example` to `.env` to set up the environment variables, and then start the hayhooks server:
 
-```
+```bash
 # cp env.example .env 
 LOG=DEBUG python app.py
 ```
