@@ -5,6 +5,7 @@ description = "Hayhooks"
 readme = "README.md"
 requires-python = "==3.12.*"
 dependencies = [
+    "exa-py>=1.12.1",
     "gdown>=5.2.0",
     "hayhooks[mcp]>=0.7.0",
     "haystack-ai>=2.13.1",

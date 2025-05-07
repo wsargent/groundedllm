@@ -9,6 +9,7 @@ from haystack.components.joiners import DocumentJoiner
 from haystack.utils import Secret
 
 from components.content_extraction import build_search_extraction_component
+from components.exa_web_search import ExaWebSearch
 from components.linkup_web_search import LinkupWebSearch
 from components.searxng_web_search import SearXNGWebSearch
 from components.tavily_web_search import TavilyWebSearch
@@ -22,6 +23,7 @@ class PipelineWrapper(BasePipelineWrapper):
         tavily_search = TavilyWebSearch()
         linkup_search = LinkupWebSearch()
         searxng_search = SearXNGWebSearch()
+        exa_search = ExaWebSearch()
 
         default_user_agent = os.getenv(
             "SEARCH_USER_AGENT",
@@ -69,6 +71,7 @@ class PipelineWrapper(BasePipelineWrapper):
         pipe.add_component("tavily_search", tavily_search)
         pipe.add_component("linkup_search", linkup_search)
         pipe.add_component("searxng_search", searxng_search)
+        pipe.add_component("exa_search", exa_search)
         pipe.add_component("document_joiner", document_joiner)
         pipe.add_component("content_extractor", content_extractor)
         pipe.add_component("prompt_builder", prompt_builder)
@@ -77,6 +80,7 @@ class PipelineWrapper(BasePipelineWrapper):
         # Connect components
         pipe.connect("tavily_search.documents", "document_joiner.documents")
         pipe.connect("linkup_search.documents", "document_joiner.documents")
+        pipe.connect("exa_search.documents", "document_joiner.documents")
         pipe.connect("searxng_search.documents", "document_joiner.documents")
         pipe.connect("document_joiner.documents", "content_extractor.documents")
         pipe.connect("content_extractor.documents", "prompt_builder.documents")
@@ -151,6 +155,12 @@ class PipelineWrapper(BasePipelineWrapper):
                 # https://docs.searxng.org/user/configured_engines.html
                 # we probably want "general"
                 "searxng_search": {"query": question, "safesearch": 1},
+                "exa_search": {
+                    "query": question,
+                    "max_results": max_results,
+                    "include_domains": include_domains if include_domains != "" else None,
+                    "exclude_domains": exclude_domains if exclude_domains != "" else None,
+                },
                 "prompt_builder": {"query": question},
             }
         )
