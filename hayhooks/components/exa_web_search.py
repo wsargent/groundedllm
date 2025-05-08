@@ -18,11 +18,15 @@ class ExaWebSearch:
 
         :param api_key: API key.
         """
+        self.exa_client = None
+        self.has_valid_client = False
         self.api_key = api_key
-        self.exa_client = Exa(api_key=self.api_key.resolve_value())
 
-        # Ensure that the API key is resolved.
-        _ = self.api_key.resolve_value()
+        try:
+            self.exa_client = Exa(api_key=api_key.resolve_value())
+            self.has_valid_client = True
+        except ValueError:
+            logger.warning("No valid Exa API key provided. ExaWebSearch will not return any results.")
 
     @component.output_types(documents=List[Document], links=List[str])
     def run(
@@ -51,6 +55,44 @@ class ExaWebSearch:
             A dict of {"documents": documents, "urls": urls}
 
         """
+        if not self.has_valid_client:
+            logger.warning(f"No valid Exa client available. Returning empty results for query: '{query}'")
+            return {"documents": [], "urls": []}
+
+        response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
+        output = self._process_response(query, response)
+        return output
+
+    @component.output_types(documents=List[Document], links=List[str])
+    async def run_async(
+        self,
+        query: str,
+        max_results: int = DEFAULT_MAX_RESULTS,
+        include_domains: Optional[list[str]] = None,
+        exclude_domains: Optional[list[str]] = None,
+    ) -> Dict[str, Union[List[Document], List[str]]]:
+        """Asynchronous version of run method.
+
+        Parameters
+        ----------
+        query: str
+            The query.
+        max_results: int
+            The maximum number of results to return.  5 by default.
+        include_domains: Optional[list[str]]
+            The only website domains that should be searched, None by default.
+        exclude_domains: Optional[list[str]]
+            The website domains that should not be searched, None by default.
+
+        Returns
+        -------
+        Dict[str, Union[List[Document], List[str]]]
+            A dict of {"documents": documents, "urls": urls}
+        """
+        if not self.has_valid_client:
+            logger.warning(f"No valid Exa client available. Returning empty results for query: '{query}'")
+            return {"documents": [], "urls": []}
+
         response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
         output = self._process_response(query, response)
         return output
@@ -128,6 +170,7 @@ class ExaWebSearch:
         return default_to_dict(
             self,
             api_key=self.api_key.to_dict(),
+            has_valid_client=self.has_valid_client,
         )
 
     @classmethod

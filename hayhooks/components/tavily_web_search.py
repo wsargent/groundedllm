@@ -21,10 +21,15 @@ class TavilyWebSearch:
         :param api_key: API key.
         """
         self.api_key = api_key
-        self.tavily_client = TavilyClient(api_key=self.api_key.resolve_value())
+        self.tavily_client = None
 
-        # Ensure that the API key is resolved.
-        _ = self.api_key.resolve_value()
+        try:
+            api_key_value = self.api_key.resolve_value()
+            if api_key_value:
+                self.tavily_client = TavilyClient(api_key=api_key_value)
+        except Exception as e:
+            logger.warning(f"Failed to initialize Tavily client: {e}")
+            # Continue without a client - will return empty results
 
     @component.output_types(documents=List[Document], links=List[str])
     def run(
@@ -100,6 +105,11 @@ class TavilyWebSearch:
         include_domains: Optional[list[str]],
         exclude_domains: Optional[list[str]],
     ) -> dict:
+        # If tavily_client is not available, return empty results
+        if self.tavily_client is None:
+            logger.warning(f"Tavily client not available. Returning empty results for query '{query}'")
+            return {"results": []}
+
         # https://github.com/tavily-ai/tavily-python?tab=readme-ov-file#api-methods
         return self.tavily_client.search(query, max_results=max_results, time_range=time_range, include_domains=include_domains, exclude_domains=exclude_domains, search_depth=self._validate_search_depth(search_depth))
 
