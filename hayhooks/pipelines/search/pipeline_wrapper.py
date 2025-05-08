@@ -26,13 +26,13 @@ class PipelineWrapper(BasePipelineWrapper):
         exa_search = ExaWebSearch()
 
         default_user_agent = os.getenv(
-            "SEARCH_USER_AGENT",
+            "HAYHOOKS_SEARCH_USER_AGENT",
             "SearchAgent.extract @ https://github.com/wsargent/groundedllm",
         )
-        use_http2 = bool(os.getenv("SEARCH_HTTP2", "True"))
-        retry_attempts = int(os.getenv("SEARCH_RETRY_ATTEMPTS", "3"))
-        timeout = int(os.getenv("SEARCH_TIMEOUT", "3"))
-        raise_on_failure = bool(os.getenv("SEARCH_RAISE_ON_FAILURE", "False"))
+        use_http2 = bool(os.getenv("HAYHOOKS_SEARCH_HTTP2", "True"))
+        retry_attempts = int(os.getenv("HAYHOOKS_SEARCH_RETRY_ATTEMPTS", "3"))
+        timeout = int(os.getenv("HAYHOOKS_SEARCH_TIMEOUT", "3"))
+        raise_on_failure = bool(os.getenv("HAYHOOKS_SEARCH_RAISE_ON_FAILURE", "False"))
         content_extractor = build_search_extraction_component(
             raise_on_failure=raise_on_failure,
             user_agents=[default_user_agent],
