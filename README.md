@@ -4,7 +4,7 @@ This is a pre-built, turnkey implementation of an AI agent grounded with search 
 
 If you have the API keys and Docker Compose, you should be able to go to http://localhost:3000 and have it Just Work.  It runs fine on a Macbook Air with 8 GB memory.
 
-You can add search engines with Tavily, Linkup, Exa, and Google's Gemini API: these are free for individuals (as of 4/13/2025) and I've only hit the tier limit for Gemini once.  
+[SearXNG](https://docs.searxng.org) is included by default.  You can add additional search engines with Tavily, Linkup, Exa, and Google's Gemini API: these are free for individuals (as of 4/13/2025) and I've only hit the tier limit for Gemini once.
 
 * [Tavily Pricing](https://tavily.com/#pricing)
 * [Linkup Pricing](https://www.linkup.so/#pricing)

@@ -18,7 +18,7 @@ class SearXNGWebSearch:
     the results of other search engines without storing information about its users.
     """
 
-    def __init__(self, base_url: Optional[str] = None, enabled: bool = (os.getenv("HAYHOOKS_SEARXNG_ENABLED", "true").lower() == "true"), timeout: int = DEFAULT_TIMEOUT):
+    def __init__(self, base_url: Optional[str] = None, enabled: bool = (os.getenv("HAYHOOKS_SEARCH_SEARXNG_ENABLED", "true").lower() == "true"), timeout: int = DEFAULT_TIMEOUT):
         """
         Initializes the SearXNGWebSearch component.
 
@@ -28,10 +28,10 @@ class SearXNGWebSearch:
                          DEFAULT_SEARXNG_BASE_URL (e.g., "http://searxng:8080").
         :param enabled: A boolean indicating whether the SearXNG search functionality is enabled.
                         If not explicitly provided, the value is determined by the
-                        `HAYHOOKS_SEARXNG_ENABLED` environment variable:
-                        - If `HAYHOOKS_SEARXNG_ENABLED` is "true" (case-insensitive), this defaults to `True`.
-                        - If `HAYHOOKS_SEARXNG_ENABLED` is set to any other string (e.g., "false"), this defaults to `False`.
-                        - If `HAYHOOKS_SEARXNG_ENABLED` is not set, this defaults to `True`.
+                        `HAYHOOKS_SEARCH_SEARXNG_ENABLED` environment variable:
+                        - If `HAYHOOKS_SEARCH_SEARXNG_ENABLED` is "true" (case-insensitive), this defaults to `True`.
+                        - If `HAYHOOKS_SEARCH_SEARXNG_ENABLED` is set to any other string (e.g., "false"), this defaults to `False`.
+                        - If `HAYHOOKS_SEARCH_SEARXNG_ENABLED` is not set, this defaults to `True`.
         :param timeout: The HTTP request timeout in seconds. Defaults to DEFAULT_TIMEOUT.
         """
         self.base_url = base_url or os.getenv("SEARXNG_BASE_URL", DEFAULT_SEARXNG_BASE_URL)
@@ -178,12 +178,14 @@ class SearXNGWebSearch:
             logger.warning(f"SearXNG returned 0 results for the query '{query}'")
             return {"documents": [], "links": []}
 
+        logger.info(f"SearXNG results: {len(raw_results)} results for query '{query}'")
+
         # If num_results was respected by API, raw_results might already be limited.
         # Slicing here ensures we don't exceed max_results_requested if API returned more for some reason.
         for result_item in raw_results[: max_results_requested if max_results_requested > 0 else len(raw_results)]:
             title = result_item.get("title")
             url = result_item.get("url")
-            logger.debug(f"SearXNG result {url}")
+            logger.info(f"SearXNG result: {url} for query {query}")
 
             content = result_item.get("content")  # Main snippet
 
