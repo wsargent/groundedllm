@@ -18,26 +18,34 @@ class SearXNGWebSearch:
     the results of other search engines without storing information about its users.
     """
 
-    def __init__(self, base_url: Optional[str] = None, timeout: int = DEFAULT_TIMEOUT):
+    def __init__(self, base_url: Optional[str] = None, enabled: bool = (os.getenv("HAYHOOKS_SEARXNG_ENABLED", "true").lower() == "true"), timeout: int = DEFAULT_TIMEOUT):
         """
         Initializes the SearXNGWebSearch component.
 
         :param base_url: The base URL of the SearXNG instance.
                          If not provided, it attempts to read from the SEARXNG_BASE_URL
                          environment variable. If still not found, it defaults to
-                         http://searxng:8080.
-        :param timeout: The HTTP request timeout in seconds.
+                         DEFAULT_SEARXNG_BASE_URL (e.g., "http://searxng:8080").
+        :param enabled: A boolean indicating whether the SearXNG search functionality is enabled.
+                        If not explicitly provided, the value is determined by the
+                        `HAYHOOKS_SEARXNG_ENABLED` environment variable:
+                        - If `HAYHOOKS_SEARXNG_ENABLED` is "true" (case-insensitive), this defaults to `True`.
+                        - If `HAYHOOKS_SEARXNG_ENABLED` is set to any other string (e.g., "false"), this defaults to `False`.
+                        - If `HAYHOOKS_SEARXNG_ENABLED` is not set, this defaults to `True`.
+        :param timeout: The HTTP request timeout in seconds. Defaults to DEFAULT_TIMEOUT.
         """
-        if base_url:
-            self.base_url = base_url
-        else:
-            self.base_url = os.getenv("SEARXNG_BASE_URL", DEFAULT_SEARXNG_BASE_URL)
+        self.base_url = base_url or os.getenv("SEARXNG_BASE_URL", DEFAULT_SEARXNG_BASE_URL)
 
         if not (self.base_url.startswith("http://") or self.base_url.startswith("https://")):
             raise ValueError(f"Invalid base_url: '{self.base_url}'. Must start with 'http://' or 'https://'.")
 
         self.timeout = timeout
-        logger.info(f"SearXNGWebSearch initialized with base_url: {self.base_url} and timeout: {self.timeout}s")
+        self.is_enabled = enabled
+
+        if self.is_enabled:
+            logger.info(f"SearXNGWebSearch initialized with base_url: {self.base_url} and timeout: {self.timeout}s")
+        else:
+            logger.info("SearXNGWebSearch component is disabled.")
 
     @component.output_types(documents=List[Document], links=List[str])
     def run(
@@ -68,21 +76,22 @@ class SearXNGWebSearch:
         :param pageno: Optional page number for results.
         :return: A dictionary containing a list of Document objects and a list of result URLs.
         """
-        api_params = self._prepare_api_params(query, max_results, time_range, language, categories, engines, safesearch, pageno)
 
-        request_url = f"{self.base_url.rstrip('/')}/search"
-        try:
-            response = httpx.get(request_url, params=api_params, timeout=self.timeout)
-            response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
-            api_response_json = response.json()
-            response_dict = self._process_response(query, api_response_json, max_results)
-            return {"documents": response_dict["documents"], "urls": response_dict["links"]}
-        except httpx.HTTPStatusError as e:
-            logger.error(f"HTTP error calling SearXNG (sync): {e.response.status_code} - {e.response.text} for URL {e.request.url}")
-        except httpx.RequestError as e:
-            logger.error(f"Request error calling SearXNG (sync): {e} for URL {e.request.url}")
-        except Exception as e:  # Catch any other unexpected errors during the request or JSON parsing
-            logger.error(f"Unexpected error during SearXNG call (sync): {e}")
+        if self.is_enabled:
+            api_params = self._prepare_api_params(query, max_results, time_range, language, categories, engines, safesearch, pageno)
+            request_url = f"{self.base_url.rstrip('/')}/search"
+            try:
+                response = httpx.get(request_url, params=api_params, timeout=self.timeout)
+                response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+                api_response_json = response.json()
+                response_dict = self._process_response(query, api_response_json, max_results)
+                return {"documents": response_dict["documents"], "urls": response_dict["links"]}
+            except httpx.HTTPStatusError as e:
+                logger.error(f"HTTP error calling SearXNG (sync): {e.response.status_code} - {e.response.text} for URL {e.request.url}")
+            except httpx.RequestError as e:
+                logger.error(f"Request error calling SearXNG (sync): {e} for URL {e.request.url}")
+            except Exception as e:  # Catch any other unexpected errors during the request or JSON parsing
+                logger.error(f"Unexpected error during SearXNG call (sync): {e}")
 
         return {"documents": [], "urls": []}  # Default
 
@@ -102,22 +111,23 @@ class SearXNGWebSearch:
         Performs an asynchronous web search using a SearXNG instance.
         (Parameters and return are the same as the synchronous `run` method)
         """
-        api_params = self._prepare_api_params(query, max_results, time_range, language, categories, engines, safesearch, pageno)
+        if self.is_enabled:
+            api_params = self._prepare_api_params(query, max_results, time_range, language, categories, engines, safesearch, pageno)
 
-        request_url = f"{self.base_url.rstrip('/')}/search"
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            try:
-                response = await client.get(request_url, params=api_params)
-                response.raise_for_status()
-                api_response_json = response.json()
-                response_dict = self._process_response(query, api_response_json, max_results)
-                return {"documents": response_dict["documents"], "urls": response_dict["links"]}
-            except httpx.HTTPStatusError as e:
-                logger.error(f"HTTP error calling SearXNG (async): {e.response.status_code} - {e.response.text} for URL {e.request.url}")
-            except httpx.RequestError as e:
-                logger.error(f"Request error calling SearXNG (async): {e} for URL {e.request.url}")
-            except Exception as e:  # Catch any other unexpected errors
-                logger.error(f"Unexpected error during SearXNG call (async): {e}")
+            request_url = f"{self.base_url.rstrip('/')}/search"
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                try:
+                    response = await client.get(request_url, params=api_params)
+                    response.raise_for_status()
+                    api_response_json = response.json()
+                    response_dict = self._process_response(query, api_response_json, max_results)
+                    return {"documents": response_dict["documents"], "urls": response_dict["links"]}
+                except httpx.HTTPStatusError as e:
+                    logger.error(f"HTTP error calling SearXNG (async): {e.response.status_code} - {e.response.text} for URL {e.request.url}")
+                except httpx.RequestError as e:
+                    logger.error(f"Request error calling SearXNG (async): {e} for URL {e.request.url}")
+                except Exception as e:  # Catch any other unexpected errors
+                    logger.error(f"Unexpected error during SearXNG call (async): {e}")
 
         return {"documents": [], "urls": []}  # Default
 
