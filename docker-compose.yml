@@ -32,9 +32,9 @@ services:
       - HAYHOOKS_DISABLE_SSL=true
       - HAYHOOKS_HOST=0.0.0.0
       - HAYHOOKS_PORT=1416
-      - LOG_LEVEL=INFO
-      - LOG=INFO
-      - HAYSTACK_LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
+      - LOG=DEBUG
+      - HAYSTACK_LOG_LEVEL=DEBUG
       - HAYHOOKS_SHOW_TRACEBACKS=true
       # Needed for search pipeline
       - TAVILY_API_KEY=$TAVILY_API_KEY

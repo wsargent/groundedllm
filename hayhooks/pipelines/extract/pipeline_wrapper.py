@@ -15,7 +15,7 @@ class PipelineWrapper(BasePipelineWrapper):
     """This pipeline extracts content from a URL and sends it to a model that can
     summarize or answer questions on the content.
 
-    Input: A list of URLs.
+    Input: a URL
     Output: The documents
     """
 
@@ -24,13 +24,13 @@ class PipelineWrapper(BasePipelineWrapper):
 
     def create_pipeline(self) -> Pipeline:
         default_user_agent = os.getenv(
-            "EXTRACT_USER_AGENT",
+            "HAYHOOKS_EXTRACT_USER_AGENT",
             "SearchAgent.extract @ https://github.com/wsargent/groundedllm",
         )
-        use_http2 = bool(os.getenv("EXTRACT_HTTP2", "true"))
-        retry_attempts = int(os.getenv("EXTRACT_RETRY_ATTEMPTS", "3"))
-        timeout = int(os.getenv("EXTRACT_TIMEOUT", "3"))
-        raise_on_failure = bool(os.getenv("EXTRACT_RAISE_ON_FAILURE", "False"))
+        use_http2 = bool(os.getenv("HAYHOOKS_EXTRACT_HTTP2", "true"))
+        retry_attempts = int(os.getenv("HAYHOOKS_EXTRACT_RETRY_ATTEMPTS", "3"))
+        timeout = int(os.getenv("HAYHOOKS_EXTRACT_TIMEOUT", "3"))
+        raise_on_failure = bool(os.getenv("HAYHOOKS_EXTRACT_RAISE_ON_FAILURE", "true").lower() == "true")
         content_extractor = build_content_extraction_component(
             raise_on_failure=raise_on_failure,
             user_agents=[default_user_agent],
@@ -69,11 +69,14 @@ class PipelineWrapper(BasePipelineWrapper):
         """
         log.info(f"Running Extract pipeline with URL: {url}")
 
-        result = self.pipeline.run({"content_extractor": {"urls": [url]}})
+        try:
+            result = self.pipeline.run({"content_extractor": {"urls": [url]}})
 
-        documents: List[haystack.Document] = result["content_extractor"]["documents"]
-        content = None
-        if documents:
-            content = documents[0].content or None
+            documents: List[haystack.Document] = result["content_extractor"]["documents"]
+            content = None
+            if documents:
+                content = documents[0].content or None
 
-        return content
+            return content
+        except Exception as e:
+            return f"Error: {e}"
