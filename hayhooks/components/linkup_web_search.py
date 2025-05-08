@@ -21,10 +21,15 @@ class LinkupWebSearch:
         :param api_key: API key.
         """
         self.api_key = api_key
-        self.linkup_client = LinkupClient(api_key=self.api_key.resolve_value())
+        self.linkup_client = None
 
-        # Ensure that the API key is resolved.
-        _ = self.api_key.resolve_value()
+        try:
+            api_key_value = self.api_key.resolve_value()
+            print(api_key_value)
+            if api_key_value:
+                self.linkup_client = LinkupClient(api_key=api_key_value)
+        except (ValueError, KeyError):
+            logger.warning("No Linkup API key provided. LinkupWebSearch will return empty results.")
 
     @component.output_types(documents=List[Document], links=List[str])
     def run(self, query: str, search_depth: str = DEFAULT_SEARCH_DEPTH) -> Dict[str, Union[List[Document], List[str]]]:
@@ -79,6 +84,9 @@ class LinkupWebSearch:
         from_date: Union[date, None] = None,
         to_date: Union[date, None] = None,
     ) -> LinkupSearchResults:
+        if self.linkup_client is None:
+            logger.warning(f"No Linkup API key available. Returning empty results for query '{query}'")
+            return LinkupSearchResults(results=[])
         return self.linkup_client.search(query=query, output_type="searchResults", depth=search_depth, from_date=from_date, to_date=to_date)
 
     def to_dict(self) -> Dict[str, Any]:
