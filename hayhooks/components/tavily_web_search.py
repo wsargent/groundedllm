@@ -1,8 +1,8 @@
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from hayhooks import log as logger
-from haystack import Document, component, default_from_dict, default_to_dict
-from haystack.utils import Secret, deserialize_secrets_inplace
+from haystack import Document, component
+from haystack.utils import Secret
 from tavily import TavilyClient
 
 TAVILY_BASE_URL = "https://api.tavily.com/search"
@@ -20,11 +20,10 @@ class TavilyWebSearch:
 
         :param api_key: API key.
         """
-        self.api_key = api_key
         self.tavily_client = None
 
         try:
-            api_key_value = self.api_key.resolve_value()
+            api_key_value = api_key.resolve_value()
             if api_key_value:
                 self.tavily_client = TavilyClient(api_key=api_key_value)
         except Exception as e:
@@ -112,29 +111,6 @@ class TavilyWebSearch:
     ) -> dict:
         # https://github.com/tavily-ai/tavily-python?tab=readme-ov-file#api-methods
         return self.tavily_client.search(query, max_results=max_results, time_range=time_range, include_domains=include_domains, exclude_domains=exclude_domains, search_depth=self._validate_search_depth(search_depth))
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serializes the component to a dictionary.
-
-        :returns:
-              Dictionary with serialized data.
-        """
-        return default_to_dict(
-            self,
-            api_key=self.api_key.to_dict(),
-        )
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TavilyWebSearch":
-        """Deserializes the component from a dictionary.
-
-        :param data:
-            The dictionary to deserialize from.
-        :returns:
-                The deserialized component.
-        """
-        deserialize_secrets_inplace(data["init_parameters"], keys=["api_key"])
-        return default_from_dict(cls, data)
 
     @staticmethod
     def _validate_search_depth(search_depth: str) -> Literal["basic", "advanced"]:

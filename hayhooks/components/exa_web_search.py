@@ -1,10 +1,10 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 from exa_py import Exa
 from exa_py.api import Result, SearchResponse
 from hayhooks import log as logger
-from haystack import Document, component, default_from_dict, default_to_dict
-from haystack.utils import Secret, deserialize_secrets_inplace
+from haystack import Document, component
+from haystack.utils import Secret
 
 DEFAULT_MAX_RESULTS = 5
 
@@ -19,8 +19,6 @@ class ExaWebSearch:
         :param api_key: API key.
         """
         self.exa_client = None
-        self.api_key = api_key
-
         try:
             self.exa_client = Exa(api_key=api_key.resolve_value())
         except ValueError:
@@ -156,23 +154,3 @@ class ExaWebSearch:
         #     flags (List[str], optional): Experimental flags for Exa usage.
         #     moderation (bool, optional): If True, the search results will be moderated for safety.
         return self.exa_client.search(query, use_autoprompt=True, num_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serializes the component to a dictionary.
-
-        :returns:
-              Dictionary with serialized data.
-        """
-        return default_to_dict(self, api_key=self.api_key.to_dict())
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ExaWebSearch":
-        """Deserializes the component from a dictionary.
-
-        :param data:
-            The dictionary to deserialize from.
-        :returns:
-                The deserialized component.
-        """
-        deserialize_secrets_inplace(data["init_parameters"], keys=["api_key"])
-        return default_from_dict(cls, data)
