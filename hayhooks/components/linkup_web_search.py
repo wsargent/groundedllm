@@ -53,12 +53,14 @@ class LinkupWebSearch:
         """
         valid_search_option = self._validate_search_depth(search_depth)
 
+        if self.linkup_client is None:
+            return {"documents": [], "urls": []}
+
         response = self._call_linkup(query=query, search_depth=valid_search_option)
         output = self._process_response(query, response)
         return output
 
-    @staticmethod
-    def _process_response(query, response: LinkupSearchResults):
+    def _process_response(self, query, response: LinkupSearchResults):
         documents = []
         urls = []
         results: List[LinkupSearchTextResult] = response.results
@@ -70,7 +72,7 @@ class LinkupWebSearch:
             urls.append(result.url)
             documents.append(Document.from_dict(doc_dict))
         number_documents = len(documents)
-        if number_documents == 0:
+        if self.linkup_client and number_documents == 0:
             logger.warning(f"Linkup returned 0 results for the query '{query}'")
         else:
             logger.debug(f"Linkup returned {number_documents} results for the query '{query}'")
@@ -84,9 +86,6 @@ class LinkupWebSearch:
         from_date: Union[date, None] = None,
         to_date: Union[date, None] = None,
     ) -> LinkupSearchResults:
-        if self.linkup_client is None:
-            logger.warning(f"No Linkup API key available. Returning empty results for query '{query}'")
-            return LinkupSearchResults(results=[])
         return self.linkup_client.search(query=query, output_type="searchResults", depth=search_depth, from_date=from_date, to_date=to_date)
 
     def to_dict(self) -> Dict[str, Any]:

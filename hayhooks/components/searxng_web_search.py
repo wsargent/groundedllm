@@ -161,7 +161,7 @@ class SearXNGWebSearch:
         documents: List[Document] = []
         urls: List[str] = []
 
-        logger.debug(f"SearXNG raw response for query '{query}': {response_json}")
+        # logger.debug(f"SearXNG raw response for query '{query}': {response_json}")
         raw_results = response_json.get("results", [])
 
         if not raw_results:
@@ -173,6 +173,8 @@ class SearXNGWebSearch:
         for result_item in raw_results[: max_results_requested if max_results_requested > 0 else len(raw_results)]:
             title = result_item.get("title")
             url = result_item.get("url")
+            logger.debug(f"SearXNG result {url}")
+
             content = result_item.get("content")  # Main snippet
 
             if not url or not content:  # Skip if essential fields are missing
