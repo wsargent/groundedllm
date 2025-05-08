@@ -10,6 +10,7 @@ logging.basicConfig(
 
 logger = logging.getLogger("main")
 
+
 def provision_search_agent():
     try:
         # Set this in your docker-compose.yml
@@ -18,7 +19,7 @@ def provision_search_agent():
         hayhooks_payload = {
             "agent_name": "search-agent",
             "chat_model": chat_model,
-            "embedding_model": embedding_model
+            "embedding_model": embedding_model,
         }
 
         hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL", "http://hayhooks:1416")
@@ -29,9 +30,7 @@ def provision_search_agent():
         response = requests.post(hayhooks_url, json=hayhooks_payload)
         response.raise_for_status()
         json_result = response.json()
-        logger.debug(
-            f"Configuration result: {json.dumps(json_result, indent=2)}"
-        )
+        logger.debug(f"Configuration result: {json.dumps(json_result, indent=2)}")
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to configure via Hayhooks: {e}")
         raise RuntimeError("Failed to configure") from e

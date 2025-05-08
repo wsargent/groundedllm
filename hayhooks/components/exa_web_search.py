@@ -19,12 +19,10 @@ class ExaWebSearch:
         :param api_key: API key.
         """
         self.exa_client = None
-        self.has_valid_client = False
         self.api_key = api_key
 
         try:
             self.exa_client = Exa(api_key=api_key.resolve_value())
-            self.has_valid_client = True
         except ValueError:
             logger.warning("No valid Exa API key provided. ExaWebSearch will not return any results.")
 
@@ -55,7 +53,7 @@ class ExaWebSearch:
             A dict of {"documents": documents, "urls": urls}
 
         """
-        if not self.has_valid_client:
+        if not self.exa_client:
             return {"documents": [], "urls": []}
 
         response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
@@ -88,7 +86,7 @@ class ExaWebSearch:
         Dict[str, Union[List[Document], List[str]]]
             A dict of {"documents": documents, "urls": urls}
         """
-        if not self.has_valid_client:
+        if not self.exa_client:
             return {"documents": [], "urls": []}
 
         response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
@@ -165,11 +163,7 @@ class ExaWebSearch:
         :returns:
               Dictionary with serialized data.
         """
-        return default_to_dict(
-            self,
-            api_key=self.api_key.to_dict(),
-            has_valid_client=self.has_valid_client,
-        )
+        return default_to_dict(self, api_key=self.api_key.to_dict())
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ExaWebSearch":
