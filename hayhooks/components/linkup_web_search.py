@@ -1,9 +1,9 @@
 from datetime import date
-from typing import Any, Dict, List, Literal, Union
+from typing import Dict, List, Literal, Union
 
 from hayhooks import log as logger
-from haystack import Document, component, default_from_dict, default_to_dict
-from haystack.utils import Secret, deserialize_secrets_inplace
+from haystack import Document, component
+from haystack.utils import Secret
 from linkup import LinkupClient
 from linkup.types import LinkupSearchResults, LinkupSearchTextResult
 
@@ -20,12 +20,10 @@ class LinkupWebSearch:
 
         :param api_key: API key.
         """
-        self.api_key = api_key
         self.linkup_client = None
 
         try:
-            api_key_value = self.api_key.resolve_value()
-            print(api_key_value)
+            api_key_value = api_key.resolve_value()
             if api_key_value:
                 self.linkup_client = LinkupClient(api_key=api_key_value)
         except (ValueError, KeyError):
@@ -87,29 +85,6 @@ class LinkupWebSearch:
         to_date: Union[date, None] = None,
     ) -> LinkupSearchResults:
         return self.linkup_client.search(query=query, output_type="searchResults", depth=search_depth, from_date=from_date, to_date=to_date)
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Serializes the component to a dictionary.
-
-        :returns:
-              Dictionary with serialized data.
-        """
-        return default_to_dict(
-            self,
-            api_key=self.api_key.to_dict(),
-        )
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "LinkupWebSearch":
-        """Deserializes the component from a dictionary.
-
-        :param data:
-            The dictionary to deserialize from.
-        :returns:
-                The deserialized component.
-        """
-        deserialize_secrets_inplace(data["init_parameters"], keys=["api_key"])
-        return default_from_dict(cls, data)
 
     @staticmethod
     def _validate_search_depth(search_depth: str) -> Literal["standard", "deep"]:
