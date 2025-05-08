@@ -69,27 +69,32 @@ class TavilyWebSearch:
             A dict of {"documents": documents, "urls": urls}
 
         """
+
+        if self.tavily_client is None:
+            return {"documents": [], "urls": []}
+
         response = self._call_tavily(query=query, search_depth=search_depth, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains, time_range=time_range)
         output = self._process_response(query, response)
         return output
 
-    @staticmethod
-    def _process_response(query: str, response: dict):
+    def _process_response(self, query: str, response: dict):
         documents = []
         urls = []
-        logger.debug(f"Tavily response: {response}")
+        # logger.debug(f"Tavily response: {response}")
         for result in response["results"]:
+            url = result["url"]
             doc_dict = {
                 "title": result["title"],
                 "content": result["content"],
-                "url": result["url"],
+                "url": url,
                 "score": result["score"],
             }
-            urls.append(result["url"])
+            logger.debug(f"Tavily result {url}")
+            urls.append(url)
             documents.append(Document.from_dict(doc_dict))
 
         number_documents = len(documents)
-        if number_documents == 0:
+        if self.tavily_client and number_documents == 0:
             logger.warning(f"Tavily returned 0 results for the query '{query}'")
         else:
             logger.debug(f"Tavily returned {number_documents} results for the query '{query}'")
@@ -105,11 +110,6 @@ class TavilyWebSearch:
         include_domains: Optional[list[str]],
         exclude_domains: Optional[list[str]],
     ) -> dict:
-        # If tavily_client is not available, return empty results
-        if self.tavily_client is None:
-            logger.warning(f"Tavily client not available. Returning empty results for query '{query}'")
-            return {"results": []}
-
         # https://github.com/tavily-ai/tavily-python?tab=readme-ov-file#api-methods
         return self.tavily_client.search(query, max_results=max_results, time_range=time_range, include_domains=include_domains, exclude_domains=exclude_domains, search_depth=self._validate_search_depth(search_depth))
 

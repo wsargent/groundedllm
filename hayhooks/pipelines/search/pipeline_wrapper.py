@@ -165,10 +165,8 @@ class PipelineWrapper(BasePipelineWrapper):
             }
         )
 
-        logger.debug(f"search: answer result from pipeline {result}")
         if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
             reply = result["llm"]["replies"][0]
-            logger.info(f"answer: reply is {reply}")
             return reply
         else:
             raise RuntimeError(f"Error: Could not retrieve answer from the pipeline. {result}")

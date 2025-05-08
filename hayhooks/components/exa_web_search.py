@@ -56,7 +56,6 @@ class ExaWebSearch:
 
         """
         if not self.has_valid_client:
-            logger.warning(f"No valid Exa client available. Returning empty results for query: '{query}'")
             return {"documents": [], "urls": []}
 
         response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
@@ -90,18 +89,16 @@ class ExaWebSearch:
             A dict of {"documents": documents, "urls": urls}
         """
         if not self.has_valid_client:
-            logger.warning(f"No valid Exa client available. Returning empty results for query: '{query}'")
             return {"documents": [], "urls": []}
 
         response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
         output = self._process_response(query, response)
         return output
 
-    @staticmethod
-    def _process_response(query: str, response: SearchResponse[Result]):
+    def _process_response(self, query: str, response: SearchResponse[Result]):
         documents = []
         urls = []
-        logger.debug(f"Exa response: {response}")
+        # logger.debug(f"Exa response: {response}")
 
         for result in response.results:
             # Attributes:
@@ -125,11 +122,12 @@ class ExaWebSearch:
                 "url": result.url,
                 "score": result.score,
             }
+            logger.debug(f"Exa result {result.url}")
             urls.append(result.url)
             documents.append(Document.from_dict(doc_dict))
 
         number_documents = len(documents)
-        if number_documents == 0:
+        if self.exa_client and number_documents == 0:
             logger.warning(f"Exa returned 0 results for the query '{query}'")
         else:
             logger.debug(f"Exa returned {number_documents} results for the query '{query}'")
