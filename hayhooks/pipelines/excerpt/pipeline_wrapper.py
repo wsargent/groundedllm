@@ -155,22 +155,26 @@ class PipelineWrapper(BasePipelineWrapper):
             The answer from the LLM model.
 
         """
-        logger.debug(f"Running EXCERPT pipeline with URLs: {urls}")
-        if not hasattr(self, "pipeline") or not self.pipeline:
-            raise RuntimeError("Pipeline not initialized during setup.")
 
-        clean_urls = self._clean_urls(urls)
+        try:
+            logger.debug(f"Running EXCERPT pipeline with URLs: {urls}")
+            if not hasattr(self, "pipeline") or not self.pipeline:
+                raise RuntimeError("Pipeline not initialized during setup.")
 
-        result = self.pipeline.run(
-            {
-                "content_extractor": {"urls": clean_urls},
-                "prompt_builder": {"query": question},
-            }
-        )
+            clean_urls = self._clean_urls(urls)
 
-        if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
-            reply = result["llm"]["replies"][0]
-            logger.info(f"answer: reply is {reply}")
-            return reply
-        else:
-            raise RuntimeError("Error: Could not retrieve answer from the pipeline.")
+            result = self.pipeline.run(
+                {
+                    "content_extractor": {"urls": clean_urls},
+                    "prompt_builder": {"query": question},
+                }
+            )
+
+            if "llm" in result and "replies" in result["llm"] and result["llm"]["replies"]:
+                reply = result["llm"]["replies"][0]
+                logger.info(f"answer: reply is {reply}")
+                return reply
+            else:
+                raise RuntimeError("Error: Could not retrieve answer from the pipeline.")
+        except Exception as e:
+            return f"Error: {e}"
