@@ -197,7 +197,7 @@ wheels = [
 
 [[package]]
 name = "exa-py"
-version = "1.12.1"
+version = "1.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -207,9 +207,9 @@ dependencies = [
     { name = "requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/8d/65/38f2a5fa722a63ecb05b33b7c5cef7e334b61a61fa6954f8dfb43b3a927a/exa_py-1.12.1.tar.gz", hash = "sha256:b043a0546428fad7251d8b5f2bad7c468f11f596386ba802b159c2aeb87742fb", size = 22421 }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/55/b1787174a3d7c93c7ccc11c599ece8f5d0a0c2a3b457423c5062ceb848cc/exa_py-1.13.0.tar.gz", hash = "sha256:7bae5e0b96830d8689d3c25afb2765107208cba2151ead3e6156fc5999a867ed", size = 27643 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/85/10/4fe4f6e95b66b1f14defe3ccd8b7700d813c69c9c4226751f470973cd21a/exa_py-1.12.1-py3-none-any.whl", hash = "sha256:64da38e64d2360d9c3bf355e9ccb2a327de6b60bb67be04937466fdf0b32b2ef", size = 27527 },
+    { url = "https://files.pythonhosted.org/packages/25/90/593162b4ebe52af5bfe26e7a7e85e93fdff6a8eb1a28cf510475ce00acd3/exa_py-1.13.0-py3-none-any.whl", hash = "sha256:4ab191bb1f9e174ba854c1b170d2a69d48708bad8e8f23869fb36bfe90b5c447", size = 27536 },
 ]
 
 [[package]]
@@ -1332,11 +1332,11 @@ wheels = [
 
 [[package]]
 name = "tenacity"
-version = "9.0.0"
+version = "9.1.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/cd/94/91fccdb4b8110642462e653d5dcb27e7b674742ad68efd146367da7bdb10/tenacity-9.0.0.tar.gz", hash = "sha256:807f37ca97d62aa361264d497b0e31e92b8027044942bfa756160d908320d73b", size = 47421 }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/d4/2b0cd0fe285e14b36db076e78c93766ff1d529d70408bd1d2a5a84f1d929/tenacity-9.1.2.tar.gz", hash = "sha256:1169d376c297e7de388d18b4481760d478b0e99a777cad3a9c86e556f4b697cb", size = 48036 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/cb/b86984bed139586d01532a587464b5805f12e397594f19f931c4c2fbfa61/tenacity-9.0.0-py3-none-any.whl", hash = "sha256:93de0c98785b27fcf659856aa9f54bfbd399e29969b0621bc7f762bd441b4539", size = 28169 },
+    { url = "https://files.pythonhosted.org/packages/e5/30/643397144bfbfec6f6ef821f36f33e57d35946c44a2352d3c9f0ae847619/tenacity-9.1.2-py3-none-any.whl", hash = "sha256:f77bf36710d8b73a50b2dd155c97b870017ad21afe6ab300326b0371b3b05138", size = 28248 },
 ]
 
 [[package]]
@@ -1398,7 +1398,7 @@ wheels = [
 
 [[package]]
 name = "typer"
-version = "0.12.4"
+version = "0.15.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -1406,9 +1406,9 @@ dependencies = [
     { name = "shellingham" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d4/f7/f174a1cae84848ae8b27170a96187b91937b743f0580ff968078fe16930a/typer-0.12.4.tar.gz", hash = "sha256:c9c1613ed6a166162705b3347b8d10b661ccc5d95692654d0fb628118f2c34e6", size = 97945 }
+sdist = { url = "https://files.pythonhosted.org/packages/98/1a/5f36851f439884bcfe8539f6a20ff7516e7b60f319bbaf69a90dc35cc2eb/typer-0.15.3.tar.gz", hash = "sha256:818873625d0569653438316567861899f7e9972f2e6e0c16dab608345ced713c", size = 101641 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/cc/15083dcde1252a663398b1b2a173637a3ec65adadfb95137dc95df1e6adc/typer-0.12.4-py3-none-any.whl", hash = "sha256:819aa03699f438397e876aa12b0d63766864ecba1b579092cc9fe35d886e34b6", size = 47402 },
+    { url = "https://files.pythonhosted.org/packages/48/20/9d953de6f4367163d23ec823200eb3ecb0050a2609691e512c8b95827a9b/typer-0.15.3-py3-none-any.whl", hash = "sha256:c86a65ad77ca531f03de08d1b9cb67cd09ad02ddddf4b34745b5008f43b239bd", size = 45253 },
 ]
 
 [[package]]

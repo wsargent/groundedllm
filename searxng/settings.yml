@@ -16,12 +16,10 @@ engines:
   - name: wolframalpha
     disabled: false
 
-  # - name: brave
-  #   engine: brave
-  #   shortcut: br
-  #   time_range_support: true
-  #   paging: true
-  #   categories: [general, web]
-  #   brave_category: search
-  #   # brave_spellcheck: true
-  #   disabled: true
+  # This asks for a captcha
+  - name: qwant
+    disabled: true
+
+  # Brave will rate limit, better off using direct API
+  - name: brave
+    disabled: true
