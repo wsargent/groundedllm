@@ -8,6 +8,7 @@ from haystack.components.generators import OpenAIGenerator
 from haystack.components.joiners import DocumentJoiner
 from haystack.utils import Secret
 
+from components.brave_web_search import BraveWebSearch
 from components.content_extraction import build_search_extraction_component
 from components.exa_web_search import ExaWebSearch
 from components.linkup_web_search import LinkupWebSearch
@@ -20,10 +21,34 @@ class PipelineWrapper(BasePipelineWrapper):
     """A Haystack pipeline wrapper that runs a search query."""
 
     def setup(self) -> None:
+        #######
+        # Set up the pipeline
+
+        pipe = Pipeline()
+
+        #######
+        # Set up the search components
+
         tavily_search = TavilyWebSearch()
         linkup_search = LinkupWebSearch()
         searxng_search = SearXNGWebSearch()
         exa_search = ExaWebSearch()
+        brave_search = BraveWebSearch()
+
+        pipe.add_component("tavily_search", tavily_search)
+        pipe.add_component("linkup_search", linkup_search)
+        pipe.add_component("searxng_search", searxng_search)
+        pipe.add_component("exa_search", exa_search)
+        pipe.add_component("brave_search", brave_search)
+
+        #######
+        # Set up the joiner
+
+        document_joiner = DocumentJoiner()
+        pipe.add_component("document_joiner", document_joiner)
+
+        #######
+        # Set up the content extractor
 
         default_user_agent = os.getenv(
             "HAYHOOKS_SEARCH_USER_AGENT",
@@ -40,10 +65,19 @@ class PipelineWrapper(BasePipelineWrapper):
             timeout=timeout,
             http2=use_http2,
         )
+        pipe.add_component("content_extractor", content_extractor)
+
+        #######
+        # Set up the prompt builder
 
         template = read_resource_file("search_prompt.md")
         prompt_builder = PromptBuilder(template=template, required_variables=["query"])
 
+        pipe.add_component("prompt_builder", prompt_builder)
+
+        #######
+        # Set up the LLM
+        #
         # This will typically use Gemini 2.0 Flash, as the LLM is fast, cheap, and has a huge context window.
         #
         # If you try searching directly using Letta and in Claude Sonnet 3.7, you'll get rate limited fairly quickly.
@@ -65,26 +99,41 @@ class PipelineWrapper(BasePipelineWrapper):
         logger.info(f"Using search model: {search_model}")
         llm = OpenAIGenerator(api_key=search_api_key, api_base_url=api_base_url, model=search_model)
 
-        document_joiner = DocumentJoiner()
-
-        pipe = Pipeline()
-        pipe.add_component("tavily_search", tavily_search)
-        pipe.add_component("linkup_search", linkup_search)
-        pipe.add_component("searxng_search", searxng_search)
-        pipe.add_component("exa_search", exa_search)
-        pipe.add_component("document_joiner", document_joiner)
-        pipe.add_component("content_extractor", content_extractor)
-        pipe.add_component("prompt_builder", prompt_builder)
         pipe.add_component("llm", llm)
 
-        # Connect components
-        pipe.connect("tavily_search.documents", "document_joiner.documents")
-        pipe.connect("linkup_search.documents", "document_joiner.documents")
-        pipe.connect("exa_search.documents", "document_joiner.documents")
+        #######
+        # Connect components to do the actual searching
+
+        # searxng is free but does not come with ranking
         pipe.connect("searxng_search.documents", "document_joiner.documents")
+
+        # Tavily is good for 1000 searches a month and has ranking
+        pipe.connect("tavily_search.documents", "document_joiner.documents")
+
+        # Exa has ranking
+        pipe.connect("exa_search.documents", "document_joiner.documents")
+
+        # Brave doesn't expose rank, but does order its documents (and has goggles)
+        pipe.connect("brave_search.documents", "document_joiner.documents")
+
+        # Linkup doesn't rank its documents (or at least doesn't expose it) >:-(
+        pipe.connect("linkup_search.documents", "document_joiner.documents")
+
+        #######
+        # If we don't have any documents at all, we've either screwed up the pipeline, or
+        # we've run out of searches, or we don't have internet access.  Bail.
+
+        #######
+        # XXX Run this through a deduplication and reranking based on snippets, then pick the top documents
+        # for full text extraction
+
+        #######
+        # Send the relevant documents with URLs to extract the full pages
+        # XXX Set up content extraction to run through a cache for frequently used documents
         pipe.connect("document_joiner.documents", "content_extractor.documents")
         pipe.connect("content_extractor.documents", "prompt_builder.documents")
-        # pipe.connect("search.documents", "prompt_builder.documents")
+
+        # Feed the full pages into the long context LLM to extract useful information out of the search.
         pipe.connect("prompt_builder", "llm")
 
         self.pipeline = pipe
@@ -155,6 +204,7 @@ class PipelineWrapper(BasePipelineWrapper):
                 # https://docs.searxng.org/user/configured_engines.html
                 # we probably want "general"
                 "searxng_search": {"query": question, "safesearch": 1},
+                "brave_search": {"query": question, "max_results": max_results},
                 "exa_search": {
                     "query": question,
                     "max_results": max_results,

@@ -10,6 +10,7 @@ If you have the API keys and Docker Compose, you should be able to go to http://
 * [Linkup Pricing](https://www.linkup.so/#pricing)
 * [Exa Pricing](https://exa.ai/pricing?tab=api)
 * [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing)
+* [Brave Pricing](https://brave.com/search/api/)
 
 Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows. 
 
@@ -27,8 +28,7 @@ This project may be of interest to you if:
 I have not researched these deeply, but this gives you an idea of what I'm going for:
 
 * [Khoj](https://docs.khoj.dev) has a self-hosting option and appears pretty sane.
-* [Phind](https://www.phind.com) is clearly a bootstrap option but has some thought put into it.
-* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) is a self hosted search engine, less focused on quality.
+* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) is similar to this, but only searches SearXNG, and doesn't incorporate an agent or full content extraction.
 * [Jina Deepsearch](https://search.jina.ai) seems pretty legit.
 * [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
 
