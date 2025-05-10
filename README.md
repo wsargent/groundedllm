@@ -4,16 +4,9 @@ This is a pre-built, turnkey implementation of an AI agent grounded with search 
 
 If you have the API keys and Docker Compose, you should be able to go to http://localhost:3000 and have it Just Work.  It runs fine on a Macbook Air with 8 GB memory.
 
-[SearXNG](https://docs.searxng.org) is included as the search engine by default.  The default option is Google's Gemini API using the [free tier](https://ai.google.dev/gemini-api/docs/pricing): I've only hit the tier limit for Gemini once.
+[SearXNG](https://docs.searxng.org) is included as the search engine by default.  
 
-These search engines have a free tier for individuals (as of 4/13/2025):
-
-* [Tavily Pricing](https://tavily.com/#pricing)
-* [Linkup Pricing](https://www.linkup.so/#pricing)
-* [Exa Pricing](https://exa.ai/pricing?tab=api)
-* [Brave Pricing](https://brave.com/search/api/)
-
-Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows.
+The default option for the chat model is Google's Gemini API using the [free tier](https://ai.google.dev/gemini-api/docs/pricing): I've only hit the tier limit for Gemini once.  Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows.
 
 ## Who's Interested?
 
@@ -33,14 +26,12 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 ### Self Hosted
 
 * [Khoj](https://docs.khoj.dev) has a self-hosting option and appears pretty sane.
-* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) is similar, but this has an agent, full content extraction, and multiple search engine options!
-* [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use 
-
-personal sources of data.
+* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) uses SearXNG and a reranker to feed into an LLM.
+* [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
 
 ### Cloud
 
-* [Jina Deepsearch](https://search.jina.ai) seems pretty legit.
+* [Jina Deepsearch](https://search.jina.ai) seems pretty good.
 * [Phind](https://www.phind.com) is more chat oriented and has good diagrams.
 * [Tak](https://tak.phospho.ai) is another chat oriented search engine.
 
