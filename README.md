@@ -78,12 +78,12 @@ See the env.example file for more details.
 
 SearXNG comes for free out of the box, but I recommend disabling SearXNG and going with one of the following search APIs that may produce better results:
 
-* [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
 * [Linkup API key](https://app.linkup.so/home) -- you get [5 euros every month](https://docs.linkup.so/pages/documentation/development/pricing).
+* [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
 * [Exa API key](https://app.linkup.so/home) -- you get [$10 total](https://exa.ai/pricing?tab=api) when you open your account.
 * [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month.
 
-For preference, I would pick Tavily or Linkup as they are focused on LLMs and have a renewable free tier.  Exa does not have a renewable free tier, and Brave's API search is not focused on accuracy for LLMs.
+For preference, I would pick Linkup, as they are focused on reliability, have a renewable free tier, and a strong privacy policy from being based in the EU.
 
 * [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  Commented out in LiteLLM and the docker compose file.
 
@@ -222,11 +222,11 @@ Since you're using this for search, you may want to know how your queries are pr
 
 There are three different services involved in search, each with their own privacy policy.
 
-You do have options for customization.  Since the tools go through Hayhooks, you can write a [ConditionalRouter](https://docs.haystack.deepset.ai/docs/conditionalrouter) that will send different queries to different services or evaluate them before they are processed.
+You do have options for customization.  Since the tools go through Hayhooks, you can write a [ConditionalRouter](https://docs.haystack.deepset.ai/docs/conditionalrouter) that will send different queries to different services or evaluate them before they are processed, or break out the search components into their own pipelines.
 
-### Anthropic
+### Linkup
 
-Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: they do not use personal data for model training [without explicit consent](https://privacy.anthropic.com/en/articles/10023580-is-my-data-used-for-model-training).
+Linkup's [privacy policy](https://linkup-platform.notion.site/Linkup-Privacy-Policy-197161ecef69800287c9cfca4bf1d39d).  It's a French company, so it's under GDPR.
 
 ### Tavily
 
@@ -236,10 +236,6 @@ Tavily's [privacy policy](https://tavily.com/privacy) is that they do store quer
 
 Exa's [privacy policy](https://exa.ai/privacy-policy).  They do say "Query data may be used to improve our services." and "We do not treat query data as personal data for privacy law compliance purposes, Any personal information voluntarily submitted through query fields will be processed according to this policy but without additional safeguards specific to personal data."
 
-### Linkup
-
-Linkup's [privacy policy](https://linkup-platform.notion.site/Linkup-Privacy-Policy-197161ecef69800287c9cfca4bf1d39d).  It's a French company, so it's under GDPR.
-
 ### Brave
 
 Brave's [privacy policy](https://api-dashboard.search.brave.com/privacy-policy) records all queries for 90 days for troubleshooting and billing purposes.  They are fairly well-known for their strong privacy stance.
@@ -248,3 +244,6 @@ Brave's [privacy policy](https://api-dashboard.search.brave.com/privacy-policy) 
 
 Google's [privacy policy](https://support.google.com/gemini/answer/13594961) states that your conversations with Gemini may be used to improve and develop their products and services, including machine learning technologies.  The [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing) page says the free tier does your conversations to train their models. They do use human reviewers and there is a note saying **Please don’t enter confidential information in your conversations or any data you wouldn’t want a reviewer to see or Google to use to improve our products, services, and machine-learning technologies.**
 
+### Anthropic
+
+Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: they do not use personal data for model training [without explicit consent](https://privacy.anthropic.com/en/articles/10023580-is-my-data-used-for-model-training).
