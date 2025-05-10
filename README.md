@@ -4,15 +4,16 @@ This is a pre-built, turnkey implementation of an AI agent grounded with search 
 
 If you have the API keys and Docker Compose, you should be able to go to http://localhost:3000 and have it Just Work.  It runs fine on a Macbook Air with 8 GB memory.
 
-[SearXNG](https://docs.searxng.org) is included by default.  You can add additional search engines with Tavily, Linkup, Exa, and Google's Gemini API: these are free for individuals (as of 4/13/2025) and I've only hit the tier limit for Gemini once.
+[SearXNG](https://docs.searxng.org) is included as the search engine by default.  The default option is Google's Gemini API using the [free tier](https://ai.google.dev/gemini-api/docs/pricing): I've only hit the tier limit for Gemini once.
+
+These search engines have a free tier for individuals (as of 4/13/2025):
 
 * [Tavily Pricing](https://tavily.com/#pricing)
 * [Linkup Pricing](https://www.linkup.so/#pricing)
 * [Exa Pricing](https://exa.ai/pricing?tab=api)
-* [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing)
 * [Brave Pricing](https://brave.com/search/api/)
 
-Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows. 
+Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows.
 
 ## Who's Interested?
 
@@ -25,14 +26,25 @@ This project may be of interest to you if:
 
 ## Other Options?
 
+I am specifically interested in research agents -- chat interfaces with search attached, rather than search interfaces with chat attached.  I am also not including things like [duck.ai](https://duck.ai) that have chat, but do not attach to the search engine.
+
 I have not researched these deeply, but this gives you an idea of what I'm going for:
 
-* [Khoj](https://docs.khoj.dev) has a self-hosting option and appears pretty sane.
-* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) is similar to this, but only searches SearXNG, and doesn't incorporate an agent or full content extraction.
-* [Jina Deepsearch](https://search.jina.ai) seems pretty legit.
-* [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
+### Self Hosted
 
-I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).
+* [Khoj](https://docs.khoj.dev) has a self-hosting option and appears pretty sane.
+* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) is similar, but this has an agent, full content extraction, and multiple search engine options!
+* [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use 
+
+personal sources of data.
+
+### Cloud
+
+* [Jina Deepsearch](https://search.jina.ai) seems pretty legit.
+* [Phind](https://www.phind.com) is more chat oriented and has good diagrams.
+* [Tak](https://tak.phospho.ai) is another chat oriented search engine.
+
+I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).  
 
 ## Description
 
@@ -73,11 +85,12 @@ You will need the following:
 
 See the env.example file for more details.
 
-Optional:
+SearXNG comes for free out of the box, but you also have the option of disabling SearXNG and going with one of the following search APIs that may produce better results:
 
 * [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
 * [Linkup API key](https://app.linkup.so/home) -- you get [5 euros every month](https://docs.linkup.so/pages/documentation/development/pricing).
 * [Exa API key](https://app.linkup.so/home) -- you get [$10 total](https://exa.ai/pricing?tab=api) when you open your account.
+* [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month
 
 * [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  Commented out in LiteLLM and the docker compose file.
 
@@ -178,7 +191,7 @@ The search technique is pulled from this academic paper on [DeepRAG](https://arx
 
 The model is set up with Gemini 2.5 Pro Preview, although Claude Sonnet 3.7 is recommended as it is much more proactive about calling tools until it gets a good answer.
 
-Letta does not work reliably with local models (Ollama, LM Studio) or OpenAI-compatible proxies (LiteLLM, OpenRouter).  Stick to the major cloud providers and you'll be fine.
+Letta can be very finicky when it comes to the models it supports.  I've had the best luck with the Gemma3 models, but other models have completely crashed and burned.  If you want to be experimental, try [Google Cloud Run](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama) which will give you $300 in credits or the free [Openrouter](https://openrouter.ai/google/gemma-3-27b-it:free) models.
 
 #### Letta Desktop
 
