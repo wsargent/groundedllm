@@ -33,7 +33,7 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 
 * [Jina Deepsearch](https://search.jina.ai) seems pretty good.
 * [Phind](https://www.phind.com) is more chat oriented and has good diagrams.
-* [Tak](https://tak.phospho.ai) is another chat oriented search engine.
+* [Tak](https://tak.phospho.ai) is another chat oriented search engine, powered by [Linkup](https://www.linkup.so/blog/linkup-phospho-partnership).
 
 I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).  
 
@@ -76,14 +76,14 @@ You will need the following:
 
 See the env.example file for more details.
 
-SearXNG comes for free out of the box, but you also have the option of disabling SearXNG and going with one of the following search APIs that may produce better results:
+SearXNG comes for free out of the box, but I recommend disabling SearXNG and going with one of the following search APIs that may produce better results:
 
 * [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
 * [Linkup API key](https://app.linkup.so/home) -- you get [5 euros every month](https://docs.linkup.so/pages/documentation/development/pricing).
 * [Exa API key](https://app.linkup.so/home) -- you get [$10 total](https://exa.ai/pricing?tab=api) when you open your account.
 * [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month.
 
-For preference, I would pick Tavily or Linkup as they are focused on LLMs and have a renewable free tier.  Exa does not have a renewable free tier, and Brave's API search is not focused on LLMs.
+For preference, I would pick Tavily or Linkup as they are focused on LLMs and have a renewable free tier.  Exa does not have a renewable free tier, and Brave's API search is not focused on accuracy for LLMs.
 
 * [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  Commented out in LiteLLM and the docker compose file.
 
@@ -231,6 +231,18 @@ Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: 
 ### Tavily
 
 Tavily's [privacy policy](https://tavily.com/privacy) is that they do store queries, and they will use queries to improve the quality of their services.  You can opt out through the [account settings](https://app.tavily.com/account/settings).
+
+### Exa
+
+Exa's [privacy policy](https://exa.ai/privacy-policy).  They do say "Query data may be used to improve our services." and "We do not treat query data as personal data for privacy law compliance purposes, Any personal information voluntarily submitted through query fields will be processed according to this policy but without additional safeguards specific to personal data."
+
+### Linkup
+
+Linkup's [privacy policy](https://linkup-platform.notion.site/Linkup-Privacy-Policy-197161ecef69800287c9cfca4bf1d39d).  It's a French company, so it's under GDPR.
+
+### Brave
+
+Brave's [privacy policy](https://api-dashboard.search.brave.com/privacy-policy) records all queries for 90 days for troubleshooting and billing purposes.  They are fairly well-known for their strong privacy stance.
 
 ### Google
 
