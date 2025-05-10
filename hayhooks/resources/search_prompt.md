@@ -25,6 +25,7 @@ And here is the user's query:
 Please follow these instructions carefully:
 
 1. Analyze the context and the query:
+   - If there is no context, skip the following instructions and reply with "No results found."
    - Examine the relevance and quality of each document in the context.
    - Quote relevant passages from each document, noting which document they come from.
    - Identify key information related to the user's query.
