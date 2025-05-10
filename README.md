@@ -1,10 +1,10 @@
 # GroundedLLM
 
-This is a pre-built, turnkey implementation of an AI agent grounded with search and extract tools to reduce hallucination.
+This is a pre-built, turnkey implementation of an AI agent grounded with search, excerpt, and extract tools to reduce hallucination and provide correct and complete answers to questions.  Jina has an [excellent blog post](https://jina.ai/news/a-practical-guide-to-implementing-deepsearch-deepresearch) on the details.
 
 If you have the API keys and Docker Compose, you should be able to go to http://localhost:3000 and have it Just Work.  It runs fine on a Macbook Air with 8 GB memory.
 
-[SearXNG](https://docs.searxng.org) is included as the search engine by default.  
+[SearXNG](https://docs.searxng.org) is included as the search engine by default, but I recommend you set up one of the included Search APIs and use those, as they claim to have higher quality search results.
 
 The default option for the chat model is Google's Gemini API using the [free tier](https://ai.google.dev/gemini-api/docs/pricing): I've only hit the tier limit for Gemini once.  Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows.
 
@@ -21,7 +21,7 @@ This project may be of interest to you if:
 
 I am specifically interested in research agents -- chat interfaces with search attached, rather than search interfaces with chat attached.  I am also not including things like [duck.ai](https://duck.ai) that have chat, but do not attach to the search engine.
 
-I have not researched these deeply, but this gives you an idea of what I'm going for:
+I have not researched these deeply, but this gives you an idea of what I'm going for.
 
 ### Self Hosted
 
@@ -81,7 +81,9 @@ SearXNG comes for free out of the box, but you also have the option of disabling
 * [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
 * [Linkup API key](https://app.linkup.so/home) -- you get [5 euros every month](https://docs.linkup.so/pages/documentation/development/pricing).
 * [Exa API key](https://app.linkup.so/home) -- you get [$10 total](https://exa.ai/pricing?tab=api) when you open your account.
-* [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month
+* [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month.
+
+For preference, I would pick Tavily or Linkup as they are focused on LLMs and have a renewable free tier.  Exa does not have a renewable free tier, and Brave's API search is not focused on LLMs.
 
 * [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  Commented out in LiteLLM and the docker compose file.
 

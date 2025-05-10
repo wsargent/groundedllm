@@ -26,8 +26,6 @@ services:
     volumes:
       - ./hayhooks/pipelines:/pipelines
     environment:
-      - HAYHOOKS_SEARCH_MODEL=$HAYHOOKS_SEARCH_MODEL
-      - HAYHOOKS_EXCERPT_MODEL=$HAYHOOKS_EXCERPT_MODEL
       - HAYHOOKS_PIPELINES_DIR=/pipelines
       - HAYHOOKS_DISABLE_SSL=true
       - HAYHOOKS_HOST=0.0.0.0
@@ -36,14 +34,17 @@ services:
       - LOG=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYSTACK_LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYHOOKS_SHOW_TRACEBACKS=true
-      # Needed for search pipeline
-      - TAVILY_API_KEY=$TAVILY_API_KEY
-      - LINKUP_API_KEY=$LINKUP_API_KEY
+      # Pipeline specific options
+      - HAYHOOKS_SEARCH_MODEL=$HAYHOOKS_SEARCH_MODEL
+      - HAYHOOKS_EXCERPT_MODEL=$HAYHOOKS_EXCERPT_MODEL
+      - HAYHOOKS_SEARCH_SEARXNG_ENABLED=$HAYHOOKS_SEARCH_SEARXNG_ENABLED
+      # Connections to other containers
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - OPENAI_API_BASE=http://litellm:4000
       - SEARXNG_BASE_URL=http://searxng:8080
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
+      
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
       interval: 10s
