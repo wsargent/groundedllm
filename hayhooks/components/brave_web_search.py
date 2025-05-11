@@ -12,7 +12,11 @@ DEFAULT_TIMEOUT = 10
 class BraveWebSearch:
     def __init__(self, api_key: Secret = Secret.from_env_var("BRAVE_API_KEY"), timeout: int = DEFAULT_TIMEOUT):
         self.endpoint = "https://api.search.brave.com/res/v1/web/search"
-        self.api_key = api_key.resolve_value()
+        try:
+            self.api_key = api_key.resolve_value()
+        except Exception:
+            self.api_key = None
+
         if api_key:
             self.is_enabled = True
         else:
