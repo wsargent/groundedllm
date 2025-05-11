@@ -83,9 +83,11 @@ SearXNG comes for free out of the box, but I recommend disabling SearXNG and goi
 * [Exa API key](https://app.linkup.so/home) -- you get [$10 total](https://exa.ai/pricing?tab=api) when you open your account.
 * [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month.
 
-For preference, I would pick Linkup, as they are focused on reliability, have a renewable free tier, and a strong privacy policy from being based in the EU.  There is a full list [here](https://www.mattcollins.net/web-search-apis-for-llms).
+If none of these work for you, there is a full list of options [here](https://www.mattcollins.net/web-search-apis-for-llms).
 
-* [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  Commented out in LiteLLM and the docker compose file.
+In addition, if you want to use Claude Sonnet instead of Google Gemini, you'll want a key for that.
+
+* [Anthropic API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  
 
 If you do not have these accounts or API keys, it is *very* simple to set them up if you have a Google or Github account.  Gemini will ask you to sign in with your Google account, then give you a free key.  If you want to upgrade, you can set up a  [billing account](https://ai.google.dev/gemini-api/docs/billing) for PAYG.  Tavily is the same way; there's no [credit card required](https://docs.tavily.com/documentation/api-credits) and PAYG is opt in.
 
@@ -200,7 +202,7 @@ To cut down on Anthropic's brutally low rate limits and higher costs, the search
 
 The search tool extracts the full text of each search result and adds it as context to the search model following [search best practices](https://docs.tavily.com/documentation/best-practices/best-practices-search).  It also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.
 
-The extract tool converts documents in many formats to Markdown and does some document cleanup before sending it to the extract model.  It's all internal to Haystack and comes for free.  It does not attempt any kind of bot evasion.
+The extract tool converts documents in many formats to Markdown and does some document cleanup before sending it to the extract model.  It's all internal to Haystack and comes for free.  It does not attempt any kind of bot evasion.  There is a fallback option to use [Jina Reader](https://github.com/jina-ai/reader).
 
 There is no vector/embeddings/database RAG involved in this project, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is technically a RAG implementation based on pgvector.
 
@@ -247,3 +249,7 @@ Google's [privacy policy](https://support.google.com/gemini/answer/13594961) sta
 ### Anthropic
 
 Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: they do not use personal data for model training [without explicit consent](https://privacy.anthropic.com/en/articles/10023580-is-my-data-used-for-model-training).
+
+## Jina
+
+Jina's [privacy policy](https://jina.ai/legal#privacy-policy).  They are a German company, so GDPR applies. 
