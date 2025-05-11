@@ -202,35 +202,6 @@ class JinaLinkContentFetcher:
         # If we've exhausted all retries, return None
         return None, None
 
-    def _fetch_with_retries(self, url: str):
-        """
-        Fetch content from a URL with retry logic.
-
-        Args:
-            url: The URL to fetch content from.
-
-        Returns:
-            A tuple containing metadata and ByteStream.
-        """
-        attempt = 0
-
-        while attempt <= self.retry_attempts:
-            try:
-                return self._fetch(url)
-            except Exception as e:
-                attempt += 1
-                if attempt <= self.retry_attempts:
-                    # Wait before retry using exponential backoff
-                    import time
-
-                    time.sleep(min(2 * 2 ** (attempt - 1), 10))
-                else:
-                    logger.warning(f"Failed to fetch {url} using jina.ai after {self.retry_attempts} attempts: {str(e)}")
-                    break
-
-        # If we've exhausted all retries, return None
-        return None, None
-
     def _fetch(self, url: str) -> Tuple[Dict[str, str], ByteStream]:
         """
         Fetch content from a URL using jina.ai service.
