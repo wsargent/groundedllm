@@ -83,7 +83,7 @@ SearXNG comes for free out of the box, but I recommend disabling SearXNG and goi
 * [Exa API key](https://app.linkup.so/home) -- you get [$10 total](https://exa.ai/pricing?tab=api) when you open your account.
 * [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month.
 
-For preference, I would pick Linkup, as they are focused on reliability, have a renewable free tier, and a strong privacy policy from being based in the EU.
+For preference, I would pick Linkup, as they are focused on reliability, have a renewable free tier, and a strong privacy policy from being based in the EU.  There is a full list [here](https://www.mattcollins.net/web-search-apis-for-llms).
 
 * [Anthropic or OpenAI API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  Commented out in LiteLLM and the docker compose file.
 
