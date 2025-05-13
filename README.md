@@ -28,6 +28,7 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 * [Khoj](https://docs.khoj.dev) has a self-hosting option and appears pretty sane.
 * [Perplexica](https://github.com/ItzCrazyKns/Perplexica) uses SearXNG and a reranker to feed into an LLM.
 * [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
+* [Deer-Flow](https://deerflow.tech) is a self-hosted deep research tool using Tavily.  It produces *long* reports.
 
 ### Cloud
 
@@ -82,6 +83,7 @@ SearXNG comes for free out of the box, but I recommend disabling SearXNG and goi
 * [Tavily API key](https://app.tavily.com/home) -- free up to 1000 searches, pay as you go (PAYG) is 8 cents per 1000 searches.
 * [Exa API key](https://app.linkup.so/home) -- you get [$10 total](https://exa.ai/pricing?tab=api) when you open your account.
 * [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month.
+* [Jina API key](https://jina.ai/api-dashboard/key-manager) -- free, there's a limited number of tokens.
 
 If none of these work for you, there is a full list of options [here](https://www.mattcollins.net/web-search-apis-for-llms).
 
@@ -196,13 +198,15 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 
 ### Hayhooks
 
-[Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs. It's primarily used for RAG, but it's also a great way to make tools available in general as it has MCP and OpenAPI support.
+[Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs.  It's great for processing content and providing a simple interface to Letta.
 
-To cut down on Anthropic's brutally low rate limits and higher costs, the search and extract tools use Google Flash 2.0 to process the output from Tavily and create an answer for Letta.  Hayhooks has the most flexibility in using different models, and you can swap to Ollama or OpenRouter models like Gemma3 or Qwen3 if that works better for you.
+In this case, the tools use Google Flash 2.0 to process the search output and run searches through cheaper models to ameliorate Anthropic's brutally low rate limits and higher costs.  Unlike Letta, Hayhooks is very flexible about the models it uses, and you can swap to Ollama or OpenRouter models like Gemma3 or Qwen3 if that works better for you.
 
-The search tool extracts the full text of each search result and adds it as context to the search model following [search best practices](https://docs.tavily.com/documentation/best-practices/best-practices-search).  It also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.
+The search tool extracts the full text of each search result and adds it as context to a long context search model following [search best practices](https://docs.tavily.com/documentation/best-practices/best-practices-search).  It also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.
 
-The extract tool converts documents in many formats to Markdown and does some document cleanup before sending it to the extract model.  It's all internal to Haystack and comes for free.  It does not attempt any kind of bot evasion.  There is a fallback option to use [Jina Reader](https://github.com/jina-ai/reader).
+The extract tool converts a single web page to Markdown and does some document cleanup before sending it directly to Letta.  The content extraction is internal to Haystack and comes for free.  It does not attempt any kind of bot evasion.  There is a fallback option to use [Jina Reader](https://github.com/jina-ai/reader) if the internal content extraction fails.
+
+The excerpt tool does content extraction like the extract tool, but sends it to a long context model which will answer the question given to it by Letta, using the provided context.  This is useful when there's a small amount of focused data that's inside many URLs.
 
 There is no vector/embeddings/database RAG involved in this project, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is technically a RAG implementation based on pgvector.
 
