@@ -29,12 +29,14 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 * [Perplexica](https://github.com/ItzCrazyKns/Perplexica) uses SearXNG and a reranker to feed into an LLM.
 * [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
 * [Deer-Flow](https://deerflow.tech) is a self-hosted deep research tool using Tavily.  It produces *long* reports.
+* [Morphic](https://www.morphic.sh) is an OSS project on [github](https://github.com/miurla/morphic) that can use Tavily, SearXNG, or Exa.
 
 ### Cloud
 
 * [Jina Deepsearch](https://search.jina.ai) seems pretty good.
 * [Phind](https://www.phind.com) is more chat oriented and has good diagrams.
 * [Tak](https://tak.phospho.ai) is another chat oriented search engine, powered by [Linkup](https://www.linkup.so/blog/linkup-phospho-partnership).
+
 
 I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).  
 
