@@ -17,11 +17,9 @@ class BraveWebSearch:
         except Exception:
             self.api_key = None
 
-        if api_key:
-            self.is_enabled = True
-        else:
-            self.is_enabled = False
+        self.is_enabled = self.api_key is not None
         self.timeout = timeout
+        logger.info(f"is_enabled = {self.is_enabled} self.api_key = {self.api_key}")
 
     @component.output_types(documents=List[Document], links=List[str])
     def run(self, query: str, max_results: int = 5) -> Dict[str, Union[List[Document], List[str]]]:
