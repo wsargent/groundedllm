@@ -27,7 +27,7 @@ class LinkupWebSearch:
             if api_key_value:
                 self.linkup_client = LinkupClient(api_key=api_key_value)
         except (ValueError, KeyError):
-            logger.warning("No Linkup API key provided. LinkupWebSearch will return empty results.")
+            logger.info("LINKUP_API_KEY not provided. LinkupWebSearch is disabled.")
 
     @component.output_types(documents=List[Document], links=List[str])
     def run(self, query: str, search_depth: str = DEFAULT_SEARCH_DEPTH) -> Dict[str, Union[List[Document], List[str]]]:

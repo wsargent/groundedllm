@@ -26,8 +26,8 @@ class TavilyWebSearch:
             api_key_value = api_key.resolve_value()
             if api_key_value:
                 self.tavily_client = TavilyClient(api_key=api_key_value)
-        except Exception as e:
-            logger.warning(f"Failed to initialize Tavily client: {e}")
+        except Exception:
+            logger.info("TavilyWebSearch component is disabled.")
             # Continue without a client - will return empty results
 
     @component.output_types(documents=List[Document], links=List[str])

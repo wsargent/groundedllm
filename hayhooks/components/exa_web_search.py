@@ -22,7 +22,7 @@ class ExaWebSearch:
         try:
             self.exa_client = Exa(api_key=api_key.resolve_value())
         except ValueError:
-            logger.warning("No valid Exa API key provided. ExaWebSearch will not return any results.")
+            logger.info("EXA_API_KEY not provided. ExaWebSearch is disabled.")
 
     @component.output_types(documents=List[Document], links=List[str])
     def run(
