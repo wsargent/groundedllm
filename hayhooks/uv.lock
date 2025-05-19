@@ -183,6 +183,15 @@ wheels = [
 ]
 
 [[package]]
+name = "docstring-parser"
+version = "0.16"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/08/12/9c22a58c0b1e29271051222d8906257616da84135af9ed167c9e28f85cb3/docstring_parser-0.16.tar.gz", hash = "sha256:538beabd0af1e2db0146b6bd3caa526c35a34d61af9fd2887f3a8a27a739aa6e", size = 26565 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d5/7c/e9fcff7623954d86bdc17782036cbf715ecab1bec4847c008557affe1ca8/docstring_parser-0.16-py3-none-any.whl", hash = "sha256:bf0a1387354d3691d102edef7ec124f219ef639982d096e26e3b60aeffa90637", size = 36533 },
+]
+
+[[package]]
 name = "email-validator"
 version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -323,8 +332,8 @@ dev = [
 requires-dist = [
     { name = "exa-py", specifier = ">=1.12.1" },
     { name = "gdown", specifier = ">=5.2.0" },
-    { name = "hayhooks", extras = ["mcp"], specifier = ">=0.7.0" },
-    { name = "haystack-ai", specifier = ">=2.13.1" },
+    { name = "hayhooks", extras = ["mcp"], specifier = ">=0.8.0" },
+    { name = "haystack-ai", specifier = ">=2.13.2" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.27.0" },
     { name = "letta-client", specifier = ">=0.1.137" },
     { name = "linkup-sdk", specifier = ">=0.2.4" },
@@ -372,9 +381,10 @@ wheels = [
 
 [[package]]
 name = "hayhooks"
-version = "0.7.0"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "docstring-parser" },
     { name = "fastapi", extra = ["standard"] },
     { name = "haystack-ai" },
     { name = "loguru" },
@@ -386,9 +396,9 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/69/a7/e4bed1e3c9962e2750f3f35bd927c93410b7a9157f9ac6eec0430a6289ce/hayhooks-0.7.0.tar.gz", hash = "sha256:d16186995720a54f3d67e81d8edd8698a8f67b55f48e3a79b4b8e7e28781f6d3", size = 5733332 }
+sdist = { url = "https://files.pythonhosted.org/packages/55/d9/2465654b10d8437d4bbeef8109cf709edb752831da7e2c59967165eca807/hayhooks-0.8.0.tar.gz", hash = "sha256:4c0740f73e6bc28b0d2a9530a8ed5578405bc826a12d5e33c5889bd73d5c4c21", size = 11523706 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/96/08c7dcfb2bb4ebdb51bc6774e30257bd8a621f642d7e4105d66c7f84e5a1/hayhooks-0.7.0-py3-none-any.whl", hash = "sha256:9509df6c59109f0b3de67525649ea00fa3e4b841774c31961bc4f39487402787", size = 44900 },
+    { url = "https://files.pythonhosted.org/packages/cb/a5/8a3226af0e82d67ae4c1944cd6135b14b163e5504c2c3da910ba444383fb/hayhooks-0.8.0-py3-none-any.whl", hash = "sha256:4c942d9d444e1a0c17071073a6088d7dbb591d641b1ff12b5a7a22f70032ba40", size = 47215 },
 ]
 
 [package.optional-dependencies]
@@ -398,7 +408,7 @@ mcp = [
 
 [[package]]
 name = "haystack-ai"
-version = "2.13.1"
+version = "2.13.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "haystack-experimental" },
@@ -418,9 +428,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/95/fc/7a0cc023696084e5359e958b48078e64a977bce743e6cf3f55e08fee8319/haystack_ai-2.13.1.tar.gz", hash = "sha256:851aa550cf3b9751a0c222983773a4c411a56eb678dabc3805573170fe173a0d", size = 326801 }
+sdist = { url = "https://files.pythonhosted.org/packages/45/34/a6f757c2d1293ab7ab461e32272df4c9882883e219c6da1db13e6534dfd1/haystack_ai-2.13.2.tar.gz", hash = "sha256:6794a7995d64ff53361dc31667680740b17d12b7592436b607e6d789e24ed2e6", size = 327169 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/27/e732db16dd7a5c72aa9d5807158a0bfb024714c733490dea4907459ad32b/haystack_ai-2.13.1-py3-none-any.whl", hash = "sha256:7f1513e1b1626c13e944d7e728c2a5adeb77d68aaf78b404d7be2cba38a87288", size = 493386 },
+    { url = "https://files.pythonhosted.org/packages/3a/3b/55b1215b93be68d3e8f4d608391cec74d7386e44a2a085bff10357156e2b/haystack_ai-2.13.2-py3-none-any.whl", hash = "sha256:5f5e7e47dd19edf8a5d5afe529c38dbb0fe2939e5e6f230765d7c042de351e04", size = 494044 },
 ]
 
 [[package]]
