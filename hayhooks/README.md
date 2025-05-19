@@ -89,6 +89,16 @@ hayhooks pipeline run extract \
     --param 'url=https://docs.letta.com/guides/agents/sleep-time-agents'
 ```
 
+### Analyze Stack Trace
+
+The Analyze trace pipeline takes a stacktrace (or fragment) and sends it to Stack Overflow.
+
+```bash
+hayhooks pipeline run analyze_trace \
+    --param 'stack_trace=java.lang.NullPointerException' \
+    --param 'language=java'
+```
+
 ### Provision Search Agent Pipeline
 
 This pipeline provisions a search agent in Letta and creates a pipe function in Open WebUI to talk to it.  The search agent is configured with the search and extract tools by the pipeline.
