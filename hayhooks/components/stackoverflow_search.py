@@ -93,7 +93,7 @@ class StackOverflowBase:
             logger.error(f"Error fetching answers for question {question_id}: {e}")
             return []
 
-    def _fetch_answers(self, question_id: int) -> List[Dict[str, Any]]:
+    def fetch_answers(self, question_id: int) -> List[Dict[str, Any]]:
         """Fetch answers for a specific question synchronously."""
         if not self.is_enabled:
             return []
@@ -108,7 +108,7 @@ class StackOverflowBase:
                 import time
 
                 time.sleep(RETRY_AFTER_MS / 1000)
-                return self._fetch_answers(question_id)
+                return self.fetch_answers(question_id)
 
             logger.debug(f"_fetch_answers: url={url} params={params}")
             response = httpx.get(url, params=params, timeout=self.timeout)
@@ -218,7 +218,7 @@ class StackOverflowBase:
             # logger.debug(f"_process_search_results: question={json.dumps(question, indent=2)}")
 
             # Fetch answers
-            answers = self._fetch_answers(question["question_id"])
+            answers = self.fetch_answers(question["question_id"])
             # answers = []
 
             result = {"question": question, "answers": answers}
