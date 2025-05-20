@@ -89,6 +89,15 @@ hayhooks pipeline run extract \
     --param 'url=https://docs.letta.com/guides/agents/sleep-time-agents'
 ```
 
+There is a resolver system which can manage URLs that would otherwise be unavailable.  For example, if you have a StackOverflow URL:
+
+```
+hayhooks pipeline run extract \                                                                             
+  --param 'url=https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported'
+```
+
+Then the StackOverflow content resolver will make a query through the StackExchange API and return the content, using your API key if configured.
+
 ### Analyze Stack Trace
 
 The Analyze trace pipeline takes a stacktrace (or fragment) and sends it to Stack Overflow.
