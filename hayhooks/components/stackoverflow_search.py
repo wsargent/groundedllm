@@ -41,7 +41,7 @@ class StackOverflowBase:
             self.api_key = api_key.resolve_value()
             self.access_token = access_token.resolve_value() if access_token else None
         except Exception as e:
-            logger.error(f"No API key or access token: {e}")
+            logger.warning(f"No API key or access token: {e}")
             self.api_key = None
             self.access_token = None
 
@@ -110,28 +110,10 @@ class StackOverflowBase:
                 time.sleep(RETRY_AFTER_MS / 1000)
                 return self._fetch_answers(question_id)
 
-            # {
-            #     "owner": {
-            #         "account_id": 8759033,
-            #         "reputation": 1373,
-            #         "user_id": 6549532,
-            #         "user_type": "registered",
-            #         "profile_image": "https://i.sstatic.net/39I1E.jpg?s=256",
-            #         "display_name": "Kevin",
-            #         "link": "https://stackoverflow.com/users/6549532/kevin"
-            #     },
-            #     "is_accepted": false,
-            #     "score": 21,
-            #     "last_activity_date": 1469499896,
-            #     "creation_date": 1469499896,
-            #     "answer_id": 38580137,
-            #     "question_id": 3988788,
-            #     "content_license": "CC BY-SA 3.0"
-            # }
             logger.debug(f"_fetch_answers: url={url} params={params}")
             response = httpx.get(url, params=params, timeout=self.timeout)
             response.raise_for_status()
-            logger.debug(f"_fetch_answers: response = {json.dumps(response.json(), indent=2)}")
+            # logger.debug(f"_fetch_answers: response = {json.dumps(response.json(), indent=2)}")
             data = response.json()
             return data.get("items", [])
         except Exception as e:
@@ -233,8 +215,11 @@ class StackOverflowBase:
             if min_score is not None and question.get("score", 0) < min_score:
                 continue
 
+            # logger.debug(f"_process_search_results: question={json.dumps(question, indent=2)}")
+
             # Fetch answers
             answers = self._fetch_answers(question["question_id"])
+            # answers = []
 
             result = {"question": question, "answers": answers}
 
@@ -262,7 +247,7 @@ class StackOverflowBase:
         markdown = ""
         for result in results:
             question = result["question"]
-            logger.debug(f"_format_response: question={question}")
+            # logger.debug(f"_format_response: question={question}")
 
             markdown += f"# {question.get('title', 'Untitled Question')}\n\n"
             markdown += f"**Score:** {question.get('score', 0)} | **Answers:** {question.get('answer_count', 0)}\n\n"
@@ -295,16 +280,7 @@ class StackOverflowBase:
 
         for result in results:
             question = result["question"]
-
-            # Create document for question
-            question_content = f"# {question.get('title', 'Untitled Question')}\n\n{question.get('body', '')}"
-
-            # Add answers to content
-            for i, answer in enumerate(result.get("answers", [])):
-                question_content += f"\n\n## Answer {i + 1}"
-                if answer.get("is_accepted"):
-                    question_content += " (Accepted)"
-                question_content += f" - Score: {answer.get('score', 0)}\n\n{answer.get('body', '')}"
+            question_content = question.get("body", "")
 
             # Create metadata
             meta = {
@@ -315,18 +291,144 @@ class StackOverflowBase:
                 "tags": question.get("tags", []),
                 "creation_date": question.get("creation_date"),
                 "question_id": question.get("question_id"),
+                "answers": result.get("answers", []),
             }
-
             documents.append(Document(content=question_content, meta=meta))
 
         return documents
 
 
 @component
+class StackOverflowErrorSearch(StackOverflowBase):
+    """Uses Stack Overflow to search for error-related questions."""
+
+    @component.output_types(documents=List[Document])
+    def run(self, error_message: str, language: Optional[str] = None, technologies: Optional[List[str]] = None, min_score: Optional[int] = None, include_comments: bool = False, limit: Optional[int] = None) -> Dict[str, Union[List[Document], str]]:
+        """Search Stack Overflow for error-related questions.
+
+        Args:
+            error_message: Error message to search for
+            language: Programming language
+            technologies: Related technologies
+            min_score: Minimum score threshold
+            include_comments: Include comments in results
+            limit: Maximum number of results
+
+        Returns:
+            Dictionary containing documents
+        """
+        if not self.is_enabled:
+            return {"documents": []}
+
+        # Build tags list
+        tags = []
+        if language:
+            tags.append(language.lower())
+        if technologies:
+            tags.extend([tech.lower() for tech in technologies])
+
+        try:
+            # https://api.stackexchange.com/docs/advanced-search
+            # Prepare search parameters
+            params = self._prepare_base_params(
+                q=error_message, sort="relevance", order="desc", filter=DEFAULT_FILTER, **({"min": min_score} if min_score is not None else {}), **({"pagesize": str(limit)} if limit is not None else {}), **({"tagged": ";".join(tags)} if tags else {})
+            )
+            logger.debug(f"params={params}")
+
+            # Execute search
+            url = f"{STACKOVERFLOW_API}/search/advanced"
+
+            if not self._check_rate_limit():
+                logger.warning("Rate limit exceeded, waiting before retry...")
+                import time
+
+                time.sleep(RETRY_AFTER_MS / 1000)
+                return self.run(error_message, language, technologies, min_score, include_comments, limit)
+
+            response = httpx.get(url, params=params, timeout=self.timeout)
+            response.raise_for_status()
+            data = response.json()
+
+            # Process results
+            results = self._process_search_results(data.get("items", []), min_score=min_score, include_comments=include_comments, limit=limit)
+
+            markdown = self._format_response(results, "markdown")
+            logger.debug(f"_process_search_results: results={markdown}")
+
+            # Create documents
+            documents = self._create_documents_from_results(results)
+
+            return {"documents": documents}
+
+        except Exception as e:
+            logger.error(f"Error in search_by_error: {e}")
+            return {"documents": [], "results_json": "[]", "results_markdown": ""}
+
+    @component.output_types(documents=List[Document])
+    async def run_async(
+        self, error_message: str, language: Optional[str] = None, technologies: Optional[List[str]] = None, min_score: Optional[int] = None, include_comments: bool = False, limit: Optional[int] = None
+    ) -> Dict[str, Union[List[Document], str]]:
+        """Asynchronously search Stack Overflow for error-related questions.
+
+        Args:
+            error_message: Error message to search for
+            language: Programming language
+            technologies: Related technologies
+            min_score: Minimum score threshold
+            include_comments: Include comments in results
+            response_format: Response format ("json" or "markdown")
+            limit: Maximum number of results
+
+        Returns:
+            Dictionary containing documents
+        """
+        if not self.is_enabled:
+            return {"documents": []}
+
+        # Build tags list
+        tags = []
+        if language:
+            tags.append(language.lower())
+        if technologies:
+            tags.extend([tech.lower() for tech in technologies])
+
+        try:
+            # Prepare search parameters
+            params = self._prepare_base_params(
+                q=error_message, sort="relevance", order="desc", filter=DEFAULT_FILTER, **({"min": min_score} if min_score is not None else {}), **({"pagesize": str(limit)} if limit is not None else {}), **({"tagged": ";".join(tags)} if tags else {})
+            )
+
+            # Execute search
+            url = f"{STACKOVERFLOW_API}/search/advanced"
+
+            if not self._check_rate_limit():
+                logger.warning("Rate limit exceeded, waiting before retry...")
+                await asyncio.sleep(RETRY_AFTER_MS / 1000)
+                return await self.run_async(error_message, language, technologies, min_score, include_comments, limit)
+
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+                data = response.json()
+
+            # Process results
+            results = await self._process_search_results_async(data.get("items", []), min_score=min_score, include_comments=include_comments, limit=limit)
+
+            # Create documents
+            documents = self._create_documents_from_results(results)
+
+            return {"documents": documents}
+
+        except Exception as e:
+            logger.error(f"Error in search_by_error (async): {e}")
+            return {"documents": []}
+
+
+@component
 class StackOverflowStackTraceAnalyzer(StackOverflowBase):
     """Uses Stack Overflow to analyze stack traces and find relevant solutions."""
 
-    @component.output_types(documents=List[Document], results_json=str, results_markdown=str)
+    @component.output_types(documents=List[Document])
     def run(self, stack_trace: str, language: str, include_comments: bool = False, limit: Optional[int] = None) -> Dict[str, Union[List[Document], str]]:
         """Analyze stack trace and find relevant solutions.
 
@@ -351,7 +453,7 @@ class StackOverflowStackTraceAnalyzer(StackOverflowBase):
             error_message = error_lines[0] if error_lines else stack_trace
 
             # Prepare search parameters
-            params = self._prepare_base_params(q=error_message, tagged=language.lower(), sort="votes", order="desc", filter=DEFAULT_FILTER)
+            params = self._prepare_base_params(q=error_message, tagged=language.lower(), sort="relevance", order="desc", filter=DEFAULT_FILTER, limit=limit)
 
             # Execute search
             url = f"{STACKOVERFLOW_API}/search/advanced"
@@ -364,9 +466,9 @@ class StackOverflowStackTraceAnalyzer(StackOverflowBase):
                 return self.run(stack_trace, language, include_comments, limit)
 
             headers = {"Accept-Encoding": "gzip,deflate"}
-            logger.debug(f"run: url={url} params={params}")
+            # logger.debug(f"run: url={url} params={params}")
             response = httpx.get(url, params=params, timeout=self.timeout, headers=headers)
-            logger.debug(f"run: response = {response.text}")
+            # logger.debug(f"run: response = {response.text}")
             response.raise_for_status()
             data = response.json()
 

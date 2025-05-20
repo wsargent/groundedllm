@@ -99,6 +99,15 @@ hayhooks pipeline run analyze_trace \
     --param 'language=java'
 ```
 
+### Search By Error
+
+The Analyze trace pipeline takes a stacktrace (or fragment) and sends it to Stack Overflow.
+
+```bash
+hayhooks pipeline run search_by_error \
+    --param 'error_message=error:0308010C:digital envelope routines::unsupported'
+```
+
 ### Provision Search Agent Pipeline
 
 This pipeline provisions a search agent in Letta and creates a pipe function in Open WebUI to talk to it.  The search agent is configured with the search and extract tools by the pipeline.
