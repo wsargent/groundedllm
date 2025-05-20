@@ -10,5 +10,5 @@ def test_search_extraction_component():
     doc = Document.from_dict({"title": "title", "content": "derp", "link": "http://example.com"})
     kwargs = {"documents": [doc]}
     result = component.run(**kwargs)
-    contents = result["contents"]
-    assert contents[0].startswith("This domain is for use")
+    documents = result["documents"]
+    assert documents[0].content.startswith("This domain is for use")

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 from hayhooks import log as logger
@@ -16,6 +16,253 @@ from haystack.components.preprocessors import DocumentCleaner
 from haystack.components.routers import FileTypeRouter
 from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
+
+from components.stackoverflow_search import DEFAULT_TIMEOUT, STACKOVERFLOW_API, StackOverflowBase
+
+
+class URLContentResolver:
+    """Base class for URL content resolvers."""
+
+    def __init__(self, raise_on_failure: bool = False):
+        """Initialize the URL content resolver.
+
+        Args:
+            raise_on_failure: Whether to raise an exception if fetching fails.
+        """
+        self.raise_on_failure = raise_on_failure
+
+    @component.output_types(streams=List[ByteStream])
+    def run(self, urls: List[str]):
+        """Fetch content from URLs.
+
+        Args:
+            urls: A list of URLs to fetch content from.
+
+        Returns:
+            A dictionary with a "streams" key containing a list of ByteStream objects.
+        """
+        raise NotImplementedError("Subclasses must implement this method")
+
+    def can_handle(self, url: str) -> bool:
+        """Check if this resolver can handle the given URL.
+
+        Args:
+            url: The URL to check.
+
+        Returns:
+            True if this resolver can handle the URL, False otherwise.
+        """
+        raise NotImplementedError("Subclasses must implement this method")
+
+
+@component
+class GenericURLContentResolver:
+    """A resolver that uses the existing FallbackLinkContentFetcher for generic URLs."""
+
+    def __init__(
+        self,
+        raise_on_failure: bool = False,
+        user_agents: Optional[List[str]] = None,
+        retry_attempts: int = 2,
+        timeout: int = 3,
+        http2: bool = False,
+        client_kwargs: Optional[Dict] = None,
+        jina_timeout: int = 10,
+        jina_retry_attempts: int = 2,
+    ):
+        self.raise_on_failure = raise_on_failure
+        self.fetcher = FallbackLinkContentFetcher(
+            raise_on_failure=raise_on_failure,
+            user_agents=user_agents,
+            retry_attempts=retry_attempts,
+            timeout=timeout,
+            http2=http2,
+            client_kwargs=client_kwargs,
+            jina_timeout=jina_timeout,
+            jina_retry_attempts=jina_retry_attempts,
+        )
+
+    @component.output_types(streams=List[ByteStream])
+    def run(self, urls: List[str]):
+        return self.fetcher.run(urls)
+
+    def can_handle(self, url: str) -> bool:
+        # This is the fallback resolver, so it can handle any URL
+        return True
+
+
+@component
+class StackOverflowContentResolver:
+    """A resolver that uses the StackExchange API to fetch content from StackOverflow URLs."""
+
+    def __init__(
+        self,
+        api_key: Secret = Secret.from_env_var("STACKOVERFLOW_API_KEY"),
+        access_token: Optional[Secret] = None,
+        timeout: int = DEFAULT_TIMEOUT,
+        raise_on_failure: bool = False,
+    ):
+        self.raise_on_failure = raise_on_failure
+        self.stackoverflow_client = StackOverflowBase(
+            api_key=api_key,
+            access_token=access_token,
+            timeout=timeout,
+        )
+
+    @component.output_types(streams=List[ByteStream])
+    def run(self, urls: List[str]):
+        streams = []
+
+        for url in urls:
+            try:
+                # Extract question ID from URL
+                question_id = self._extract_question_id(url)
+                if not question_id:
+                    logger.warning(f"Could not extract question ID from {url}")
+                    continue
+
+                # Fetch question details
+                params = self.stackoverflow_client._prepare_base_params(
+                    filter="withbody",  # Include question body
+                    site="stackoverflow",
+                )
+                api_url = f"{STACKOVERFLOW_API}/questions/{question_id}"
+
+                response = httpx.get(api_url, params=params, timeout=self.stackoverflow_client.timeout)
+                response.raise_for_status()
+                data = response.json()
+
+                if not data.get("items"):
+                    logger.warning(f"No question found for ID {question_id}")
+                    continue
+
+                question = data["items"][0]
+
+                # Fetch answers
+                answers = self.stackoverflow_client.fetch_answers(question_id)
+
+                # Combine question and answers into a single document
+                result = {"question": question, "answers": answers}
+
+                # Format the content as markdown
+                content = self._format_as_markdown(result)
+
+                # Create ByteStream
+                stream = ByteStream(data=content.encode("utf-8"))
+                stream.meta = {"url": url, "content_type": "text/markdown", "title": question.get("title", ""), "source": "stackoverflow"}
+                stream.mime_type = "text/markdown"
+
+                streams.append(stream)
+
+            except Exception as e:
+                logger.warning(f"Failed to fetch {url} using StackOverflow API: {str(e)}")
+                if self.raise_on_failure:
+                    raise e
+
+        return {"streams": streams}
+
+    def can_handle(self, url: str) -> bool:
+        # Check if the URL is from StackOverflow
+        return "stackoverflow.com/questions" in url
+
+    def _extract_question_id(self, url: str) -> Optional[int]:
+        """Extract the question ID from a StackOverflow URL."""
+        import re
+
+        # Match patterns like:
+        # https://stackoverflow.com/questions/12345/title
+        # https://stackoverflow.com/questions/12345
+        match = re.search(r"stackoverflow\.com/questions/(\d+)", url)
+        if match:
+            return int(match.group(1))
+        return None
+
+    def _format_as_markdown(self, result: Dict) -> str:
+        """Format the question and answers as markdown."""
+        question = result["question"]
+        answers = result["answers"]
+
+        # Format question
+        md = f"# {question.get('title', 'Untitled Question')}\n\n"
+        md += f"**Score**: {question.get('score', 0)} | "
+        md += f"**Asked by**: {question.get('owner', {}).get('display_name', 'Anonymous')} | "
+        md += f"**Date**: {question.get('creation_date', '')}\n\n"
+        md += question.get("body", "")
+        md += "\n\n---\n\n"
+
+        # Format answers
+        md += f"## {len(answers)} Answers\n\n"
+
+        # Sort answers by score (highest first)
+        sorted_answers = sorted(answers, key=lambda x: x.get("score", 0), reverse=True)
+
+        for i, answer in enumerate(sorted_answers):
+            md += f"### Answer {i + 1} (Score: {answer.get('score', 0)})\n\n"
+            md += f"**Answered by**: {answer.get('owner', {}).get('display_name', 'Anonymous')} | "
+            md += f"**Date**: {answer.get('creation_date', '')}\n\n"
+            md += answer.get("body", "")
+            md += "\n\n---\n\n"
+
+        return md
+
+
+@component
+class URLContentRouter:
+    """A component that routes URLs to the appropriate resolver."""
+
+    def __init__(self, resolvers: List[Any]):
+        """Initialize the URL router.
+
+        Args:
+            resolvers: A list of URL content resolvers.
+        """
+        self.resolvers = resolvers
+        # The last resolver should be the generic one that can handle any URL
+        self.generic_resolver = resolvers[-1]
+
+    @component.output_types(streams=List[ByteStream])
+    def run(self, urls: List[str]):
+        """Route URLs to the appropriate resolver and fetch their content.
+
+        Args:
+            urls: A list of URLs to fetch content from.
+
+        Returns:
+            A dictionary with a "streams" key containing a list of ByteStream objects.
+        """
+        # Group URLs by resolver
+        resolver_urls = {}
+
+        for url in urls:
+            resolver = self._find_resolver(url)
+            if resolver not in resolver_urls:
+                resolver_urls[resolver] = []
+            resolver_urls[resolver].append(url)
+
+        # Fetch content using each resolver
+        all_streams = []
+
+        for resolver, urls in resolver_urls.items():
+            result = resolver.run(urls)
+            all_streams.extend(result["streams"])
+
+        return {"streams": all_streams}
+
+    def _find_resolver(self, url: str) -> Any:
+        """Find the appropriate resolver for the given URL.
+
+        Args:
+            url: The URL to find a resolver for.
+
+        Returns:
+            The resolver that can handle the URL.
+        """
+        for resolver in self.resolvers:
+            if resolver.can_handle(url):
+                return resolver
+
+        # This should never happen since the generic resolver can handle any URL
+        return self.generic_resolver
 
 
 @component
@@ -235,7 +482,14 @@ class JinaLinkContentFetcher:
 class ExtractUrls:
     @component.output_types(urls=list[str])
     def run(self, documents: list[Document]):
-        return {"urls": [doc.meta["url"] for doc in documents]}
+        urls = []
+        for doc in documents:
+            # Check for both "url" and "link" keys in the document meta
+            if "url" in doc.meta:
+                urls.append(doc.meta["url"])
+            elif "link" in doc.meta:
+                urls.append(doc.meta["link"])
+        return {"urls": urls}
 
 
 @component
@@ -244,14 +498,28 @@ class JoinWithContent:
     def run(self, scored_documents: list[Document], content_documents: list[Document]):
         joined_documents = []
         extracted_content: dict[str, str] = {}
+
+        # Helper function to get URL from document meta
+        def get_url(doc):
+            if "url" in doc.meta:
+                return doc.meta["url"]
+            elif "link" in doc.meta:
+                return doc.meta["link"]
+            return None
+
         for content_doc in content_documents:
-            url = content_doc.meta["url"]
-            extracted_content[url] = content_doc.content
+            url = get_url(content_doc)
+            if url:
+                extracted_content[url] = content_doc.content
 
         for scored_document in scored_documents:
-            url = scored_document.meta["url"]
+            url = get_url(scored_document)
+            if not url:
+                continue  # Skip documents without URL or link
+
             score = scored_document.score
             logger.debug(f"run: processing document {url} with score {score}")
+
             if url in extracted_content:
                 content = extracted_content[url]
             else:
@@ -259,7 +527,7 @@ class JoinWithContent:
 
             doc = Document.from_dict(
                 {
-                    "title": scored_document.meta["title"],
+                    "title": scored_document.meta.get("title", "Untitled"),
                     "content": content,
                     "url": url,
                     "score": score,
@@ -320,9 +588,18 @@ def build_content_extraction_component(
     """
     preprocessing_pipeline = Pipeline()
 
-    # Use FallbackLinkContentFetcher which tries LinkContentFetcher first
-    # and falls back to JinaLinkContentFetcher if it fails
-    fetcher = FallbackLinkContentFetcher(
+    # Create resolvers
+    stackoverflow_resolver = StackOverflowContentResolver(
+        raise_on_failure=raise_on_failure,
+        timeout=timeout,
+    )
+
+    # Add more domain-specific resolvers here as needed
+    # github_resolver = GitHubContentResolver(...)
+    # medium_resolver = MediumContentResolver(...)
+
+    # Generic resolver as fallback
+    generic_resolver = GenericURLContentResolver(
         raise_on_failure=raise_on_failure,
         user_agents=user_agents,
         retry_attempts=retry_attempts,
@@ -331,11 +608,18 @@ def build_content_extraction_component(
         jina_timeout=10,
         jina_retry_attempts=2,
     )
+
+    # Create router with all resolvers (generic resolver must be last)
+    url_router = URLContentRouter(
+        resolvers=[
+            stackoverflow_resolver,
+            # Add more resolvers here
+            generic_resolver,  # Must be last
+        ]
+    )
+
     document_cleaner = DocumentCleaner()
 
-    # Also see MultiFileConverter
-    # https://haystack.deepset.ai/release-notes/2.12.0
-    # https://github.com/deepset-ai/haystack-experimental/blob/main/haystack_experimental/super_components/converters/multi_file_converter.py
     # Define supported MIME types and any custom mappings
     mime_types = [
         "text/plain",
@@ -360,7 +644,7 @@ def build_content_extraction_component(
     document_joiner = DocumentJoiner()
 
     # Add components to the internal pipeline
-    preprocessing_pipeline.add_component(instance=fetcher, name="fetcher")
+    preprocessing_pipeline.add_component(instance=url_router, name="url_router")
     preprocessing_pipeline.add_component(instance=file_type_router, name="file_type_router")
     preprocessing_pipeline.add_component(instance=text_file_converter, name="text_file_converter")
     preprocessing_pipeline.add_component(instance=markdown_converter, name="markdown_converter")
@@ -373,7 +657,7 @@ def build_content_extraction_component(
     preprocessing_pipeline.add_component(instance=document_cleaner, name="document_cleaner")
 
     # Connect the components
-    preprocessing_pipeline.connect("fetcher.streams", "file_type_router.sources")
+    preprocessing_pipeline.connect("url_router.streams", "file_type_router.sources")
 
     preprocessing_pipeline.connect("file_type_router.text/plain", "text_file_converter.sources")
     preprocessing_pipeline.connect("file_type_router.text/html", "html_converter.sources")
@@ -395,7 +679,7 @@ def build_content_extraction_component(
 
     extraction_component = SuperComponent(
         pipeline=preprocessing_pipeline,
-        input_mapping={"urls": ["fetcher.urls"]},
+        input_mapping={"urls": ["url_router.urls"]},
         output_mapping={"document_cleaner.documents": "documents"},
     )
     return extraction_component
