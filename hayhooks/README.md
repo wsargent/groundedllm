@@ -89,14 +89,23 @@ hayhooks pipeline run extract \
     --param 'url=https://docs.letta.com/guides/agents/sleep-time-agents'
 ```
 
-There is a resolver system which can manage URLs that would otherwise be unavailable.  For example, if you have a StackOverflow URL:
+There is a resolver system that can manage URLs that would otherwise be unavailable.  For example, if you have a StackOverflow URL:
 
-```
+```bash
 hayhooks pipeline run extract \                                                                             
   --param 'url=https://stackoverflow.com/questions/69692842/error-message-error0308010cdigital-envelope-routinesunsupported'
 ```
 
 Then the StackOverflow content resolver will make a query through the StackExchange API and return the content, using your API key if configured.
+
+If you have Zotero, you can use the Zotero content extractor to match URLs that are in your library and pull the content. The Zotero content extractor now uses a local SQLite database to cache Zotero items for faster querying:
+
+```bash
+hayhooks pipeline run extract \                                                                             
+  --param 'url=https://doi.org/10.1145/3459637.3482468'
+```
+
+You can configure the path to the SQLite database file by setting the `ZOTERO_DB_FILE` environment variable in your `.env` file. By default, it uses `zotero_json_cache.db` in the current directory.
 
 ### Analyze Stack Trace
 
@@ -129,4 +138,3 @@ hayhooks pipeline run provision_search_agent \
     --param 'chat_model=anthropic/claude-3-7-sonnet-20250219" \
     --param 'embedding_model=letta/letta-free'
 ```
-
