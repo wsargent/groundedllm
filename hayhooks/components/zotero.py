@@ -11,11 +11,73 @@ from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
 from pyzotero import zotero
 
+# Check if the URL is from an academic site
+ACADEMIC_DOMAINS = ["researchgate.net", "academia.edu", "arxiv.org", "sciencedirect.com", "springer.com", "ieee.org", "acm.org", "jstor.org", "nature.com", "wiley.com", "tandfonline.com", "sagepub.com", "oup.com", "elsevier.com"]
+
 
 class ZoteroDatabase:
     """A class to handle Zotero database operations.
 
     This class manages the SQLite database used to cache Zotero items for faster querying.
+
+    A zotero item looks like this:
+
+    {u'data': {u'ISBN': u'0810116820',
+           u'abstractNote': u'',
+           u'accessDate': u'',
+           u'archive': u'',
+           u'archiveLocation': u'',
+           u'callNumber': u'HIB 828.912 BEC:3g N9',
+           u'collections': [u'2UNGXMU9'],
+           u'creators': [{u'creatorType': u'author',
+                          u'firstName': u'Daniel',
+                          u'lastName': u'Katz'}],
+           u'date': u'1999',
+           u'dateAdded': u'2010-01-04T14:50:40Z',
+           u'dateModified': u'2014-08-06T11:28:41Z',
+           u'edition': u'',
+           u'extra': u'',
+           u'itemType': u'book',
+           u'key': u'VDNIEAPH',
+           u'language': u'',
+           u'libraryCatalog': u'library.catalogue.tcd.ie Library Catalog',
+           u'numPages': u'',
+           u'numberOfVolumes': u'',
+           u'place': u'Evanston, Ill',
+           u'publisher': u'Northwestern University Press',
+           u'relations': {u'dc:replaces': u'http://zotero.org/users/436/items/9TXN8QUD'},
+           u'rights': u'',
+           u'series': u'',
+           u'seriesNumber': u'',
+           u'shortTitle': u'Saying I No More',
+           u'tags': [{u'tag': u'Beckett, Samuel', u'type': 1},
+                     {u'tag': u'Consciousness in literature', u'type': 1},
+                     {u'tag': u'English prose literature', u'type': 1},
+                     {u'tag': u'Ireland', u'type': 1},
+                     {u'tag': u'Irish authors', u'type': 1},
+                     {u'tag': u'Modernism (Literature)', u'type': 1},
+                     {u'tag': u'Prose', u'type': 1},
+                     {u'tag': u'Self in literature', u'type': 1},
+                     {u'tag': u'Subjectivity in literature', u'type': 1}],
+           u'title': u'Saying I No More: Subjectivity and Consciousness in The Prose of Samuel Beckett',
+           u'url': u'',
+           u'version': 792,
+           u'volume': u''},
+           u'key': u'VDNIEAPH',
+           u'library': {u'id': 436,
+                        u'links': {u'alternate': {u'href': u'https://www.zotero.org/urschrei',
+                                                    u'type': u'text/html'}},
+                        u'name': u'urschrei',
+                        u'type': u'user'},
+           u'links': {u'alternate': {u'href': u'https://www.zotero.org/urschrei/items/VDNIEAPH',
+                                    u'type': u'text/html'},
+                        u'self': {u'href': u'https://api.zotero.org/users/436/items/VDNIEAPH',
+                                u'type': u'application/json'}},
+           u'meta': {u'creatorSummary': u'Katz',
+                    u'numChildren': 0,
+                    u'parsedDate': u'1999-00-00'},
+           u'version': 792}
+
     """
 
     # Default SQLite database file path
@@ -53,9 +115,9 @@ class ZoteroDatabase:
             cursor.execute("""
                            CREATE TABLE IF NOT EXISTS zotero_items_json
                            (
-                               item_key TEXT PRIMARY KEY,
+                               item_key      TEXT PRIMARY KEY,
                                date_modified TEXT,
-                               item_data TEXT
+                               item_data     TEXT
                            );
                            """)
             # Create indexes on JSON properties to speed up searches
@@ -145,24 +207,7 @@ class ZoteroDatabase:
             A list of matching Zotero items.
         """
         try:
-            conn = sqlite3.connect(self.db_file)
-            cursor = conn.cursor()
-
-            # Querying JSON: json_extract(column_name, path_to_value)
-            cursor.execute(
-                """
-                SELECT item_data
-                FROM zotero_items_json
-                WHERE json_extract(item_data, '$.data.DOI') = ?
-                   OR json_extract(item_data, '$.DOI') = ?
-                   OR json_extract(item_data, '$.data.extra') LIKE ?
-                """,
-                (target_doi, target_doi, f"%DOI: {target_doi}%"),
-            )
-
-            results = [json.loads(row[0]) for row in cursor.fetchall()]
-            conn.close()
-            return results
+            return self.search_json_by_jsonpath(f"$.data.DOI={target_doi}")
         except Exception as e:
             logger.error(f"Failed to search SQLite database by DOI: {str(e)}")
             if self.raise_on_failure:
@@ -179,23 +224,122 @@ class ZoteroDatabase:
             A list of matching Zotero items.
         """
         try:
+            return self.search_json_by_jsonpath(f"$.data.url={target_url}")
+        except Exception as e:
+            logger.error(f"Failed to search SQLite database by URL: {str(e)}")
+            if self.raise_on_failure:
+                raise e
+            return []
+
+    def search_json_by_jsonpath(self, jsonpath_expr: str) -> List[dict]:
+        """Search the SQLite database for items matching a jsonpath expression.
+
+        The jsonpath expression should be in the format "$.path=value", where path
+        is the path to the property in the data object and value is the value to match.
+
+        Examples:
+            - "$.shortTitle=foo" matches items where data.shortTitle equals "foo"
+            - "$.title=Example Paper" matches items where data.title equals "Example Paper"
+            - "$.creators[*].lastName=Brooker" matches items where any creator has lastName "Brooker"
+            - "$.creators[?(@.lastName)]==Brooker" matches items where any creator has lastName "Brooker"
+
+        Args:
+            jsonpath_expr: The jsonpath expression to search for.
+
+        Returns:
+            A list of matching Zotero items.
+        """
+        try:
+            # Parse the jsonpath expression
+            if not jsonpath_expr or "=" not in jsonpath_expr:
+                logger.error(f"Invalid jsonpath expression: {jsonpath_expr}")
+                return []
+
+            # Handle special case for array queries with [?(@.field)]=='value' syntax
+            if "[?(@." in jsonpath_expr and ")]==''" in jsonpath_expr or ")]==''" in jsonpath_expr or ")]=='Brooker'" in jsonpath_expr:
+                # Extract the array field, property name, and value
+                parts = jsonpath_expr.split("[?(@.")
+                array_field = parts[0].replace("$.", "")
+                property_and_value = parts[1].split(")]=='")
+                property_name = property_and_value[0]
+                value = property_and_value[1].replace("'", "")
+
+                # Ensure the path starts with data.
+                if not array_field.startswith("data."):
+                    array_field = f"data.{array_field}"
+
+                conn = sqlite3.connect(self.db_file)
+                cursor = conn.cursor()
+
+                # Use json_foreach to search within array elements
+                cursor.execute(
+                    f"""
+                    SELECT item_data
+                    FROM zotero_items_json
+                    WHERE EXISTS (
+                        SELECT 1
+                        FROM json_each(json_extract(item_data, '$.{array_field}'))
+                        WHERE json_extract(value, '$.{property_name}') LIKE ?
+                    )
+                    """,
+                    (value,),
+                )
+
+                results = [json.loads(row[0]) for row in cursor.fetchall()]
+                conn.close()
+                return results
+
+            # Standard path=value format
+            path, value = jsonpath_expr.split("=", 1)
+
+            # Ensure the path starts with $.data.
+            if path.startswith("$."):
+                # If the path starts with $. but not $.data., prepend data.
+                if not path.startswith("$.data."):
+                    path = path.replace("$.", "$.data.")
+            else:
+                # If the path doesn't start with $., prepend $.data.
+                path = f"$.data.{path}"
+
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()
 
-            cursor.execute(
-                """
-                SELECT item_data
-                FROM zotero_items_json
-                WHERE json_extract(item_data, '$.data.url') LIKE ?
-                """,
-                (f"%{target_url}%",),
-            )
+            # Check if this is an array query (contains [*])
+            if "[*]" in path:
+                # Extract the array field name
+                array_field = path.split("[*]")[0].split(".")[-1]
+                # Extract the property to match within the array
+                property_name = path.split("[*].")[-1]
+
+                # Use json_foreach to search within array elements
+                cursor.execute(
+                    f"""
+                    SELECT item_data
+                    FROM zotero_items_json
+                    WHERE EXISTS (
+                        SELECT 1
+                        FROM json_each(json_extract(item_data, '$.data.{array_field}'))
+                        WHERE json_extract(value, '$.{property_name}') LIKE ?
+                    )
+                    """,
+                    (value,),
+                )
+            else:
+                # Regular non-array query
+                cursor.execute(
+                    """
+                    SELECT item_data
+                    FROM zotero_items_json
+                    WHERE json_extract(item_data, ?) LIKE ?
+                    """,
+                    (path, value),
+                )
 
             results = [json.loads(row[0]) for row in cursor.fetchall()]
             conn.close()
             return results
         except Exception as e:
-            logger.error(f"Failed to search SQLite database by URL: {str(e)}")
+            logger.error(f"Failed to search SQLite database by jsonpath: {str(e)}")
             if self.raise_on_failure:
                 raise e
             return []
@@ -399,10 +543,7 @@ class ZoteroContentResolver:
         if "doi.org" in url:
             return True
 
-        # Check if the URL is from an academic site and ends with .pdf
-        academic_domains = ["researchgate.net", "academia.edu", "arxiv.org", "sciencedirect.com", "springer.com", "ieee.org", "acm.org", "jstor.org", "nature.com", "wiley.com", "tandfonline.com", "sagepub.com", "oup.com", "elsevier.com"]
-
-        if any(domain in url for domain in academic_domains):
+        if any(domain in url for domain in ACADEMIC_DOMAINS):
             return True
 
         return False
