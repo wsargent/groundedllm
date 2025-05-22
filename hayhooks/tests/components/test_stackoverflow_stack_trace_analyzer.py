@@ -6,7 +6,7 @@ import pytest
 from haystack import Document
 from haystack.utils import Secret
 
-from components.stackoverflow_search import StackOverflowStackTraceAnalyzer
+from components.stackoverflow import StackOverflowStackTraceAnalyzer
 
 # class TestStackOverflowStackTraceAnalyzer(unittest.TestCase):
 #     @patch("components.stackoverflow_search.httpx.get")
