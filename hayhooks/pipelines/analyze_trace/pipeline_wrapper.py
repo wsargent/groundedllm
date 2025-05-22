@@ -7,7 +7,7 @@ from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
 
-from components.stackoverflow_search import StackOverflowStackTraceAnalyzer
+from components.stackoverflow import StackOverflowStackTraceAnalyzer
 from resources.utils import read_resource_file
 
 

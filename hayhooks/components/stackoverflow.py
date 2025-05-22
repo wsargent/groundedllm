@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 import httpx
 from hayhooks import log as logger
 from haystack import Document, component
+from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
 
 ## Shamelessly stolen from https://github.com/gscalzo/stackoverflow-mcp/blob/main/src/index.ts
@@ -483,3 +484,118 @@ class StackOverflowStackTraceAnalyzer(StackOverflowBase):
         except Exception as e:
             logger.error(f"Error in analyze_stack_trace: {e}")
             return {"documents": [], "results_json": "[]", "results_markdown": ""}
+
+
+@component
+class StackOverflowContentResolver:
+    """A resolver that uses the StackExchange API to fetch content from StackOverflow URLs."""
+
+    def __init__(
+        self,
+        api_key: Secret = Secret.from_env_var("STACKOVERFLOW_API_KEY"),
+        access_token: Optional[Secret] = None,
+        timeout: int = DEFAULT_TIMEOUT,
+        raise_on_failure: bool = False,
+    ):
+        self.raise_on_failure = raise_on_failure
+        self.stackoverflow_client = StackOverflowBase(
+            api_key=api_key,
+            access_token=access_token,
+            timeout=timeout,
+        )
+
+    @component.output_types(streams=List[ByteStream])
+    def run(self, urls: List[str]):
+        streams = []
+
+        for url in urls:
+            try:
+                # Extract question ID from URL
+                question_id = self._extract_question_id(url)
+                if not question_id:
+                    logger.warning(f"Could not extract question ID from {url}")
+                    continue
+
+                # Fetch question details
+                params = self.stackoverflow_client._prepare_base_params(
+                    filter="withbody",  # Include question body
+                    site="stackoverflow",
+                )
+                api_url = f"{STACKOVERFLOW_API}/questions/{question_id}"
+
+                response = httpx.get(api_url, params=params, timeout=self.stackoverflow_client.timeout)
+                response.raise_for_status()
+                data = response.json()
+
+                if not data.get("items"):
+                    logger.warning(f"No question found for ID {question_id}")
+                    continue
+
+                question = data["items"][0]
+
+                # Fetch answers
+                answers = self.stackoverflow_client.fetch_answers(question_id)
+
+                # Combine question and answers into a single document
+                result = {"question": question, "answers": answers}
+
+                # Format the content as markdown
+                content = self._format_as_markdown(result)
+
+                # Create ByteStream
+                stream = ByteStream(data=content.encode("utf-8"))
+                stream.meta = {"url": url, "content_type": "text/markdown", "title": question.get("title", ""), "source": "stackoverflow"}
+                stream.mime_type = "text/markdown"
+
+                streams.append(stream)
+
+            except Exception as e:
+                logger.warning(f"Failed to fetch {url} using StackOverflow API: {str(e)}")
+                if self.raise_on_failure:
+                    raise e
+
+        return {"streams": streams}
+
+    def can_handle(self, url: str) -> bool:
+        # Check if the URL is from StackOverflow
+        return "stackoverflow.com/questions" in url
+
+    def _extract_question_id(self, url: str) -> Optional[int]:
+        """Extract the question ID from a StackOverflow URL."""
+        import re
+
+        # Match patterns like:
+        # https://stackoverflow.com/questions/12345/title
+        # https://stackoverflow.com/questions/12345
+        match = re.search(r"stackoverflow\.com/questions/(\d+)", url)
+        if match:
+            return int(match.group(1))
+        return None
+
+    def _format_as_markdown(self, result: Dict) -> str:
+        """Format the question and answers as markdown."""
+        question = result["question"]
+        answers = result["answers"]
+
+        # Format question
+        md = f"# {question.get('title', 'Untitled Question')}\n\n"
+        md += f"**Score**: {question.get('score', 0)} | "
+        md += f"**Asked by**: {question.get('owner', {}).get('display_name', 'Anonymous')} | "
+        md += f"**Date**: {question.get('creation_date', '')}\n\n"
+        md += question.get("body", "")
+        md += "\n\n---\n\n"
+
+        # Format answers
+        md += f"## {len(answers)} Answers\n\n"
+
+        # Sort answers by score (highest first)
+        sorted_answers = sorted(answers, key=lambda x: x.get("score", 0), reverse=True)
+
+        for i, answer in enumerate(sorted_answers):
+            md += f"### Answer {i + 1} (Score: {answer.get('score', 0)})\n\n"
+            md += f"**Answered by**: {answer.get('owner', {}).get('display_name', 'Anonymous')} | "
+            md += f"**Date**: {answer.get('creation_date', '')}\n\n"
+            md += answer.get("body", "")
+            md += "\n\n---\n\n"
+
+        return md
