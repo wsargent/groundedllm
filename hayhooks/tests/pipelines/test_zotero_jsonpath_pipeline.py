@@ -64,7 +64,7 @@ def test_pipeline_search_by_short_title(zotero_db):
     pipeline.setup()
 
     # Test searching by shortTitle
-    results = pipeline.run_api("$.shortTitle=TP1")
+    results = pipeline.run_api({"shortTitle": "TP1"})
     assert len(results) == 1
     assert results[0]["key"] == "item1"
 
@@ -75,7 +75,7 @@ def test_pipeline_search_by_title(zotero_db):
     pipeline.setup()
 
     # Test searching by title
-    results = pipeline.run_api("$.title=Another Paper")
+    results = pipeline.run_api({"title": "Another Paper"})
     assert len(results) == 1
     assert results[0]["key"] == "item3"
 
@@ -86,7 +86,7 @@ def test_pipeline_search_by_doi(zotero_db):
     pipeline.setup()
 
     # Test searching by DOI
-    results = pipeline.run_api("$.DOI=10.1234/test1")
+    results = pipeline.run_api({"DOI": "10.1234/test1"})
     assert len(results) == 1
     assert results[0]["key"] == "item1"
 
@@ -97,32 +97,36 @@ def test_pipeline_search_no_results(zotero_db):
     pipeline.setup()
 
     # Test searching with no matches
-    results = pipeline.run_api("$.shortTitle=NonExistent")
+    results = pipeline.run_api({"shortTitle": "NonExistent"})
     assert len(results) == 0
 
 
-def test_pipeline_invalid_jsonpath(zotero_db):
+def test_pipeline_invalid_query(zotero_db):
     # Initialize the pipeline wrapper
     pipeline = PipelineWrapper()
     pipeline.setup()
 
-    # Test with invalid jsonpath expression
+    # Test with invalid query object
     # This should not raise an exception but return an empty list
-    results = pipeline.run_api("invalid_expression")
+    results = pipeline.run_api({})
     assert len(results) == 0
 
 
-def test_pipeline_shorthand_jsonpath(zotero_db):
+def test_pipeline_multiple_query_objects(zotero_db):
     # Initialize the pipeline wrapper
     pipeline = PipelineWrapper()
     pipeline.setup()
 
-    # Test that "shortTitle=TP2" is equivalent to "$.shortTitle=TP2"
-    # as claimed in the pipeline wrapper's docstring
-    results_with_dollar = pipeline.run_api("$.shortTitle=TP2")
-    results_without_dollar = pipeline.run_api("shortTitle=TP2")
+    # Test with multiple query objects that should match one item
+    results = pipeline.run_api([{"title": "Test Paper 1"}, {"DOI": "10.1234/test1"}])
+    assert len(results) == 1
+    assert results[0]["key"] == "item1"
 
-    # Both queries should return the same results
-    assert len(results_with_dollar) == len(results_without_dollar)
-    assert results_with_dollar[0]["key"] == results_without_dollar[0]["key"]
-    assert results_with_dollar[0]["key"] == "item2"
+    # Test with multiple query objects that should not match any items
+    results = pipeline.run_api([{"title": "Test Paper 1"}, {"DOI": "10.1234/test2"}])
+    assert len(results) == 0
+
+    # Test with multiple fields in a single query object
+    single_query = pipeline.run_api({"title": "Test Paper 2", "DOI": "10.1234/test2"})
+    assert len(single_query) == 1
+    assert single_query[0]["key"] == "item2"
