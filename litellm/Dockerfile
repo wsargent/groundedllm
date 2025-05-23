@@ -1,4 +1,4 @@
-FROM ghcr.io/berriai/litellm:litellm_stable_release_branch-v1.65.0-stable
+FROM ghcr.io/berriai/litellm:litellm_stable_release_branch-v1.70.1-stable
 
 # Set the working directory to /app
 WORKDIR /app
@@ -16,4 +16,4 @@ EXPOSE 4000/tcp
 # WARNING: FOR PROD DO NOT USE `--detailed_debug` it slows down response times, instead use the following CMD
 # CMD ["--port", "4000", "--config", "config.yaml"]
 
-CMD ["--port", "4000", "--config", "config.yaml", "--detailed_debug"]
+CMD ["--port", "4000", "--config", "config.yaml"]
