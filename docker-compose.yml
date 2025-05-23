@@ -7,15 +7,11 @@ services:
     container_name: litellm
     ports:
       - 4000:4000
+    env_file:
+      - ".env"
     environment:
       - LITELLM_LOG=WARN
       - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
-      - GEMINI_API_KEY=$GEMINI_API_KEY
-      - OPENROUTER_API_KEY=$OPENROUTER_API_KEY
-      - ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY
-      - OLLAMA_BASE_URL=$OLLAMA_BASE_URL
-      - LM_STUDIO_API_BASE=$LM_STUDIO_API_BASE
-      - LM_STUDIO_API_KEY=$LM_STUDIO_API_KEY
       
   # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
@@ -25,6 +21,8 @@ services:
       - 1416:1416
     volumes:
       - ./hayhooks/pipelines:/pipelines
+    env_file:
+      - ".env"
     environment:
       - HAYHOOKS_PIPELINES_DIR=/pipelines
       - HAYHOOKS_DISABLE_SSL=true
@@ -34,10 +32,6 @@ services:
       - LOG=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYSTACK_LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYHOOKS_SHOW_TRACEBACKS=true
-      # Pipeline specific options
-      - HAYHOOKS_SEARCH_MODEL=$HAYHOOKS_SEARCH_MODEL
-      - HAYHOOKS_EXCERPT_MODEL=$HAYHOOKS_EXCERPT_MODEL
-      - HAYHOOKS_SEARCH_SEARXNG_ENABLED=$HAYHOOKS_SEARCH_SEARXNG_ENABLED
       # Connections to other containers
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
@@ -102,9 +96,10 @@ services:
       ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
       # https://docs.letta.com/guides/server/providers/google
       GEMINI_API_KEY: $GEMINI_API_KEY
-      OLLAMA_BASE_URL: $OLLAMA_BASE_URL
+      #OLLAMA_BASE_URL: $OLLAMA_BASE_URL
       # Do not attempt to use Ollama, LM Studio or OpenRouter chat models with Letta.
       # Letta is *very* picky and will only reliably work with the major cloud providers.
+      # Embedding models will work fine, but only uncomment if you know what you're doing.
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8283/v1/health/"]
