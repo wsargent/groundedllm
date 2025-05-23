@@ -387,6 +387,9 @@ class ZoteroContentResolver:
         """
         matching_item = None
 
+        # Always sync before every search
+        self.db.sync_zotero_to_json_sqlite(self.zotero_client)
+
         # First, try to find the item by URL in the local database
         url_matches = self.db.search_json_by_url_sqlite(url)
         if url_matches:
@@ -433,6 +436,8 @@ class ZoteroContentResolver:
                     filename = child["data"].get("filename")
                     child_item_key = child["key"]
 
+                    logger.info("Found attachment item: " + filename + " (" + child_item_key + ")")
+
                     # Skip if no filename
                     if not filename:
                         continue
@@ -442,7 +447,7 @@ class ZoteroContentResolver:
                     is_html = filename.lower().endswith((".html", ".htm"))
 
                     if not (is_pdf or is_html):
-                        continue
+                        logger.warning("Non-PDF or HTML attachment, trying it anyway: " + filename)
 
                     # We found a valid attachment
                     attachment_found = True
