@@ -198,16 +198,8 @@ class ZoteroDatabase:
             return 0
 
     def search_json_by_doi_sqlite(self, target_doi: str) -> List[dict]:
-        """Search the SQLite database for items with the given DOI.
-
-        Args:
-            target_doi: The DOI to search for.
-
-        Returns:
-            A list of matching Zotero items.
-        """
         try:
-            return self.search_json_by_jsonpath(f"$.data.DOI={target_doi}")
+            return self.search_json_by_jsonpath({"DOI": target_doi})
         except Exception as e:
             logger.error(f"Failed to search SQLite database by DOI: {str(e)}")
             if self.raise_on_failure:
@@ -215,131 +207,122 @@ class ZoteroDatabase:
             return []
 
     def search_json_by_url_sqlite(self, target_url: str) -> List[dict]:
-        """Search the SQLite database for items with the given URL.
-
-        Args:
-            target_url: The URL to search for.
-
-        Returns:
-            A list of matching Zotero items.
-        """
         try:
-            return self.search_json_by_jsonpath(f"$.data.url={target_url}")
+            return self.search_json_by_jsonpath({"url": target_url})
         except Exception as e:
             logger.error(f"Failed to search SQLite database by URL: {str(e)}")
             if self.raise_on_failure:
                 raise e
             return []
 
-    def search_json_by_jsonpath(self, jsonpath_expr: str) -> List[dict]:
-        """Search the SQLite database for items matching a jsonpath expression.
+    def search_json_by_jsonpath(self, query: dict | List[dict]) -> List[dict]:
+        """Search the SQLite database for items matching one or more MongoDB-style query objects.
 
-        The jsonpath expression should be in the format "$.path=value", where path
-        is the path to the property in the data object and value is the value to match.
+        The query objects should be in MongoDB-style format, where keys are field paths and values are the values to match.
+        If a list of query objects is provided, they are logically ANDed together (all must match).
 
         Examples:
-            - "$.shortTitle=foo" matches items where data.shortTitle equals "foo"
-            - "$.title=Example Paper" matches items where data.title equals "Example Paper"
-            - "$.creators[*].lastName=Brooker" matches items where any creator has lastName "Brooker"
-            - "$.creators[?(@.lastName)]==Brooker" matches items where any creator has lastName "Brooker"
+            - {"shortTitle": "foo"} matches items where data.shortTitle equals "foo"
+            - {"title": "Example Paper"} matches items where data.title equals "Example Paper"
+            - {"creators.lastName": "Brooker"} matches items where any creator has lastName "Brooker"
+            - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] matches items where both conditions are true
 
         Args:
-            jsonpath_expr: The jsonpath expression to search for.
+            query: The MongoDB-style query object(s) to search for. Can be a single dict or a list of dicts.
 
         Returns:
             A list of matching Zotero items.
         """
         try:
-            # Parse the jsonpath expression
-            if not jsonpath_expr or "=" not in jsonpath_expr:
-                logger.error(f"Invalid jsonpath expression: {jsonpath_expr}")
+            # Handle both single dict and list of dicts
+            if isinstance(query, dict):
+                query_objects = [query]
+            else:
+                query_objects = query
+
+            # Validate query objects
+            if not query_objects:
+                logger.error("No query objects provided")
                 return []
 
-            # Handle special case for array queries with [?(@.field)]=='value' syntax
-            if "[?(@." in jsonpath_expr and ")]==''" in jsonpath_expr or ")]==''" in jsonpath_expr or ")]=='Brooker'" in jsonpath_expr:
-                # Extract the array field, property name, and value
-                parts = jsonpath_expr.split("[?(@.")
-                array_field = parts[0].replace("$.", "")
-                property_and_value = parts[1].split(")]=='")
-                property_name = property_and_value[0]
-                value = property_and_value[1].replace("'", "")
+            for q in query_objects:
+                if not isinstance(q, dict) or not q:
+                    logger.error(f"Invalid query object: {q}")
+                    return []
 
-                # Ensure the path starts with data.
-                if not array_field.startswith("data."):
-                    array_field = f"data.{array_field}"
+            # Process each query object and build subqueries
+            subqueries = []
+            params = []
 
-                conn = sqlite3.connect(self.db_file)
-                cursor = conn.cursor()
+            for q in query_objects:
+                for field, value in q.items():
+                    # Handle array field queries (dot notation for nested fields)
+                    if "." in field:
+                        # Extract the array field name and the property to match
+                        parts = field.split(".")
+                        array_field = parts[0]
+                        property_name = parts[1]
 
-                # Use json_foreach to search within array elements
-                cursor.execute(
-                    f"""
-                    SELECT item_data
-                    FROM zotero_items_json
-                    WHERE EXISTS (
-                        SELECT 1
-                        FROM json_each(json_extract(item_data, '$.{array_field}'))
-                        WHERE json_extract(value, '$.{property_name}') LIKE ?
-                    )
-                    """,
-                    (value,),
-                )
+                        # Ensure the path starts with data.
+                        if not array_field.startswith("data."):
+                            array_field = f"data.{array_field}"
 
-                results = [json.loads(row[0]) for row in cursor.fetchall()]
-                conn.close()
-                return results
+                        # Create subquery for array field
+                        subquery = f"""
+                            SELECT item_key FROM zotero_items_json
+                            WHERE EXISTS (
+                                SELECT 1
+                                FROM json_each(json_extract(item_data, '$.{array_field}'))
+                                WHERE json_extract(value, '$.{property_name}') LIKE ?
+                            )
+                        """
+                        subqueries.append(subquery)
+                        params.append(value)
+                    else:
+                        # Regular field query
+                        # Ensure the path starts with $.data.
+                        path = f"$.data.{field}"
 
-            # Standard path=value format
-            path, value = jsonpath_expr.split("=", 1)
+                        # Regular non-array query
+                        subquery = """
+                            SELECT item_key FROM zotero_items_json
+                            WHERE json_extract(item_data, ?) LIKE ?
+                        """
+                        subqueries.append(subquery)
+                        params.append(path)
+                        params.append(value)
 
-            # Ensure the path starts with $.data.
-            if path.startswith("$."):
-                # If the path starts with $. but not $.data., prepend data.
-                if not path.startswith("$.data."):
-                    path = path.replace("$.", "$.data.")
-            else:
-                # If the path doesn't start with $., prepend $.data.
-                path = f"$.data.{path}"
-
+            # Connect to the database
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()
 
-            # Check if this is an array query (contains [*])
-            if "[*]" in path:
-                # Extract the array field name
-                array_field = path.split("[*]")[0].split(".")[-1]
-                # Extract the property to match within the array
-                property_name = path.split("[*].")[-1]
+            # Build the final query using INTERSECT to combine all subqueries
+            query = " INTERSECT ".join(subqueries)
 
-                # Use json_foreach to search within array elements
-                cursor.execute(
-                    f"""
-                    SELECT item_data
-                    FROM zotero_items_json
-                    WHERE EXISTS (
-                        SELECT 1
-                        FROM json_each(json_extract(item_data, '$.data.{array_field}'))
-                        WHERE json_extract(value, '$.{property_name}') LIKE ?
-                    )
-                    """,
-                    (value,),
-                )
-            else:
-                # Regular non-array query
-                cursor.execute(
-                    """
-                    SELECT item_data
-                    FROM zotero_items_json
-                    WHERE json_extract(item_data, ?) LIKE ?
-                    """,
-                    (path, value),
-                )
+            # Get the matching item keys
+            cursor.execute(query, params)
+            item_keys = [row[0] for row in cursor.fetchall()]
+
+            if not item_keys:
+                conn.close()
+                return []
+
+            # Get the full item data for the matching keys
+            placeholders = ", ".join(["?" for _ in item_keys])
+            cursor.execute(
+                f"""
+                SELECT item_data
+                FROM zotero_items_json
+                WHERE item_key IN ({placeholders})
+                """,
+                item_keys,
+            )
 
             results = [json.loads(row[0]) for row in cursor.fetchall()]
             conn.close()
             return results
         except Exception as e:
-            logger.error(f"Failed to search SQLite database by jsonpath: {str(e)}")
+            logger.error(f"Failed to search SQLite database by MongoDB query: {str(e)}")
             if self.raise_on_failure:
                 raise e
             return []

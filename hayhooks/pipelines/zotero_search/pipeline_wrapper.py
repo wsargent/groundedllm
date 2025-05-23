@@ -9,7 +9,7 @@ from components.zotero import ZoteroDatabase
 
 
 class PipelineWrapper(BasePipelineWrapper):
-    """A Haystack pipeline wrapper that searches Zotero database using jsonpath expressions."""
+    """A Haystack pipeline wrapper that searches Zotero database using MongoDB-style query objects."""
 
     def setup(self) -> None:
         """Set up the pipeline with a ZoteroDatabase component."""
@@ -21,20 +21,24 @@ class PipelineWrapper(BasePipelineWrapper):
 
         self.pipeline = pipe
 
-    def run_api(self, jsonpath: str) -> List[Dict[str, Any]]:
+    def run_api(self, query: dict | List[dict]) -> List[Dict[str, Any]]:
         """
-        Search the Zotero database using a jsonpath expression.
+        Search the Zotero database using one or more MongoDB-style query objects.
 
         Arguments
         --------
-        jsonpath: str
-            The jsonpath expression to search for, in the format "$.field=value" or "field=value".
+        query: dict or List[dict]
+            The MongoDB-style query object(s) to search for. Keys are field paths and values are the values to match.
+            If a list of query objects is provided, they are logically ANDed together (all must match).
+
             Examples:
-            - "$.DOI=10.3389/fnins.2012.00138" matches items where data.DOI equals "10.3389/fnins.2012.00138"
-            " "$.url=http://journal.frontiersin.org/article/10.3389/fnins.2012.00138/abstract" matches items.
-            - "$.shortTitle=foo" matches items where data.shortTitle equals "foo"
-            - "$.title=Example Paper" matches items where data.title equals "Example Paper"
-            - "shortTitle=foo" is equivalent to "$.shortTitle=foo"
+            - {"DOI": "10.3389/fnins.2012.00138"} matches items where data.DOI equals "10.3389/fnins.2012.00138"
+            - {"url": "http://journal.frontiersin.org/article/10.3389/fnins.2012.00138/abstract"} matches items.
+            - {"shortTitle": "foo"} matches items where data.shortTitle equals "foo"
+            - {"title": "Example Paper"} matches items where data.title equals "Example Paper"
+            - {"creators.lastName": "Brooker"} matches items where any creator has lastName "Brooker"
+            - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] matches items where both conditions are true
+            - {"title": "Example Paper", "DOI": "10.1234/test"} matches items where both fields match
 
         Return
         -------
@@ -45,9 +49,9 @@ class PipelineWrapper(BasePipelineWrapper):
         """
         try:
             # Use the ZoteroDatabase's search_json_by_jsonpath method
-            results = self.zotero_db.search_json_by_jsonpath(jsonpath)
-            logger.info(f"Found {len(results)} results for jsonpath: {jsonpath}")
+            results = self.zotero_db.search_json_by_jsonpath(query)
+            logger.info(f"Found {len(results)} results for query: {query}")
             return results
         except Exception as e:
-            logger.error(f"Error searching Zotero database with jsonpath {jsonpath}: {str(e)}")
+            logger.error(f"Error searching Zotero database with query {query}: {str(e)}")
             raise RuntimeError(f"Error searching Zotero database: {str(e)}")
