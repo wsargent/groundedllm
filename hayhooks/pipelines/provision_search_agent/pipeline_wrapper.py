@@ -111,7 +111,7 @@ class PipelineWrapper(BasePipelineWrapper):
         """
         # Run the pipeline providing inputs for components that need them at runtime
         # agent_id is passed internally via connections
-        requested_tools = ["search", "extract", "excerpt", "zotero_search"]
+        requested_tools = ["search", "extract", "excerpt", "zotero_search", "search_by_error"]
         create_agent_args = {
             "agent_name": agent_name,
             "chat_model": chat_model,

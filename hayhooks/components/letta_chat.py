@@ -105,10 +105,6 @@ class LettaChatGenerator:
 
         logger.debug(f"run: completions={completions}")
 
-        # before returning, do post-processing of the completions
-        for response in completions:
-            self._check_finish_reason(response)
-
         return {"replies": completions}
 
     @staticmethod
@@ -147,43 +143,33 @@ class LettaChatGenerator:
         logger.debug(f"Processing streaming chunk: {chunk}")
         if isinstance(chunk, ReasoningMessage):
             reasoning_chunk: ReasoningMessage = chunk
-            meta_dict = {"type": "assistant", "received_at": datetime.now().isoformat()}
+            now = datetime.now()
+            meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            display_time = now.astimezone().time().isoformat("seconds")
             reasoning = reasoning_chunk.reasoning.strip().removeprefix('"').removesuffix('"')
-            content = f"\n{reasoning}"
+            content = f"\n- {display_time} {reasoning}"
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, ToolCallMessage):
             tool_call_message: ToolCallMessage = chunk
-            meta_dict = {"type": "assistant", "received_at": datetime.now().isoformat()}
-            content = f"\n- Calling tool {tool_call_message.tool_call.name}..."
+            now = datetime.now()
+            display_time = now.astimezone().time().isoformat("seconds")
+            meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            content = f"\n- {display_time} Calling tool {tool_call_message.tool_call.name}..."
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, ToolReturnMessage):
             tool_return_message: ToolReturnMessage = chunk
-            meta_dict = {"type": "assistant", "received_at": datetime.now().isoformat()}
-            content = f" Tool returned {tool_return_message.status}."
+            now = datetime.now()
+            meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            content = f" {tool_return_message.status}, returned {len(tool_return_message.tool_return)} characters."
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, AssistantMessage):
-            meta_dict = {"type": "assistant", "received_at": datetime.now().isoformat()}
+            now = datetime.now()
+            meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            # Assistant message is the last chunk so we need to close the <think> tag
             return StreamingChunk(content=f"</think>{chunk.content}", meta=meta_dict)
         else:
             logger.debug(f"Ignoring streaming chunk type: {type(chunk)}")
             return None
-
-    def _check_finish_reason(self, response):
-        logger.debug(f"_check_finish_reason: response={response}")
-        #     def _check_finish_reason(self, meta: Dict[str, Any]) -> None:
-        # if meta["finish_reason"] == "length":
-        #     logger.warning(
-        #         "The completion for index {index} has been truncated before reaching a natural stopping point. "
-        #         "Increase the max_tokens parameter to allow for longer completions.",
-        #         index=meta["index"],
-        #         finish_reason=meta["finish_reason"],
-        #     )
-        # if meta["finish_reason"] == "content_filter":
-        #     logger.warning(
-        #         "The completion for index {index} has been truncated due to the content filter.",
-        #         index=meta["index"],
-        #         finish_reason=meta["finish_reason"],
-        #     )
 
     def _build_message(self, response: LettaResponse):
         """
@@ -198,6 +184,7 @@ class LettaChatGenerator:
 
         messages: List[LettaMessageUnion] = response.messages
         usage: LettaUsageStatistics = response.usage
+        usage_dict = {"completion_tokens": usage.completion_tokens, "prompt_tokens": usage.prompt_tokens, "total_tokens": usage.total_tokens}
 
         chat_message = None
         for message in messages:
@@ -210,10 +197,10 @@ class LettaChatGenerator:
 
         chat_message.meta.update(
             {
-                "model": self.agent_name,
+                "model": self.agent_id,
                 "index": 0,
                 "finish_reason": "stop",
-                "usage": dict(usage),
+                "usage": usage_dict,
             }
         )
         return chat_message

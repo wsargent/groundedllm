@@ -346,7 +346,7 @@ class JinaLinkContentFetcher:
             A tuple containing metadata and ByteStream.
         """
         if self.api_key:
-            headers = {"Authentication:": f"Bearer {self.api_key}"}
+            headers = {"Authorization": f"Bearer {self.api_key}"}
         else:
             headers = {}
         with httpx.Client(timeout=self.timeout) as client:
