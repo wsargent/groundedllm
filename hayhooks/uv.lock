@@ -382,7 +382,7 @@ requires-dist = [
     { name = "hayhooks", extras = ["mcp"], specifier = ">=0.8.0" },
     { name = "haystack-ai", specifier = ">=2.13.2" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.27.0" },
-    { name = "letta-client", specifier = ">=0.1.137" },
+    { name = "letta-client", specifier = ">=0.1.146" },
     { name = "linkup-sdk", specifier = ">=0.2.4" },
     { name = "markdown-it-py", specifier = ">=3.0.0" },
     { name = "mcp-haystack", specifier = ">=0.1.0" },
@@ -697,7 +697,7 @@ wheels = [
 
 [[package]]
 name = "letta-client"
-version = "0.1.137"
+version = "0.1.146"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -706,9 +706,9 @@ dependencies = [
     { name = "pydantic-core" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fd/3f/9c907aa9fc2a5c9d538e69598f8b7feccf6b57e96f28297a9cd36497f585/letta_client-0.1.137.tar.gz", hash = "sha256:74b73b2ebe3a206a567ba90461eb3dba0df04472eae6e1a8f0eb96f0a9287490", size = 105812 }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/99/a694c3be5fb6765014f3fdfcc9918ff488c039d3c44c893ec9fa4ed426b9/letta_client-0.1.146.tar.gz", hash = "sha256:0864a65e59abd5e9762f4176af2687d968a4c757473019199f5c9cb7d74bc693", size = 107811 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a4/8e/60bcea37be4af37e0b93bdbd41d1cff769cd26997364ced8666aa8156283/letta_client-0.1.137-py3-none-any.whl", hash = "sha256:ac1d96bf7c6d0fd11b574c8656f855ebd7c034fc60594506fbc9bdcdd62dac81", size = 278709 },
+    { url = "https://files.pythonhosted.org/packages/f2/60/f11f70fbdc24b1054691125d378d0e361527386e405ab2bf17fa892166ad/letta_client-0.1.146-py3-none-any.whl", hash = "sha256:7af140fcfd065ec924eebc5bf3ae66aaa1447bddf3c4a63c3be27381f363feae", size = 283585 },
 ]
 
 [[package]]
