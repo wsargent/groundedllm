@@ -19,7 +19,7 @@ class LettaCreateAgent:
     attaching specified tools during creation if the agent doesn't exist.
     """
 
-    DEFAULT_RETURN_CHAR_LIMIT = 50000
+    DEFAULT_RETURN_CHAR_LIMIT = 500000
 
     def __init__(self, letta: Letta):
         """Initializes the setup class with Letta connection details."""
