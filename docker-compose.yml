@@ -21,6 +21,9 @@ services:
       - 1416:1416
     volumes:
       - ./hayhooks/pipelines:/pipelines
+      # https://stackoverflow.com/questions/39172652/using-docker-compose-to-set-containers-timezones
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
     env_file:
       - ".env"
     environment:
