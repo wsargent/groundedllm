@@ -13,6 +13,13 @@ services:
       - LITELLM_LOG=WARN
       - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
       
+  context7:
+    container_name: context7
+    build:
+      context: ./context7
+    ports:
+      - "8002:8002"
+        
   # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
     build: hayhooks/
