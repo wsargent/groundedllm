@@ -1,4 +1,7 @@
 {
-  "mcpServers": {    
+  "mcpServers": {   
+    "context7": {
+      "url": "http://context7:8002/sse"
+    } 
   }
 }
