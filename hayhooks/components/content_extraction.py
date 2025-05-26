@@ -281,7 +281,7 @@ class JinaLinkContentFetcher:
         except Exception:
             self.api_key = None
 
-        self.jina_url = "https://r.jina.ai/api/v1/fetch"
+        self.jina_url = "https://r.jina.ai"
 
     @component.output_types(streams=List[ByteStream])
     def run(self, urls: List[str]):
@@ -346,12 +346,16 @@ class JinaLinkContentFetcher:
             A tuple containing metadata and ByteStream.
         """
         if self.api_key:
-            headers = {"Authorization": f"Bearer {self.api_key}"}
+            # https://github.com/jina-ai/reader/tree/main?tab=readme-ov-file#streaming-mode
+            headers = {"Authorization": f"Bearer {self.api_key}", "Accept": "text/event-stream"}
         else:
             headers = {}
         with httpx.Client(timeout=self.timeout) as client:
-            response = client.post(self.jina_url, headers=headers, json={"url": url})
-            response.raise_for_status()
+            response = client.get(f"{self.jina_url}/{url}", headers=headers)
+
+            if response.status_code != 200:
+                logger.error(f"Link failure for url {url} status_code={response.status_code} text={response.text}")
+                response.raise_for_status()
 
             # Extract content from response
             content = response.json().get("content", "")
