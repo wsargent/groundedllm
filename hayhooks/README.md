@@ -128,9 +128,9 @@ hayhooks pipeline run search_by_error \
 
 ### Provision Search Agent Pipeline
 
-This pipeline provisions a search agent in Letta and creates a pipe function in Open WebUI to talk to it.  The search agent is configured with the search and extract tools by the pipeline.
+This pipeline provisions a search agent in Letta, and sets it up with tools.
 
-This pipeline is called by an initializer docker container that runs after Letta and Open WebUI are both healthy.
+This pipeline is called by an initializer docker container that runs after Letta is healthy.
 
 ```bash
 hayhooks pipeline run provision_search_agent \

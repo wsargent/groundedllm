@@ -89,9 +89,9 @@ SearXNG comes for free out of the box, but I recommend disabling SearXNG and goi
 
 If none of these work for you, there is a full list of options [here](https://www.mattcollins.net/web-search-apis-for-llms).
 
-In addition, if you want to use Claude Sonnet instead of Google Gemini, you'll want a key for that.
+In addition, if you want to use Claude Sonnet instead of Google Gemini, you'll want a key for that.  Gemini models are still in preview, and have a tendency to get chopped off mid reply and return internal server errors -- Sonnet is far more consistent in responding without retrying requests.
 
-* [Anthropic API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).  
+* [Anthropic API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).
 
 If you do not have these accounts or API keys, it is *very* simple to set them up if you have a Google or Github account.  Gemini will ask you to sign in with your Google account, then give you a free key.  If you want to upgrade, you can set up a  [billing account](https://ai.google.dev/gemini-api/docs/billing) for PAYG.  Tavily is the same way; there's no [credit card required](https://docs.tavily.com/documentation/api-credits) and PAYG is opt in.
 
@@ -132,6 +132,7 @@ Some example preferences:
 * I am using Haystack 2.12, please specify 2.x when searching for Haystack docs.
 * Only give me sample code examples when I explicitly ask you to.
 * Show me inline images when you provide results from Wikipedia pages.
+* Avoid sycophancy: don't tell me I've asked an insightful or deep question or compliment me.
 
 Because Letta doesn't always store conversations in archival memory, you also want to ask it to explicitly summarize and store the conversation when you're changing topics.  This lets you take notes and store bookmarks when you want to bring up an old topic for later.
 
