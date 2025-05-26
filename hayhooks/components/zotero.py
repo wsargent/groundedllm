@@ -527,12 +527,16 @@ class ZoteroContentResolver:
         Returns:
             True if this resolver can handle the URL, False otherwise.
         """
+        if self.is_enabled is False:
+            return False
+
         # Check if the URL is a DOI link
         if "doi.org" in url:
             return True
 
         if any(domain in url for domain in ACADEMIC_DOMAINS):
-            return True
+            matching_item = self._find_matching_item(url)
+            return matching_item is not None
 
         return False
 
