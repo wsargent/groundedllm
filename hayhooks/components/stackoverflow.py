@@ -41,8 +41,8 @@ class StackOverflowBase:
         try:
             self.api_key = api_key.resolve_value()
             self.access_token = access_token.resolve_value() if access_token else None
-        except Exception as e:
-            logger.warning(f"No API key or access token: {e}")
+        except Exception:
+            logger.info("STACKOVERFLOW_API_KEY is not set, rate limit for queries will be lower.")
             self.api_key = None
             self.access_token = None
 
