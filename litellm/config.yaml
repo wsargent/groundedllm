@@ -12,12 +12,36 @@ model_list:
   # LiteLLM can also be used by Cline/Continue.dev/etc to list models.
 
   # This is the primary model used by Hayhooks for search and extract
+
+  - model_name: "gemini/gemini-2.5-pro-preview-05-06"
+    litellm_params:
+      model: "gemini/gemini-2.5-pro-preview-05-06"
+      api_key: "os.environ/GEMINI_API_KEY"
+      tags: ["gemini"]
+
+  - model_name: "gemini/gemini-2.5-flash-preview-05-20"
+    litellm_params:
+      model: "gemini/gemini-2.5-flash-preview-05-20"
+      api_key: "os.environ/GEMINI_API_KEY"
+      tags: ["gemini"]
+            
   - model_name: "gemini/gemini-2.0-flash"
     litellm_params:
       model: "gemini/gemini-2.0-flash"
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
+  - model_name: "gemini/gemini-1.5-flash"
+    litellm_params:
+      model: "gemini/gemini-1.5-flash"
+      api_key: "os.environ/GEMINI_API_KEY"
+      tags: ["gemini"]
+
+  - model_name: "gemini/gemini-1.5-flash-8b"
+    litellm_params:
+      model: "gemini/gemini-1.5-flash-8b"
+      api_key: "os.environ/GEMINI_API_KEY"
+      tags: ["gemini"]
 
   # Expose Ollama models to Hayhooks
   - model_name: "ollama_chat/*"
@@ -31,6 +55,12 @@ model_list:
     litellm_params:
       model: "openrouter/*"
       api_key: "os.environ/OPENROUTER_API_KEY"
+
+  - model_name: claude-sonnet-4
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      api_key: "os.environ/ANTHROPIC_API_KEY"
+      tags: ["anthropic"]      
 
   # Expose claude-3-7-sonnet with token-efficient-tools to Hayhooks
   # (Useful if we have to call tools from inside hayhooks)
