@@ -8,7 +8,7 @@ from haystack.utils import Secret
 
 @component
 class CreateFunction:
-    """Handles the setup and configuration of a (mostly) generic Open WebUI function pipe."""
+    """Handles the setup and configuration of a (mostly) generic Open WebUI pipe function."""
 
     def __init__(self, base_url: str, email: str, password: Secret):
         """Initializes the setup class with Open WebUI connection and function details.
@@ -27,7 +27,6 @@ class CreateFunction:
     @component.output_types(function_state=dict)
     def run(
         self,
-        agent_id: str,
         function_id: str,
         function_name: str,
         function_description: str,
@@ -38,8 +37,6 @@ class CreateFunction:
 
         Arguments:
         ---------
-        agent_id: str
-            The agent id (I should pass in a dict here but I don't know how)
         function_id: str
             The unique ID for the function to be created/managed.
         function_name: str
@@ -75,11 +72,6 @@ class CreateFunction:
             self._toggle_function(function_id)
         else:
             logger.info(f"Function ID {function_id} already exists.")
-
-        # Set up the agent id as a valve setting
-        # This is a hack because I don't know how to pass it through the pipeline
-        function_valve_payload = {"Agent_ID": agent_id}
-        self._update_function_valve(function_id, function_valve_payload)
 
         logger.info(f"Setup complete for function ID {function_id}.")
 

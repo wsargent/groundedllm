@@ -79,8 +79,6 @@ class PipelineWrapper(BasePipelineWrapper):
         pipe.add_component("create_agent", create_agent)
         pipe.add_component("create_function", create_open_webui_function)
 
-        pipe.connect(sender="create_agent.agent_id", receiver="create_function.agent_id")
-
         self.pipeline = pipe
 
     def run_api(
@@ -122,12 +120,10 @@ class PipelineWrapper(BasePipelineWrapper):
         }
 
         create_open_webui_function_args = {
-            "function_id": self._snake_case(agent_name),
-            "function_name": f"{agent_name}",
-            "function_description": f"A pipe function for {agent_name}",
-            # Revert to using internal helper method
+            "function_id": "letta_pipe",
+            "function_name": "letta_pipe",
+            "function_description": "A pipe function for Letta",
             "function_content": self._get_letta_pipe_script(),
-            # Revert to using internal helper method
             "function_manifest": self._get_function_manifest(),
         }
 

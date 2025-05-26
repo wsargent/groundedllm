@@ -23,12 +23,9 @@ class LettaChatGenerator:
     Generates chat responses using Letta.
     """
 
-    # haystack/components/generators/chat/openai.py
-    # haystack/components/generators/chat/hugging_face_local.py
     def __init__(
         self,
         agent_id: Optional[str] = None,
-        agent_name: Optional[str] = None,
         base_url: Optional[str] = os.getenv("LETTA_BASE_URL"),
         token: Optional[Secret] = Secret.from_env_var(["LETTA_API_TOKEN"], strict=False),
         generation_kwargs: Optional[Dict[str, Any]] = None,
@@ -38,43 +35,35 @@ class LettaChatGenerator:
         Initialize the component with a Letta client.
 
         :param agent_id: The ID of the Letta agent to use for text generation.
-        :param agent_name: The name of the Letta agent to use for text generation.
         :param base_url: The base URL of the Letta instance.
         :param token: The token to use as HTTP bearer authorization for Letta.
         :param generation_kwargs: A dictionary with keyword arguments to customize text generation.
         :param streaming_callback: An optional callable for handling streaming responses.
         """
 
-        logger.info(f"Using Letta base URL: {base_url} with agent_id = {agent_id} agent_name = {agent_name}")
+        logger.info(f"Using Letta base URL: {base_url} with agent_id = {agent_id}")
         self.agent_id = agent_id
-        self.agent_name = agent_name
         self.base_url = base_url
         self.token = token
         self.generation_kwargs = generation_kwargs
         self.streaming_callback = streaming_callback
 
     @component.output_types(replies=List[str], meta=List[Dict[str, Any]])
-    def run(self, prompt: str, streaming_callback: Optional[Callable[[StreamingChunk], None]] = None):
+    def run(self, prompt: str, agent_id: str, streaming_callback: Optional[Callable[[StreamingChunk], None]] = None):
         """
         Send a query to Letta and return the response.
 
         :param prompt: The string prompt to use for text generation.
+        :param agent_id: The id of the Letta agent to use for text generation.
         :param streaming_callback: An optional callable for handling streaming responses.
         :returns:
             A list of strings containing the generated responses and a list of dictionaries containing the metadata for each response.
         """
 
         client = Letta(base_url=self.base_url, token=self.token.resolve_value())
-        if not self.agent_id and self.agent_name:
-            # Letta does sub-string match on name so we have to explicitly match on the exact name
-            agents = client.agents.list(name=self.agent_name)
-            for agent in agents:
-                if agent.name == self.agent_name:
-                    self.agent_id = agent.id
-                    break
-
-        if not self.agent_id:
-            raise ValueError("No Letta agent ID available!")
+        agent_id = agent_id or self.agent_id
+        if not agent_id:
+            raise ValueError(f"No Letta agent ID available for {agent_id}!")
 
         message = self._message_from_user(prompt)
         messages = [message]
@@ -82,7 +71,7 @@ class LettaChatGenerator:
 
         completions: List[ChatMessage] = []
         if streaming_callback is not None:
-            stream_completion: Iterator[LettaStreamingResponse] = client.agents.messages.create_stream(agent_id=self.agent_id, messages=messages)
+            stream_completion: Iterator[LettaStreamingResponse] = client.agents.messages.create_stream(agent_id=agent_id, messages=messages)
 
             meta_dict = {"type": "assistant", "received_at": datetime.now().isoformat()}
             think_chunk = StreamingChunk(content="<think>", meta=meta_dict)
@@ -100,7 +89,7 @@ class LettaChatGenerator:
             assert last_chunk is not None
             completions = [self._create_message_from_chunks(last_chunk, chunks)]
         else:
-            completion: LettaResponse = client.agents.messages.create(agent_id=self.agent_id, messages=messages)
+            completion: LettaResponse = client.agents.messages.create(agent_id=agent_id, messages=messages)
             completions = [self._build_message(completion)]
 
         logger.debug(f"run: completions={completions}")
