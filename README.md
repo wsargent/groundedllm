@@ -33,10 +33,10 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 
 ### Cloud
 
-* [Jina Deepsearch](https://search.jina.ai) seems pretty good.
+* [Jina Search](https://search.jina.ai) seems pretty good but it will chew through tokens very fast.
 * [Phind](https://www.phind.com) is more chat oriented and has good diagrams.
 * [Tak](https://tak.phospho.ai) is another chat oriented search engine, powered by [Linkup](https://www.linkup.so/blog/linkup-phospho-partnership).
-
+* [Morphic](https://www.morphic.sh) also has a free hosted option.
 
 I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).  
 
@@ -168,7 +168,7 @@ The docker compose file integrates several key components:
 * **Hayhooks:** A tool server for use by Letta.
 * **LiteLLM Proxy Server:**  Makes all providers "OpenAI style" for Hayhooks.
 
-Note that if you delete or rename the Letta agent or the Open WebUI pipe, the initializer will provision a new one with the same name automatically.
+Note that if you delete or rename the Letta agent, the initializer will provision a new one with the same name automatically.
 
 ### Open WebUI
 
@@ -200,7 +200,7 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 
 ### Hayhooks
 
-[Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs.  It's great for processing content and providing a simple interface to Letta.
+[Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs.  It's great for processing content and providing a simple interface to Letta.  It also exposes Letta agents as an OpenAI-compatable endpoint.
 
 In this case, the tools use Google Flash 2.0 to process the search output and run searches through cheaper models to ameliorate Anthropic's brutally low rate limits and higher costs.  Unlike Letta, Hayhooks is very flexible about the models it uses, and you can swap to Ollama or OpenRouter models like Gemma3 or Qwen3 if that works better for you.
 
@@ -256,6 +256,6 @@ Google's [privacy policy](https://support.google.com/gemini/answer/13594961) sta
 
 Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: they do not use personal data for model training [without explicit consent](https://privacy.anthropic.com/en/articles/10023580-is-my-data-used-for-model-training).
 
-## Jina
+### Jina
 
 Jina's [privacy policy](https://jina.ai/legal#privacy-policy).  They are a German company, so GDPR applies. 
