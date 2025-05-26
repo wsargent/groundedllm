@@ -18,7 +18,7 @@ function_name = "letta_pipe"
 def setup_logger():
     logger = logging.getLogger(function_name)
     if not logger.handlers:
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.WARNING)
         handler = logging.StreamHandler()
         handler.set_name(function_name)
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -60,7 +60,7 @@ class Pipe:
                     ) as resp:
                         if resp.status == 200:
                             agents = await resp.json()
-                            return [self.parse_agent(agent) for agent in agents]
+                            return self.valid_agents(agents)
                         else:
                             error_content = await resp.text()
                             logger.error(f"Error fetching agents from Letta: {resp.status} - {error_content}")
@@ -72,9 +72,17 @@ class Pipe:
             logger.error(f"Unexpected error when fetching agents: {e}", exc_info=True)
             return []
 
+    def valid_agents(self, agents):
+        """Filter the agents to remove invalid backend agents"""
+
+        all_agents = [self.parse_agent(agent) for agent in agents]
+        # Filter out agents with names ending in "sleeptime"
+        filtered_agents = [agent for agent in all_agents if not agent["name"].endswith("sleeptime")]
+        return filtered_agents
+
     @staticmethod
     def parse_agent(agent):
-        logger.debug(f"Parsing agent: {json.dumps(agent, indent=2)}")
+        # logger.debug(f"Parsing agent: {json.dumps(agent, indent=2)}")
         agent_id = agent["id"]
         agent_name = agent["name"]
         return {"id": agent_id, "name": agent_name}
