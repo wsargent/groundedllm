@@ -535,8 +535,9 @@ class ZoteroContentResolver:
             return True
 
         if any(domain in url for domain in ACADEMIC_DOMAINS):
-            matching_item = self._find_matching_item(url)
-            return matching_item is not None
+            matching_item = self.db.search_json_by_url_sqlite(url)
+            if matching_item and len(matching_item) > 0:
+                return True
 
         return False
 
