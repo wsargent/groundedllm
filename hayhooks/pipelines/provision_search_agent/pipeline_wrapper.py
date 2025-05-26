@@ -109,15 +109,20 @@ class PipelineWrapper(BasePipelineWrapper):
         """
         # Run the pipeline providing inputs for components that need them at runtime
         # agent_id is passed internally via connections
-        requested_tools = ["search", "extract", "excerpt", "zotero_search", "search_by_error"]
-        create_agent_args = {
-            "agent_name": agent_name,
-            "chat_model": chat_model,
-            "embedding_model": embedding_model,
-            "human_block": "",
-            "persona_block": self._read_persona_block_content(),
-            "requested_tools": requested_tools,
-        }
+        script_tools = [
+            "search",  # query the search engines
+            "extract",  # get full text of document
+            "excerpt",  # call LLM to query document
+            "zotero_search",  # calls sqlite db synced to zotero
+            "search_by_error",  # query stack exchange api
+        ]
+
+        mcp_tools = [
+            "get-library-docs",  # context7 query docs
+            "resolve-library-id",  # context7 query id
+        ]
+
+        create_agent_args = {"agent_name": agent_name, "chat_model": chat_model, "embedding_model": embedding_model, "human_block": "", "persona_block": self._read_persona_block_content(), "script_tools": script_tools, "mcp_tools": mcp_tools}
 
         create_open_webui_function_args = {
             "function_id": "letta_pipe",

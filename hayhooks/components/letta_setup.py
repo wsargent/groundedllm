@@ -35,7 +35,8 @@ class LettaCreateAgent:
         embedding_model: str,
         human_block: str,
         persona_block: str,
-        requested_tools: List[str],
+        script_tools: List[str],
+        mcp_tools: List[str],
     ) -> Dict[str, any]:
         """Finds an existing Letta agent by name or creates a new one with specified tools.
 
@@ -82,7 +83,7 @@ class LettaCreateAgent:
             # --- Agent Creation (if needed) ---
             if found_agent_id is None:
                 logger.info(f"Agent '{agent_name}' not found, creating agent with prepared tools...")
-                agent_id = self._create_agent(agent_name=agent_name, human_block_content=human_block, persona_block_content=persona_block, letta_embedding=embedding_model, letta_model=chat_model, requested_tools=requested_tools)
+                agent_id = self._create_agent(agent_name=agent_name, human_block_content=human_block, persona_block_content=persona_block, letta_embedding=embedding_model, letta_model=chat_model, script_tools=script_tools, mcp_tools=mcp_tools)
                 logger.info(f"Created new agent '{agent_name}' with ID: {agent_id}")
             else:
                 agent_id = found_agent_id
@@ -99,7 +100,7 @@ class LettaCreateAgent:
             # For now, re-raise to indicate failure.
             raise RuntimeError(f"Failed Letta agent setup for '{agent_name}'") from e
 
-    def _create_agent(self, agent_name: str, human_block_content: str, persona_block_content: str, letta_model: str, letta_embedding: str, requested_tools: List[str]) -> str:
+    def _create_agent(self, agent_name: str, human_block_content: str, persona_block_content: str, letta_model: str, letta_embedding: str, script_tools: List[str], mcp_tools: List[str]) -> str:
         """Creates a new Letta agent with the specified configuration and tools.
 
         Args:
@@ -114,8 +115,10 @@ class LettaCreateAgent:
             The identifier for the chat model.
         letta_embedding:
             The identifier for the embedding model.
-        requested_tools:
-            The requested tools to attach to the agent upon creation.
+        script_tools:
+            The script tools to attach to the agent upon creation.
+        mcp_tools:
+            THe MCP tools to attach to the agent upon creation.
 
         Returns:
         -------
@@ -144,7 +147,13 @@ class LettaCreateAgent:
                 ),
             ]
 
-            tool_ids = self._find_tools_id(requested_tools)
+            # hardcode the mcp server name for now
+            mcp_server_name = "context7"
+
+            script_tool_ids = self._find_tools_id(script_tools)
+            mcp_tool_ids = self._add_mcp_tools(mcp_server_name=mcp_server_name, mcp_tool_names=mcp_tools)
+
+            tool_ids: list[str] = [*script_tool_ids, *mcp_tool_ids]
             available_llms: List[LlmConfig] = self.client.models.list()
             available_model_names = {llm.handle for llm in available_llms}
 
@@ -214,12 +223,37 @@ class LettaCreateAgent:
         tool_list = self.client.tools.list(name=name, limit=1)
         return tool_list[0] if tool_list else None
 
-    def _find_tools_id(self, requested_tools: List[str]) -> List[str]:
+    def _find_tools_id(self, script_tools: List[str]) -> List[str]:
         found_tools = []
-        for tool_name in requested_tools:
+        for tool_name in script_tools:
             tool = self._get_tool(tool_name)
             if tool is not None:
                 found_tools.append(tool.id)
             else:
                 logger.warning(f"Could not find tool '{tool_name}'")
         return found_tools
+
+    def _add_mcp_tools(self, mcp_server_name: str, mcp_tool_names: list[str]) -> list[str]:
+        found_tools = []
+        existing_tools = self.client.tools.list()
+        for tool_name in mcp_tool_names:
+            tool = None
+            for existing_tool in existing_tools:
+                if existing_tool.name == tool_name:
+                    logger.warning(f"Found exisiting tool '{tool_name}' with ID: {existing_tool.id} ")
+                    tool = existing_tool
+                    break
+
+            if tool is None:
+                tool = self._add_mcp_tool(mcp_server_name, tool_name)
+
+            if tool is not None:
+                found_tools.append(tool.id)
+            else:
+                logger.warning(f"Could not find or add tool '{tool_name}'")
+
+        return found_tools
+
+    def _add_mcp_tool(self, mcp_server_name: str, tool_name: str) -> Tool:
+        mcp_tool = self.client.tools.add_mcp_tool(mcp_server_name=mcp_server_name, mcp_tool_name=tool_name)
+        return mcp_tool
