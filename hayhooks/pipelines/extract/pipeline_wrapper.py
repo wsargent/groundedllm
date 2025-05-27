@@ -54,7 +54,8 @@ class PipelineWrapper(BasePipelineWrapper):
         """Extract pages from URL.
 
         This tool will fetch HTML, Markdown, PDF, or plain text web pages from URLs.
-        and returns the content as JSON. It cannot handle audio, video, or binary content.
+        and returns the content as Markdown. If given a youtube URL, it will return
+        the transcript.
 
         Parameters
         ----------

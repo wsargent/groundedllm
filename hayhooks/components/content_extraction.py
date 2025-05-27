@@ -18,6 +18,7 @@ from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
 
 from components.stackoverflow import StackOverflowContentResolver
+from components.youtube_transcript import YouTubeTranscriptResolver
 from components.zotero import ZoteroContentResolver
 
 
@@ -504,11 +505,17 @@ def build_content_extraction_component(
         jina_retry_attempts=2,
     )
 
+    # Create YouTube transcript resolver
+    youtube_resolver = YouTubeTranscriptResolver(
+        raise_on_failure=raise_on_failure,
+    )
+
     # Create router with all resolvers (generic resolver must be last)
     url_router = URLContentRouter(
         resolvers=[
             stackoverflow_resolver,
             zotero_resolver,
+            youtube_resolver,
             generic_resolver,  # Must be last
         ]
     )
