@@ -140,7 +140,8 @@ class PipelineWrapper(BasePipelineWrapper):
 
         This tool will fetch HTML, Markdown, PDF, or plain text web pages from URLs.
         and sends them to an LLM model that can answer questions about the content of the
-        web pages. It cannot handle audio, video, or binary content.
+        web pages. If given a URL to a youtube video, it will use the transcript as input
+        to the LLM.
 
         Parameters
         ----------
