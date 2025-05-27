@@ -159,6 +159,8 @@ class LettaChatGenerator:
             if no_heartbeat_requested:
                 self.send_end_think = True
                 call_statement = call_statement + " *without heartbeat*"
+            else:
+                self.send_end_think = False
 
             if self._debug_tooL_statements():
                 call_statement = call_statement + " with arguments: " + arguments
@@ -170,10 +172,6 @@ class LettaChatGenerator:
             now = datetime.now()
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
             content = f" {tool_return_message.status}, returned {len(tool_return_message.tool_return)} characters."
-            if self.send_end_think:
-                content = content + "</think>[No request heartbeat, you must prompt the agent to reply.]"
-                self.send_end_think = False
-
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, AssistantMessage):
             now = datetime.now()
