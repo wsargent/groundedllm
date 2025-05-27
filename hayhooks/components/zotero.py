@@ -412,17 +412,16 @@ class ZoteroContentResolver:
         try:
             self.library_id = library_id.resolve_value()
             self.api_key = api_key.resolve_value()
-            self.is_enabled = self.library_id is not None and self.api_key is not None
-
-            if self.is_enabled:
-                self.zotero_client = zotero.Zotero(self.library_id, library_type, self.api_key)
-                # Sync Zotero data to the local database
-                self.db.sync_zotero_to_json_sqlite(self.zotero_client)
-            else:
-                logger.info("No ZOTERO_LIBRARY_ID or ZOTERO_API_KEY provided. ZoteroContentResolver is disabled.")
-        except Exception as e:
-            logger.error(f"Failed to initialize Zotero client: {str(e)}")
+            self.is_enabled = True
+        except Exception:
             self.is_enabled = False
+
+        if self.is_enabled:
+            self.zotero_client = zotero.Zotero(self.library_id, library_type, self.api_key)
+            # Sync Zotero data to the local database
+            self.db.sync_zotero_to_json_sqlite(self.zotero_client)
+        else:
+            logger.info("No ZOTERO_LIBRARY_ID or ZOTERO_API_KEY provided. ZoteroContentResolver is disabled.")
 
     def _find_matching_item(self, url: str) -> Optional[dict]:
         """Find a matching Zotero item for the given URL.
