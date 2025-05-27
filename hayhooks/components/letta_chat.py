@@ -45,6 +45,7 @@ class LettaChatGenerator:
         self.agent_id = agent_id
         self.base_url = base_url
         self.token = token
+        self.no_heartbeat = False
         self.generation_kwargs = generation_kwargs
         self.streaming_callback = streaming_callback
 
@@ -125,6 +126,12 @@ class LettaChatGenerator:
         )
         return complete_response
 
+    def _debug_tooL_statements(self) -> bool:
+        """
+        Returns True if the environment variable DEBUG_TOOL_STATEMENTS is set to True.
+        """
+        return os.getenv("LETTA_CHAT_DEBUG_TOOL_STATEMENTS", "False").lower() == "true"
+
     def _process_streaming_chunk(self, chunk: LettaStreamingResponse) -> Optional[StreamingChunk]:
         """
         Process a streaming chunk based on its type and invoke the streaming callback.
@@ -143,19 +150,40 @@ class LettaChatGenerator:
             now = datetime.now()
             display_time = now.astimezone().time().isoformat("seconds")
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
-            content = f"\n- {display_time} Calling tool {tool_call_message.tool_call.name}..."
+            tool_name = tool_call_message.tool_call.name
+            call_statement = f"Calling tool {tool_name}"
+            arguments: str = tool_call_message.tool_call.arguments
+            no_heartbeat = """"request_heartbeat": false""" in arguments
+            if no_heartbeat:
+                call_statement = call_statement + " *without heartbeat*"
+                self.no_heartbeat = no_heartbeat
+            if self._debug_tooL_statements():
+                call_statement = call_statement + " with arguments: " + arguments
+
+            content = f"\n- {display_time} {call_statement}..."
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, ToolReturnMessage):
             tool_return_message: ToolReturnMessage = chunk
             now = datetime.now()
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
             content = f" {tool_return_message.status}, returned {len(tool_return_message.tool_return)} characters."
+            if self.no_heartbeat:
+                content = content + "</think>[No request heartbeat, you must prompt the agent to reply.]"
+                self.no_heartbeat = False
+
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, AssistantMessage):
             now = datetime.now()
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            content = ""
+            if self.no_heartbeat:
+                content = "</think>"
+                self.no_heartbeat = False
+
+            content = content + chunk.content
+
             # Assistant message is the last chunk so we need to close the <think> tag
-            return StreamingChunk(content=f"</think>{chunk.content}", meta=meta_dict)
+            return StreamingChunk(content=content, meta=meta_dict)
         else:
             logger.debug(f"Ignoring streaming chunk type: {type(chunk)}")
             return None
