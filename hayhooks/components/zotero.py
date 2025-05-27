@@ -7,8 +7,8 @@ from typing import List, Optional
 
 from hayhooks import log as logger
 from haystack import component
-from haystack.dataclasses import ByteStream
-from haystack.utils import Secret
+from haystack.dataclasses.byte_stream import ByteStream
+from haystack.utils.auth import Secret
 from pyzotero import zotero
 
 # Check if the URL is from an academic site
@@ -199,7 +199,12 @@ class ZoteroDatabase:
 
     def search_json_by_doi_sqlite(self, target_doi: str) -> List[dict]:
         try:
-            return self.search_json_by_jsonpath({"DOI": target_doi})
+            query = [
+                {"DOI": target_doi},
+                {"itemType": {"$ne": "attachment"}},  # Ensures 'data.itemType' is not 'attachment'
+                {"parentItem": {"$exists": False}},  # Ensures 'data.parentItem' is null (i.e., top-level)
+            ]
+            return self.find_items_by_mongo_query(query)
         except Exception as e:
             logger.error(f"Failed to search SQLite database by DOI: {str(e)}")
             if self.raise_on_failure:
@@ -208,24 +213,39 @@ class ZoteroDatabase:
 
     def search_json_by_url_sqlite(self, target_url: str) -> List[dict]:
         try:
-            return self.search_json_by_jsonpath({"url": target_url})
+            query = [
+                {"url": target_url},
+                {"itemType": {"$ne": "attachment"}},  # Ensures 'data.itemType' is not 'attachment'
+                {"parentItem": {"$exists": False}},  # Ensures 'data.parentItem' is null (i.e., top-level)
+            ]
+            return self.find_items_by_mongo_query(query)
         except Exception as e:
             logger.error(f"Failed to search SQLite database by URL: {str(e)}")
             if self.raise_on_failure:
                 raise e
             return []
 
-    def search_json_by_jsonpath(self, query: dict | List[dict]) -> List[dict]:
+    def find_items_by_mongo_query(self, query: dict | List[dict]) -> List[dict]:
         """Search the SQLite database for items matching one or more MongoDB-style query objects.
 
-        The query objects should be in MongoDB-style format, where keys are field paths and values are the values to match.
-        If a list of query objects is provided, they are logically ANDed together (all must match).
+        The query objects should be in MongoDB-style format.
+        - Keys are field paths (e.g., "title", "creators.lastName"). These paths are relative to the 'data' object within the stored Zotero item.
+        - Values can be:
+            - A primitive (string, number, boolean) for an exact match.
+            - A dictionary specifying an operator:
+                - {"$ne": value} for "not equals".
+                - {"$exists": True} for checking if a field exists and is not null (IS NOT NULL).
+                - {"$exists": False} for checking if a field does not exist or is null (IS NULL).
+
+        If a list of query objects is provided, they are logically ANDed together (all conditions must match).
 
         Examples:
-            - {"shortTitle": "foo"} matches items where data.shortTitle equals "foo"
-            - {"title": "Example Paper"} matches items where data.title equals "Example Paper"
-            - {"creators.lastName": "Brooker"} matches items where any creator has lastName "Brooker"
-            - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] matches items where both conditions are true
+            - {"title": "Example Paper"}  (data.title equals "Example Paper")
+            - {"itemType": {"$ne": "attachment"}} (data.itemType is not "attachment")
+            - {"url": {"$exists": True}} (data.url exists and is not null)
+            - {"parentItem": {"$exists": False}} (data.parentItem is null or does not exist, typically for top-level items)
+            - {"creators.lastName": "Brooker"} (any creator in data.creators has lastName "Brooker")
+            - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] (matches items where both conditions are true)
 
         Args:
             query: The MongoDB-style query object(s) to search for. Can be a single dict or a list of dicts.
@@ -256,51 +276,79 @@ class ZoteroDatabase:
 
             for q in query_objects:
                 for field, value in q.items():
+                    current_params_for_value = []
+                    sql_operator_expression = ""
+
+                    if isinstance(value, dict):
+                        if "$ne" in value:
+                            sql_operator_expression = "!= ?"
+                            current_params_for_value.append(value["$ne"])
+                        elif "$exists" in value:
+                            if value["$exists"] is True:
+                                sql_operator_expression = "IS NOT NULL"
+                            elif value["$exists"] is False:
+                                sql_operator_expression = "IS NULL"
+                            else:
+                                logger.warning(f"Invalid boolean value for $exists operator on field '{field}': {value['$exists']}. Skipping this condition.")
+                                continue  # Skip this field's condition
+                        else:
+                            logger.warning(
+                                f"Query value for field '{field}' is a dictionary but does not contain a recognized operator: {value}. Interpreting as exact match for its string representation (this is likely not intended and may yield no results)."
+                            )
+                            sql_operator_expression = "= ?"
+                            current_params_for_value.append(str(value))
+                    else:
+                        # Primitive value, so exact match
+                        sql_operator_expression = "= ?"
+                        current_params_for_value.append(value)
+
+                    if not sql_operator_expression:  # Should not happen if logic above is complete
+                        logger.error(f"Could not determine SQL operator for field '{field}' with value '{value}'. Skipping.")
+                        continue
+
                     # Handle array field queries (dot notation for nested fields)
                     if "." in field:
-                        # Extract the array field name and the property to match
                         parts = field.split(".")
-                        array_field = parts[0]
-                        property_name = parts[1]
+                        array_field_name = parts[0]
+                        property_to_match = parts[1]
 
-                        # Ensure the path starts with data.
-                        if not array_field.startswith("data."):
-                            array_field = f"data.{array_field}"
+                        # Ensure the array path starts with data.
+                        if not array_field_name.startswith("data."):
+                            array_field_path = f"data.{array_field_name}"
+                        else:
+                            array_field_path = array_field_name
 
-                        # Create subquery for array field
-                        subquery = f"""
+                        # Note: json_extract path for property_to_match is relative to the elements of the array ('value')
+                        subquery_sql = f"""
                             SELECT item_key FROM zotero_items_json
                             WHERE EXISTS (
                                 SELECT 1
-                                FROM json_each(json_extract(item_data, '$.{array_field}'))
-                                WHERE json_extract(value, '$.{property_name}') LIKE ?
+                                FROM json_each(json_extract(item_data, '$.{array_field_path}'))
+                                WHERE json_extract(value, '$.{property_to_match}') {sql_operator_expression}
                             )
                         """
-                        subqueries.append(subquery)
-                        params.append(value)
+                        subqueries.append(subquery_sql)
+                        params.extend(current_params_for_value)
                     else:
                         # Regular field query
                         # Ensure the path starts with $.data.
-                        path = f"$.data.{field}"
+                        json_path = f"$.data.{field}"
 
-                        # Regular non-array query
-                        subquery = """
-                            SELECT item_key FROM zotero_items_json
-                            WHERE json_extract(item_data, ?) LIKE ?
-                        """
-                        subqueries.append(subquery)
-                        params.append(path)
-                        params.append(value)
+                        subquery_sql = f"SELECT item_key FROM zotero_items_json WHERE json_extract(item_data, ?) {sql_operator_expression}"
+
+                        current_query_params = [json_path] + current_params_for_value
+                        subqueries.append(subquery_sql)
+                        params.extend(current_query_params)
 
             # Connect to the database
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()
 
             # Build the final query using INTERSECT to combine all subqueries
-            query = " INTERSECT ".join(subqueries)
+            final_sql_query = " INTERSECT ".join(subqueries)
 
             # Get the matching item keys
-            cursor.execute(query, params)
+            cursor.execute(final_sql_query, params)
             item_keys = [row[0] for row in cursor.fetchall()]
 
             if not item_keys:
@@ -339,7 +387,7 @@ class ZoteroContentResolver:
         self,
         library_id: Secret = Secret.from_env_var("ZOTERO_LIBRARY_ID"),
         api_key: Secret = Secret.from_env_var("ZOTERO_API_KEY"),
-        db_file: str = os.getenv("ZOTERO_DB_FILE"),
+        db_file: str = os.getenv("ZOTERO_DB_FILE") or ZoteroDatabase.DEFAULT_DB_FILE,
         library_type: str = "user",  # 'user' or 'group'
         timeout: int = 10,
         raise_on_failure: bool = False,
@@ -420,23 +468,37 @@ class ZoteroContentResolver:
         title = parent_item.get("data", {}).get("title", "")
 
         try:
-            child_items = self.zotero_client.children(parent_item_key)
+            child_items = self.zotero_client.children(parent_item_key, itemType="attachment")
 
             # If no child items found, log and return
             if not child_items:
-                logger.warning(f"No child items found for Zotero item with URL {url}, skipping")
+                logger.warning(f"No child items found for Zotero item {parent_item_key} with URL {url}, skipping")
                 return False
 
             # Find attachment items
             attachment_found = False
 
             for child in child_items:
-                # Check if the child is an attachment
-                if child["data"]["itemType"] == "attachment":
-                    filename = child["data"].get("filename")
-                    child_item_key = child["key"]
+                if not isinstance(child, dict):
+                    logger.warning(f"Unexpected item type in child_items: {type(child)}. Expected dict. Skipping item: {child}")
+                    continue
 
-                    logger.info("Found attachment item: " + filename + " (" + child_item_key + ")")
+                child_data = child.get("data", {})
+                if not isinstance(child_data, dict):  # child.get might return non-dict if data is malformed
+                    logger.warning(f"Child item 'data' field is not a dictionary. Skipping item: {child}")
+                    continue
+
+                # Check if the child is an attachment
+                if child_data.get("itemType") == "attachment":
+                    filename = child_data.get("filename")
+                    child_item_key = child.get("key")
+
+                    if not child_item_key:  # Should always have a key, but good to check
+                        logger.warning(f"Attachment item found without a key, skipping: {child_data}")
+                        continue
+
+                    log_filename = filename if filename else "Unknown Filename"
+                    logger.info(f"Found attachment item: {log_filename} ({child_item_key})")
 
                     # Skip if no filename
                     if not filename:
@@ -453,17 +515,34 @@ class ZoteroContentResolver:
                     attachment_found = True
 
                     # Get the file contents using the child item key
-                    file_contents = self.zotero_client.file(child_item_key)
+                    file_contents_str = self.zotero_client.file(child_item_key)
+
+                    # Ensure file_contents_str is not None before encoding
+                    if file_contents_str is None:
+                        logger.warning(f"Received None for file contents of attachment {child_item_key} ({filename}). Skipping.")
+                        continue
+
+                    try:
+                        file_contents_bytes = file_contents_str.encode("utf-8")
+                    except AttributeError:
+                        # If file_contents_str is already bytes (less likely for zotero.file but good to handle)
+                        if isinstance(file_contents_str, bytes):
+                            file_contents_bytes = file_contents_str
+                        else:
+                            logger.error(f"Could not encode file contents for attachment {child_item_key} ({filename}). Type: {type(file_contents_str)}. Skipping.")
+                            continue
 
                     # Determine MIME type from filename
-                    mime_type = "application/pdf"  # Default fallback
+                    mime_type = "application/octet-stream"  # Default fallback
                     if filename:
                         guessed_type, _ = mimetypes.guess_type(filename)
                         if guessed_type:
                             mime_type = guessed_type
+                        elif filename.lower().endswith(".pdf"):  # Common case if guess_type fails
+                            mime_type = "application/pdf"
 
                     # Create ByteStream
-                    stream = ByteStream(data=file_contents)
+                    stream = ByteStream(data=file_contents_bytes)
                     stream.meta = {"url": url, "filename": filename, "title": title, "source": "zotero"}
                     stream.mime_type = mime_type
 
@@ -535,7 +614,7 @@ class ZoteroContentResolver:
             return True
 
         if any(domain in url for domain in ACADEMIC_DOMAINS):
-            matching_item = self.db.search_json_by_url_sqlite(url)
+            matching_item = self._find_matching_item(url)
             if matching_item and len(matching_item) > 0:
                 return True
 
