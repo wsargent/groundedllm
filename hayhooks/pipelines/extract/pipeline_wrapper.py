@@ -80,4 +80,5 @@ class PipelineWrapper(BasePipelineWrapper):
 
             return content
         except Exception as e:
-            return f"Error: {e}"
+            log.error(f"Error extracting content from {url}", exc_info=e)
+            return f"Error: {str(e)}"

@@ -27,10 +27,10 @@ And then start up LiteLLM as Hayhooks will use it:
 docker compose -f '../docker-compose.yml' up -d 'litellm'
 ```
 
-Copy your `env.example` to `.env` to set up the environment variables, and then start the hayhooks server:
+Copy your `env.example` to `.env` in the root directory to set up the environment variables, and then start the hayhooks server:
 
 ```bash
-# cp env.example .env 
+source ../.env
 LOG=DEBUG python app.py
 ```
 
@@ -106,6 +106,13 @@ hayhooks pipeline run extract \
 ```
 
 You can configure the path to the SQLite database file by setting the `ZOTERO_DB_FILE` environment variable in your `.env` file. By default, it uses `zotero_json_cache.db` in the current directory.
+
+If you have the Notion integration set up, you can extract Notion content directly from the URL:
+
+```bash
+hayhooks pipeline run extract \                                                                            
+  --param 'url=https://www.notion.so/AI-Work-Log-1ff20f5b9bec8000a169e6a29bae0b42'
+```
 
 ### Analyze Stack Trace
 

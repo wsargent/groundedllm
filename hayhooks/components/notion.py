@@ -69,6 +69,8 @@ class NotionContentResolver:
             stream = ByteStream(data=doc.content.encode("utf-8"))
             # Add metadata from document
             stream.meta.update(doc.meta)
+            stream.meta["content_type"] = "text/markdown"
+            stream.mime_type = "text/markdown"
             streams.append(stream)
 
         return streams
@@ -82,7 +84,17 @@ class NotionContentResolver:
             return {"streams": []}
 
         page_ids = self._extract_page_ids(urls)
+        # logger.debug(f"Extracted page IDs: {page_ids}")
         documents = self.exporter.run(page_ids=page_ids)
+        # logger.debug(f"Extracted documents: {documents}")
         successful_streams = self._convert_to_streams(documents)
+        # logger.debug(f"Extracted successful_streams: {successful_streams}")
 
         return {"streams": successful_streams}
+
+    def can_handle(self, url: str) -> bool:
+        if self.exporter is None:
+            return False
+
+        page_ids = self._extract_page_ids([url])
+        return len(page_ids) == 1
