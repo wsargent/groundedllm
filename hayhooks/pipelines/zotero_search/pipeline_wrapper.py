@@ -49,7 +49,7 @@ class PipelineWrapper(BasePipelineWrapper):
             Use the excerpt tool with several items URLs to ask an LLM a question about the items.
         """
         try:
-            results = self.zotero_db.search_json_by_jsonpath(query)
+            results = self.zotero_db.find_items_by_mongo_query(query)
             logger.info(f"Found {len(results)} results for query: {query}")
             return json.dumps(results, indent=2)
         except Exception as e:
