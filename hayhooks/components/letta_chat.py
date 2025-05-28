@@ -45,6 +45,7 @@ class LettaChatGenerator:
         self.agent_id = agent_id
         self.base_url = base_url
         self.token = token
+        self.send_end_think = False
         self.generation_kwargs = generation_kwargs
         self.streaming_callback = streaming_callback
 
@@ -125,12 +126,19 @@ class LettaChatGenerator:
         )
         return complete_response
 
+    def _debug_tooL_statements(self) -> bool:
+        """
+        Returns True if the environment variable DEBUG_TOOL_STATEMENTS is set to True.
+        """
+        return os.getenv("LETTA_CHAT_DEBUG_TOOL_STATEMENTS", "False").lower() == "true"
+
     def _process_streaming_chunk(self, chunk: LettaStreamingResponse) -> Optional[StreamingChunk]:
         """
         Process a streaming chunk based on its type and invoke the streaming callback.
         """
         logger.debug(f"Processing streaming chunk: {chunk}")
         if isinstance(chunk, ReasoningMessage):
+            self.send_end_think = True
             reasoning_chunk: ReasoningMessage = chunk
             now = datetime.now()
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
@@ -139,11 +147,25 @@ class LettaChatGenerator:
             content = f"\n- {display_time} {reasoning}"
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, ToolCallMessage):
+            self.send_end_think = False
             tool_call_message: ToolCallMessage = chunk
             now = datetime.now()
             display_time = now.astimezone().time().isoformat("seconds")
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
-            content = f"\n- {display_time} Calling tool {tool_call_message.tool_call.name}..."
+            tool_name = tool_call_message.tool_call.name
+            call_statement = f"Calling tool {tool_name}"
+            arguments: str = tool_call_message.tool_call.arguments
+            no_heartbeat_requested = """"request_heartbeat": false""" in arguments
+            if no_heartbeat_requested:
+                self.send_end_think = True
+                call_statement = call_statement + " *without heartbeat*"
+            else:
+                self.send_end_think = False
+
+            if self._debug_tooL_statements():
+                call_statement = call_statement + " with arguments: " + arguments
+
+            content = f"\n- {display_time} {call_statement}..."
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, ToolReturnMessage):
             tool_return_message: ToolReturnMessage = chunk
@@ -154,8 +176,16 @@ class LettaChatGenerator:
         if isinstance(chunk, AssistantMessage):
             now = datetime.now()
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            content = ""
+            if self.send_end_think:
+                content = "</think>"
+
+            self.send_end_think = False  # always set this after think
+
+            content = content + chunk.content
+
             # Assistant message is the last chunk so we need to close the <think> tag
-            return StreamingChunk(content=f"</think>{chunk.content}", meta=meta_dict)
+            return StreamingChunk(content=content, meta=meta_dict)
         else:
             logger.debug(f"Ignoring streaming chunk type: {type(chunk)}")
             return None

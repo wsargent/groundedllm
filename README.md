@@ -99,13 +99,13 @@ To configure the API keys, start by creating an `.env` file from the `env.exampl
 
 ```
 cp env.example .env
-# edit .env file with your own API keys
+# edit .env file with your own API keys and change LETTA_CHAT_MODEL if you want Anthropic
 ```
 
 To start the services, run the following:
 
 ```bash
-docker compose up
+docker compose up --build
 ```
 
 You will see a bunch of text in the logs, but the important bit is this line:
