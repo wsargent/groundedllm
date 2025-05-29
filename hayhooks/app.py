@@ -6,7 +6,7 @@ from typing import Generator, List, Union
 import uvicorn
 from fastapi import HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from fastapi.routing import APIRoute
 from hayhooks import BasePipelineWrapper, create_app, log
 from hayhooks.server.pipelines import registry
@@ -21,6 +21,8 @@ from haystack import tracing
 from haystack.lazy_imports import LazyImport
 from haystack.tracing.logging_tracer import LoggingTracer
 from letta_client import Letta
+
+from components.google_oauth import GoogleOAuth
 
 with LazyImport("Run 'pip install \"mcp\"' to install MCP.") as mcp_import:
     from mcp.server import Server
@@ -248,6 +250,93 @@ async def handle_sse(request: Request) -> Response:
 hayhooks.add_route("/sse", handle_sse)
 hayhooks.mount("/messages", mcp_sse.handle_post_message)
 # --- End MCP Server Integration ---
+
+# --- Google OAuth2 Integration ---
+# Initialize the Google OAuth handler
+google_oauth = GoogleOAuth(
+    client_secrets_file=os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json"), base_url=os.getenv("HAYHOOKS_BASE_URL", f"http://{settings.host}:{settings.port}"), token_storage_path=os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens")
+)
+
+
+@hayhooks.get("/google-auth-initiate")
+async def google_auth_initiate(user_id: str = "default_user"):
+    """
+    Initiates the Google OAuth2 flow.
+    Returns the authorization URL that the user should visit to grant permissions.
+    """
+    try:
+        authorization_url, state = google_oauth.create_authorization_url(user_id)
+        return {"authorization_url": authorization_url, "state": state}
+    except Exception as e:
+        log.error(f"Error initiating Google OAuth: {e}")
+        raise HTTPException(status_code=500, detail=f"Error initiating Google OAuth: {e}")
+
+
+@hayhooks.get("/google-auth-callback")
+async def google_auth_callback(request: Request):
+    """
+    Handles the callback from Google after user authorization.
+    """
+    try:
+        # Get the full URL including query parameters
+        authorization_response = str(request.url)
+        state = request.query_params.get("state")
+
+        if not state:
+            raise HTTPException(status_code=400, detail="Missing state parameter")
+
+        google_oauth.handle_callback(authorization_response, state)
+
+        # Return a success HTML page
+        return HTMLResponse(
+            content="""
+            <html>
+                <body>
+                    <h1>Google Authorization Successful!</h1>
+                    <p>You can now close this window and return to your chat.</p>
+                    <script>
+                        // Close the window after 5 seconds
+                        setTimeout(function() {
+                            window.close();
+                        }, 5000);
+                    </script>
+                </body>
+            </html>
+        """
+        )
+    except HTTPException as he:
+        # Re-raise HTTP exceptions
+        raise he
+    except Exception as e:
+        log.error(f"Error in Google OAuth callback: {e}")
+        return HTMLResponse(
+            content=f"""
+            <html>
+                <body>
+                    <h1>Google Authorization Failed!</h1>
+                    <p>An error occurred: {e}</p>
+                    <p>Please close this window and try again.</p>
+                </body>
+            </html>
+        """,
+            status_code=500,
+        )
+
+
+@hayhooks.get("/check-google-auth")
+async def check_google_auth(user_id: str = "default_user"):
+    """
+    Checks if a user is authenticated with Google.
+    """
+    try:
+        status = google_oauth.check_auth_status(user_id)
+        return status
+    except Exception as e:
+        log.error(f"Error checking Google auth status: {e}")
+        raise HTTPException(status_code=500, detail=f"Error checking Google auth status: {e}")
+
+
+# --- End Google OAuth2 Integration ---
 
 if __name__ == "__main__":
     # Run the combined Hayhooks + MCP server

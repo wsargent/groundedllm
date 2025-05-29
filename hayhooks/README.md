@@ -145,3 +145,63 @@ hayhooks pipeline run provision_search_agent \
     --param 'chat_model=anthropic/claude-3-7-sonnet-20250219" \
     --param 'embedding_model=letta/letta-free'
 ```
+
+## Google OAuth2 Integration
+
+Hayhooks includes a Google OAuth2 integration that allows your AI agents to access Google services like Gmail and Calendar on behalf of users. This follows the standard OAuth2 authorization flow:
+
+1. The AI agent detects a need for Google API access
+2. The agent directs the user to authorize access via a Google consent screen
+3. After authorization, the agent can access the requested Google services
+
+### Setup
+
+1. Create a Google Cloud Project and OAuth 2.0 credentials:
+   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Navigate to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth client ID"
+   - Select "Web application" as the application type
+   - Add your Hayhooks server URL to the "Authorized JavaScript origins"
+   - Add `http://your-hayhooks-server.com/google-auth-callback` to the "Authorized redirect URIs"
+   - Download the client secrets JSON file
+
+2. Configure environment variables in your `.env` file:
+   ```
+   GOOGLE_CLIENT_SECRETS_FILE=/path/to/your/client_secret.json
+   HAYHOOKS_BASE_URL=http://your-hayhooks-server.com
+   GOOGLE_TOKEN_STORAGE_PATH=/path/to/store/tokens
+   ```
+
+### API Endpoints
+
+The Google OAuth2 integration provides the following endpoints:
+
+- **GET /google-auth-initiate**: Initiates the OAuth2 flow and returns the authorization URL
+  - Query parameter: `user_id` (optional, defaults to "default_user")
+  - Response: JSON with `authorization_url` and `state`
+
+- **GET /google-auth-callback**: Handles the callback from Google after user authorization
+  - This endpoint is called by Google after the user grants or denies consent
+  - It stores the access and refresh tokens for the user
+
+- **GET /check-google-auth**: Checks if a user is authenticated
+  - Query parameter: `user_id` (optional, defaults to "default_user")
+  - Response: JSON with `authenticated` (boolean) and `user_id`
+
+### Usage in AI Agents
+
+When your AI agent needs to access Google services, it should:
+
+1. Check if the user is authenticated using the `/check-google-auth` endpoint
+2. If not authenticated, get the authorization URL from `/google-auth-initiate` and present it to the user
+3. After the user completes authorization, the agent can proceed with the original request
+
+Example flow in an AI agent:
+```
+User: "Check my calendar for tomorrow"
+Agent: [Checks authentication status]
+Agent: "I need access to your Google Calendar to check your schedule. Please click this link to authorize access: [authorization URL]"
+User: [Clicks link, grants permission, and returns to chat]
+Agent: "Thanks! Now I can access your calendar. Let me check your schedule for tomorrow..."
+```
