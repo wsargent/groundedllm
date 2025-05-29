@@ -17,6 +17,7 @@ from haystack.components.routers import FileTypeRouter
 from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
 
+from components.notion import NotionContentResolver
 from components.stackoverflow import StackOverflowContentResolver
 from components.youtube_transcript import YouTubeTranscriptResolver
 from components.zotero import ZoteroContentResolver
@@ -510,12 +511,15 @@ def build_content_extraction_component(
         raise_on_failure=raise_on_failure,
     )
 
+    notion_resolver = NotionContentResolver(raise_on_failure=raise_on_failure)
+
     # Create router with all resolvers (generic resolver must be last)
     url_router = URLContentRouter(
         resolvers=[
             stackoverflow_resolver,
             zotero_resolver,
             youtube_resolver,
+            notion_resolver,
             generic_resolver,  # Must be last
         ]
     )
