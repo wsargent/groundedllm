@@ -10,6 +10,8 @@ Also see [hayhooks-open-webui-docker-compose](https://github.com/deepset-ai/hayh
 
 In addition to running as part of the docker compose stack, you can run hayhooks out of the box for development purposes.
 
+### Running FastAPI backend
+
 This project uses [uv](https://docs.astral.sh/uv/).  It requires Python 3.12.
 
 First, set up your uv environment with development dependencies (be aware that `uv sync` does not include dev tools):
@@ -35,6 +37,29 @@ LOG=DEBUG python app.py
 ```
 
 You can see the OpenAPI routes at http://localhost:1416/docs to see what pipelines are available.
+
+### Running HTTPS Front End
+
+To use Google OAuth, you must have HTTPS installed.  The easiest way to do this is to use mkcert and caddy as a frontend.
+
+```
+brew install mkcert caddy
+```
+
+And then make your own local certificates:
+
+```
+mkcert -install
+mkcert localhost 127.0.0.1
+```
+
+And then use the local `Caddyfile`:
+
+```
+caddy run
+```
+
+This will start up a server at `https://localhost` which is the HAYHOOKS_BASE_URL.
 
 ## Pipelines
 
@@ -169,7 +194,7 @@ Hayhooks includes a Google OAuth2 integration that allows your AI agents to acce
 2. Configure environment variables in your `.env` file:
    ```
    GOOGLE_CLIENT_SECRETS_FILE=/path/to/your/client_secret.json
-   HAYHOOKS_BASE_URL=http://your-hayhooks-server.com
+   HAYHOOKS_BASE_URL=https://localhost
    GOOGLE_TOKEN_STORAGE_PATH=/path/to/store/tokens
    ```
 

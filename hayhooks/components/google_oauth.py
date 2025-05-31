@@ -1,26 +1,26 @@
 import json
 import os
-from typing import Dict, Optional, Tuple
+import uuid  # Added import
+from typing import Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
 from google.auth.transport.requests import Request as GoogleRequest
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from hayhooks import log as logger
-from haystack import component
 
 
 class GoogleOAuth:
     """
-    Component for handling Google OAuth2 authentication flow.
+    Handles Google OAuth2 authentication flow.
     """
 
     def __init__(
         self,
-        client_secrets_file: str = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json"),
-        base_url: str = os.getenv("HAYHOOKS_BASE_URL", "http://localhost:8000"),
-        token_storage_path: str = os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens"),
-        scopes: list = None,
+        client_secrets_file: str,
+        base_url: str,
+        token_storage_path: str,
+        scopes: Optional[List[str]] = None,
     ):
         """
         Initialize the Google OAuth component.
@@ -56,12 +56,20 @@ class GoogleOAuth:
         try:
             flow = Flow.from_client_secrets_file(self.client_secrets_file, scopes=self.scopes, redirect_uri=f"{self.base_url}/google-auth-callback")
 
-            authorization_url, state = flow.authorization_url(access_type="offline", include_granted_scopes="true")
+            # Create a base state for CSRF protection part
+            base_csrf_state = uuid.uuid4().hex
 
-            # Store the state and user_id mapping
-            state_with_user = f"{state}|{user_id}"
+            # Combine base CSRF state with user_id
+            composite_state = f"{base_csrf_state}|{user_id}"
 
-            return authorization_url, state_with_user
+            authorization_url, returned_state = flow.authorization_url(
+                access_type="offline",
+                include_granted_scopes="true",
+                state=composite_state,  # Pass the composite state to Google
+            )
+            # returned_state will be equal to composite_state
+
+            return authorization_url, composite_state
         except Exception as e:
             logger.error(f"Error creating authorization URL: {e}")
             raise HTTPException(status_code=500, detail=f"Error creating authorization URL: {e}")
@@ -78,19 +86,38 @@ class GoogleOAuth:
             Dictionary with user_id and success status
         """
         try:
-            # Extract original state and user_id
+            # state (argument to this method) is composite_state from Google callback
             if not state or "|" not in state:
-                raise HTTPException(status_code=400, detail="Invalid state parameter")
+                logger.error(f"Invalid state parameter received: {state}")
+                raise HTTPException(status_code=400, detail="Invalid state parameter: format error")
 
-            original_state, user_id = state.split("|", 1)
+            # Split the composite state to get user_id for application logic
+            # The CSRF part (_csrf_token_from_state) is implicitly verified by the library
+            # when the flow is initialized with the full composite state.
+            try:
+                _csrf_token_from_state, user_id = state.split("|", 1)
+            except ValueError:
+                logger.error(f"Could not split state parameter: {state}")
+                raise HTTPException(status_code=400, detail="Invalid state parameter: split error")
 
-            flow = Flow.from_client_secrets_file(self.client_secrets_file, scopes=self.scopes, redirect_uri=f"{self.base_url}/google-auth-callback", state=original_state)
+            # Initialize the flow with the *exact state string* received from Google.
+            # The library will compare this with the 'state' param in authorization_response.
+            flow = Flow.from_client_secrets_file(
+                self.client_secrets_file,
+                scopes=self.scopes,
+                redirect_uri=f"{self.base_url}/google-auth-callback",
+                state=state,  # Use the full composite state received from Google
+            )
 
             flow.fetch_token(authorization_response=authorization_response)
-            credentials = flow.credentials
+            creds_from_flow = flow.credentials
+
+            if not isinstance(creds_from_flow, Credentials):
+                logger.error(f"Unexpected credentials type from Google OAuth flow: {type(creds_from_flow)}")
+                raise HTTPException(status_code=500, detail="Internal server error: Unexpected credential type from Google.")
 
             # Save the credentials
-            self.save_credentials(user_id, credentials)
+            self.save_credentials(user_id, creds_from_flow)
 
             return {"user_id": user_id, "success": True}
         except Exception as e:
@@ -103,7 +130,7 @@ class GoogleOAuth:
 
         Args:
             user_id: Identifier for the user
-            credentials: Google OAuth credentials
+            credentials: Union[Credentials, ExternalAccountCredentials]
         """
         token_path = os.path.join(self.token_storage_path, f"{user_id}.json")
 
@@ -167,22 +194,20 @@ class GoogleOAuth:
         return {"authenticated": credentials is not None and not credentials.expired, "user_id": user_id}
 
 
-@component
 class GoogleOAuthComponent:
     """
-    Haystack component wrapper for Google OAuth functionality.
+    Wrapper for Google OAuth functionality.
     """
 
     def __init__(
         self,
-        client_secrets_file: str = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json"),
-        base_url: str = os.getenv("HAYHOOKS_BASE_URL", "http://localhost:8000"),
-        token_storage_path: str = os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens"),
-        scopes: list = None,
+        client_secrets_file: str,
+        base_url: str,
+        token_storage_path: str,
+        scopes: Optional[List[str]] = None,
     ):
         self.oauth = GoogleOAuth(client_secrets_file=client_secrets_file, base_url=base_url, token_storage_path=token_storage_path, scopes=scopes)
 
-    @component.output_types(authorization_url=str, state=str)
     def create_authorization_url(self, user_id: str = "default_user"):
         """
         Create a Google OAuth2 authorization URL.
@@ -196,7 +221,6 @@ class GoogleOAuthComponent:
         authorization_url, state = self.oauth.create_authorization_url(user_id)
         return {"authorization_url": authorization_url, "state": state}
 
-    @component.output_types(authenticated=bool, user_id=str)
     def check_auth_status(self, user_id: str = "default_user"):
         """
         Check if a user is authenticated.
@@ -210,7 +234,6 @@ class GoogleOAuthComponent:
         status = self.oauth.check_auth_status(user_id)
         return status
 
-    @component.output_types(credentials=dict)
     def get_credentials(self, user_id: str = "default_user"):
         """
         Get user credentials.

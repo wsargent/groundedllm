@@ -1,6 +1,9 @@
+import os
 from typing import List
 
 import requests
+
+HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL")
 
 
 def excerpt(urls: List[str], question: str) -> str:
@@ -29,7 +32,7 @@ def excerpt(urls: List[str], question: str) -> str:
     """
 
     response = requests.post(
-        "http://hayhooks:1416/excerpt/run",
+        f"{HAYHOOKS_BASE_URL}/excerpt/run",
         json={"urls": urls, "question": question},
     )
     return response.json()["result"]

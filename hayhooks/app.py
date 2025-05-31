@@ -6,8 +6,9 @@ from typing import Generator, List, Union
 import uvicorn
 from fastapi import HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import HTMLResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from fastapi.routing import APIRoute
+from fastapi.staticfiles import StaticFiles
 from hayhooks import BasePipelineWrapper, create_app, log
 from hayhooks.server.pipelines import registry
 from hayhooks.server.routers import openai as openai_module_to_patch
@@ -251,11 +252,18 @@ hayhooks.add_route("/sse", handle_sse)
 hayhooks.mount("/messages", mcp_sse.handle_post_message)
 # --- End MCP Server Integration ---
 
+HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL", "https://localhost")
+
 # --- Google OAuth2 Integration ---
 # Initialize the Google OAuth handler
-google_oauth = GoogleOAuth(
-    client_secrets_file=os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json"), base_url=os.getenv("HAYHOOKS_BASE_URL", f"http://{settings.host}:{settings.port}"), token_storage_path=os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens")
-)
+google_oauth = GoogleOAuth(client_secrets_file=os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json"), base_url=HAYHOOKS_BASE_URL, token_storage_path=os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens"))
+
+hayhooks.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@hayhooks.get("/", response_class=HTMLResponse)
+async def test_page():
+    return FileResponse("static/index.html")
 
 
 @hayhooks.get("/google-auth-initiate")
