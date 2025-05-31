@@ -1,4 +1,8 @@
+import os
+
 import requests
+
+HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL")
 
 
 def search(
@@ -47,7 +51,7 @@ def search(
     """
 
     response = requests.post(
-        "http://hayhooks:1416/search/run",
+        f"{HAYHOOKS_BASE_URL}/search/run",
         json={"question": question, "max_results": max_results, "search_depth": search_depth, "time_range": time_range, "include_domains": include_domains, "exclude_domains": exclude_domains},
     )
     return response.json()["result"]

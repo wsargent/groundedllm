@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google OAuth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        .status { margin: 20px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+<h1>Google OAuth Test</h1>
+<button onclick="startAuth()">Start Google Authorization</button>
+<button onclick="checkStatus()">Check Auth Status</button>
+
+<div id="status"></div>
+
+<script>
+    async function startAuth() {
+        try {
+            const response = await fetch('/google-auth-initiate?user_id=test_user');
+            const data = await response.json();
+
+            if (data.authorization_url) {
+                // Store state for later verification
+                localStorage.setItem('oauth_state', data.state);
+                // Redirect to Google
+                window.location.href = data.authorization_url;
+            }
+        } catch (error) {
+            showStatus('Error: ' + error.message, 'error');
+        }
+    }
+
+    async function checkStatus() {
+        try {
+            const response = await fetch('/check-google-auth?user_id=test_user');
+            const data = await response.json();
+
+            if (data.authenticated) {
+                showStatus('✅ User is authenticated!', 'success');
+            } else {
+                showStatus('❌ User is not authenticated', 'error');
+            }
+        } catch (error) {
+            showStatus('Error: ' + error.message, 'error');
+        }
+    }
+
+    function showStatus(message, type) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+
+    // Check for callback parameters on page load
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+
+        if (code && state) {
+            showStatus('✅ Authorization successful! Tokens saved.', 'success');
+            // Clean up URL
+            window.history.replaceState({}, document.title, '/');
+        }
+    };
+</script>
+</body>
+</html>

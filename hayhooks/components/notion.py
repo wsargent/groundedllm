@@ -3,8 +3,9 @@ from typing import Dict, List
 
 from hayhooks import log as logger
 from haystack import component
-from haystack.dataclasses import ByteStream, Document
-from haystack.utils import Secret
+from haystack.dataclasses.byte_stream import ByteStream
+from haystack.dataclasses.document import Document
+from haystack.utils.auth import Secret
 from notion_haystack import NotionExporter
 
 
@@ -65,13 +66,14 @@ class NotionContentResolver:
         streams = []
 
         for doc in documents:
-            # Create ByteStream from document content
-            stream = ByteStream(data=doc.content.encode("utf-8"))
-            # Add metadata from document
-            stream.meta.update(doc.meta)
-            stream.meta["content_type"] = "text/markdown"
-            stream.mime_type = "text/markdown"
-            streams.append(stream)
+            if doc.content:
+                # Create ByteStream from document content
+                stream = ByteStream(data=doc.content.encode("utf-8"))
+                # Add metadata from document
+                stream.meta.update(doc.meta)
+                stream.meta["content_type"] = "text/markdown"
+                stream.mime_type = "text/markdown"
+                streams.append(stream)
 
         return streams
 

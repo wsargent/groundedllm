@@ -1,4 +1,8 @@
+import os
+
 import requests
+
+HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL")
 
 
 def extract(url: str) -> str:
@@ -22,7 +26,7 @@ def extract(url: str) -> str:
     """
 
     response = requests.post(
-        "http://hayhooks:1416/extract/run",
+        f"{HAYHOOKS_BASE_URL}/extract/run",
         json={"url": url},
     )
     response.raise_for_status()

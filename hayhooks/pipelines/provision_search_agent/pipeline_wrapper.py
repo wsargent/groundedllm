@@ -72,7 +72,8 @@ class PipelineWrapper(BasePipelineWrapper):
         """
         # Run the pipeline providing inputs for components that need them at runtime
         # agent_id is passed internally via connections
-        requested_tools = ["search", "extract", "excerpt", "zotero_search", "search_by_error"]
+        requested_tools = ["search", "extract", "excerpt", "zotero_search", "search_by_error", "google_auth"]
+        tool_env_vars = {"HAYHOOKS_BASE_URL": os.getenv("HAYHOOKS_BASE_URL")}
         create_agent_args = {
             "agent_name": agent_name,
             "chat_model": chat_model,
@@ -80,6 +81,7 @@ class PipelineWrapper(BasePipelineWrapper):
             "human_block": "",
             "persona_block": self._read_persona_block_content(),
             "requested_tools": requested_tools,
+            "tool_exec_environment_variables": tool_env_vars,
         }
 
         # Run the actual pipeline

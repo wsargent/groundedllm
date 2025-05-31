@@ -1,6 +1,9 @@
+import os
 from typing import List
 
 import requests
+
+HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL")
 
 
 def zotero_search(query: List[dict]) -> str:
@@ -88,7 +91,7 @@ def zotero_search(query: List[dict]) -> str:
     """
 
     response = requests.post(
-        "http://hayhooks:1416/zotero_search/run",
+        f"{HAYHOOKS_BASE_URL}/zotero_search/run",
         json={"query": query},  # Keep the parameter name as "jsonpath" for backward compatibility
     )
     return response.json()["result"]
