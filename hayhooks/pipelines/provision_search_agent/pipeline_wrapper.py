@@ -72,8 +72,8 @@ class PipelineWrapper(BasePipelineWrapper):
         """
         # Run the pipeline providing inputs for components that need them at runtime
         # agent_id is passed internally via connections
-        requested_tools = ["search", "extract", "excerpt", "zotero_search", "search_by_error", "google_auth"]
-        tool_env_vars = {"HAYHOOKS_BASE_URL": os.getenv("HAYHOOKS_BASE_URL")}
+        requested_tools = ["search", "extract", "excerpt", "zotero_search", "search_by_error", "google_auth", "get_calendar_events"]
+        tool_env_vars = {"HAYHOOKS_BASE_URL": self._get_hayhooks_base_url()}
         create_agent_args = {
             "agent_name": agent_name,
             "chat_model": chat_model,
@@ -96,3 +96,6 @@ class PipelineWrapper(BasePipelineWrapper):
     def _read_persona_block_content(self):
         """Reads the persona content from the file."""
         return read_resource_file("persona_memory.md")
+
+    def _get_hayhooks_base_url(self):
+        return os.getenv("HAYHOOKS_BASE_URL")

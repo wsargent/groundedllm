@@ -1,0 +1,8 @@
+{
+    auto_https off
+}
+
+caddy:443 {
+    tls /etc/caddy/caddy+2.pem /etc/caddy/caddy+2-key.pem
+    reverse_proxy http://hayhooks:1416
+}

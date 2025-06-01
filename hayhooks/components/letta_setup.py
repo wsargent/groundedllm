@@ -85,7 +85,15 @@ class LettaCreateAgent:
             # --- Agent Creation (if needed) ---
             if found_agent_id is None:
                 logger.info(f"Agent '{agent_name}' not found, creating agent with prepared tools...")
-                agent_id = self._create_agent(agent_name=agent_name, human_block_content=human_block, persona_block_content=persona_block, letta_embedding=embedding_model, letta_model=chat_model, requested_tools=requested_tools)
+                agent_id = self._create_agent(
+                    agent_name=agent_name,
+                    human_block_content=human_block,
+                    persona_block_content=persona_block,
+                    letta_embedding=embedding_model,
+                    letta_model=chat_model,
+                    requested_tools=requested_tools,
+                    tool_exec_environment_variables=tool_exec_environment_variables,
+                )
                 logger.info(f"Created new agent '{agent_name}' with ID: {agent_id}")
             else:
                 agent_id = found_agent_id

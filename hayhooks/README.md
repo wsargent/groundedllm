@@ -171,6 +171,22 @@ hayhooks pipeline run provision_search_agent \
     --param 'embedding_model=letta/letta-free'
 ```
 
+## Google Authentication Pipeline
+
+Calling `google_auth` will either tell you if you're authenticated or kick off a new OAuth 2 flow.
+
+```bash
+hayhooks pipeline run google_auth
+```
+
+## Get Calendar Events
+
+Gets your calendar events from Google Calendar.
+
+```bash
+hayhooks pipeline run get_calendar_events --param 'user_id=test_user' 
+```
+
 ## Google OAuth2 Integration
 
 Hayhooks includes a Google OAuth2 integration that allows your AI agents to access Google services like Gmail and Calendar on behalf of users. This follows the standard OAuth2 authorization flow:
@@ -178,6 +194,8 @@ Hayhooks includes a Google OAuth2 integration that allows your AI agents to acce
 1. The AI agent detects a need for Google API access
 2. The agent directs the user to authorize access via a Google consent screen
 3. After authorization, the agent can access the requested Google services
+
+This can be tricky to set up, but it's honestly not that bad using [a step by step guide](https://blog.futuresmart.ai/integrating-google-authentication-with-fastapi-a-step-by-step-guide).
 
 ### Setup
 
@@ -188,7 +206,7 @@ Hayhooks includes a Google OAuth2 integration that allows your AI agents to acce
    - Click "Create Credentials" > "OAuth client ID"
    - Select "Web application" as the application type
    - Add your Hayhooks server URL to the "Authorized JavaScript origins"
-   - Add `http://your-hayhooks-server.com/google-auth-callback` to the "Authorized redirect URIs"
+   - Add `https://localhost/google-auth-callback` to the "Authorized redirect URIs"
    - Download the client secrets JSON file
 
 2. Configure environment variables in your `.env` file:
@@ -198,35 +216,17 @@ Hayhooks includes a Google OAuth2 integration that allows your AI agents to acce
    GOOGLE_TOKEN_STORAGE_PATH=/path/to/store/tokens
    ```
 
-### API Endpoints
+3. Download the [CLI](https://cloud.google.com/sdk/docs/install-sdk) and enable the google calendar service using [gcloud](https://cloud.google.com/sdk/gcloud/reference/services/enable). 
 
-The Google OAuth2 integration provides the following endpoints:
-
-- **GET /google-auth-initiate**: Initiates the OAuth2 flow and returns the authorization URL
-  - Query parameter: `user_id` (optional, defaults to "default_user")
-  - Response: JSON with `authorization_url` and `state`
-
-- **GET /google-auth-callback**: Handles the callback from Google after user authorization
-  - This endpoint is called by Google after the user grants or denies consent
-  - It stores the access and refresh tokens for the user
-
-- **GET /check-google-auth**: Checks if a user is authenticated
-  - Query parameter: `user_id` (optional, defaults to "default_user")
-  - Response: JSON with `authenticated` (boolean) and `user_id`
-
-### Usage in AI Agents
-
-When your AI agent needs to access Google services, it should:
-
-1. Check if the user is authenticated using the `/check-google-auth` endpoint
-2. If not authenticated, get the authorization URL from `/google-auth-initiate` and present it to the user
-3. After the user completes authorization, the agent can proceed with the original request
-
-Example flow in an AI agent:
 ```
-User: "Check my calendar for tomorrow"
-Agent: [Checks authentication status]
-Agent: "I need access to your Google Calendar to check your schedule. Please click this link to authorize access: [authorization URL]"
-User: [Clicks link, grants permission, and returns to chat]
-Agent: "Thanks! Now I can access your calendar. Let me check your schedule for tomorrow..."
+gcloud services enable calendar-json.googleapis.com --project=1070070617610
+```
+
+4. The OAuth 2 requires HTTPS, so we need to involve Caddy and set up some self signed certificates. You'll need to install certificates using [mkcert](https://github.com/FiloSottile/mkcert) and make them available.
+
+```
+cd caddy
+brew install mkcert
+mkcert caddy localhost 127.0.0.1
+cp "$(mkcert -CAROOT)/rootCA.pem" ./ca.pem
 ```

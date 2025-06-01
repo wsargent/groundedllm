@@ -271,15 +271,6 @@ wheels = [
 ]
 
 [[package]]
-name = "exceptiongroup"
-version = "1.2.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/09/35/2495c4ac46b980e4ca1f6ad6db102322ef3ad2410b79fdde159a4b0f3b92/exceptiongroup-1.2.2.tar.gz", hash = "sha256:47c2edf7c6738fafb49fd34290706d1a1a2f4d1c6df275526b62cbb4aa5393cc", size = 28883 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/02/cc/b7e31358aac6ed1ef2bb790a9746ac2c69bcb3c8588b41616914eb106eaf/exceptiongroup-1.2.2-py3-none-any.whl", hash = "sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b", size = 16453 },
-]
-
-[[package]]
 name = "fastapi"
 version = "0.112.1"
 source = { registry = "https://pypi.org/simple" }
@@ -457,7 +448,6 @@ dependencies = [
     { name = "letta-client" },
     { name = "linkup-sdk" },
     { name = "markdown-it-py" },
-    { name = "mcp-haystack" },
     { name = "mdit-plain" },
     { name = "notion-haystack" },
     { name = "pydantic-settings" },
@@ -489,12 +479,11 @@ requires-dist = [
     { name = "google-auth", specifier = ">=2.28.1" },
     { name = "google-auth-oauthlib", specifier = ">=1.2.0" },
     { name = "hayhooks", extras = ["mcp"], specifier = ">=0.8.0" },
-    { name = "haystack-ai", specifier = ">=2.14.0" },
+    { name = "haystack-ai", specifier = ">=2.14.1" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.27.0" },
     { name = "letta-client", specifier = ">=0.1.146" },
     { name = "linkup-sdk", specifier = ">=0.2.5" },
     { name = "markdown-it-py", specifier = ">=3.0.0" },
-    { name = "mcp-haystack", specifier = ">=0.3.1" },
     { name = "mdit-plain", specifier = ">=1.0.1" },
     { name = "notion-haystack", specifier = ">=1.0.0" },
     { name = "pydantic-settings", specifier = ">=2.9.1" },
@@ -569,7 +558,7 @@ mcp = [
 
 [[package]]
 name = "haystack-ai"
-version = "2.14.0"
+version = "2.14.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "haystack-experimental" },
@@ -589,9 +578,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f0/bb/b616f940f9162fd79adf1b2a29ea10338b4d8043d401d115eafc2136ba24/haystack_ai-2.14.0.tar.gz", hash = "sha256:af22640cb1a9cf9d7f294e40e9a0ff4addf3f3cf9adff0b01bb5f8f15abf6bf9", size = 341781 }
+sdist = { url = "https://files.pythonhosted.org/packages/bc/f4/1ede3044f365579edcd95c87f124eaa8c78dbcb9cfd5f691cb08dcb209f4/haystack_ai-2.14.1.tar.gz", hash = "sha256:cea28d66a6fdc454f9a5b3367efa6cd568b5386e256f4ac1f39c3d1e37205ae7", size = 341815 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7e/40/cef8e2515e9c3496920e3d13cc73dcfb900ffbb393a17b71091100c1b393/haystack_ai-2.14.0-py3-none-any.whl", hash = "sha256:b484d34fda2778ea7221c5d2609423a25e8315eafa865c95101f177cb85ce646", size = 514715 },
+    { url = "https://files.pythonhosted.org/packages/a4/29/0f51c5034a8b96ee13a2c99033dfbc69fffc3eae082aa715321d6a3af1d5/haystack_ai-2.14.1-py3-none-any.whl", hash = "sha256:3a28d7315ea268b5f7ad3d21f80778cbab01785c66adfb49544375c57d967832", size = 514745 },
 ]
 
 [[package]]
@@ -949,21 +938,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e7/bc/54aec2c334698cc575ca3b3481eed627125fb66544152fa1af927b1a495c/mcp-1.9.1.tar.gz", hash = "sha256:19879cd6dde3d763297617242888c2f695a95dfa854386a6a68676a646ce75e4", size = 316247 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a6/c0/4ac795585a22a0a2d09cd2b1187b0252d2afcdebd01e10a68bbac4d34890/mcp-1.9.1-py3-none-any.whl", hash = "sha256:2900ded8ffafc3c8a7bfcfe8bc5204037e988e753ec398f371663e6a06ecd9a9", size = 130261 },
-]
-
-[[package]]
-name = "mcp-haystack"
-version = "0.3.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "exceptiongroup" },
-    { name = "haystack-ai" },
-    { name = "httpx" },
-    { name = "mcp" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/8e/256839b4090382b4220a9b6ce8f007ea53d9da27bb7154523a4c78bf2101/mcp_haystack-0.3.1.tar.gz", hash = "sha256:80fec04df3e10d648a7b2923ba51ac2355d852040a25ceadeb96959318fdaccf", size = 30221 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/e4/57a1db696d88453a48b3c7665b64cfcdfe02c797c0918c26831d8286049f/mcp_haystack-0.3.1-py3-none-any.whl", hash = "sha256:67d00efe9cb34b6f4be5e84acf460651508ce83a3e06d6efaf252f7f494f2efe", size = 20130 },
 ]
 
 [[package]]

@@ -17,9 +17,9 @@ class GoogleOAuth:
 
     def __init__(
         self,
-        client_secrets_file: str,
-        base_url: str,
-        token_storage_path: str,
+        client_secrets_file: str = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json"),
+        base_callback_url: str = os.getenv("GOOGLE_AUTH_CALLBACK_URL", "https://localhost"),
+        token_storage_path: str = os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens"),
         scopes: Optional[List[str]] = None,
     ):
         """
@@ -27,14 +27,14 @@ class GoogleOAuth:
 
         Args:
             client_secrets_file: Path to the client secrets JSON file downloaded from Google Cloud Console
-            base_url: Base URL of the Hayhooks server (must match the authorized redirect URI in Google Cloud Console)
+            base_callback_url: Base callback URL of the Hayhooks server (must match the authorized redirect URI in Google Cloud Console)
             token_storage_path: Path to store the token files
             scopes: List of Google API scopes to request
         """
         self.client_secrets_file = client_secrets_file
-        self.base_url = base_url
+        self.base_callback_url = base_callback_url
         self.token_storage_path = token_storage_path
-        self.scopes = scopes or ["https://www.googleapis.com/auth/gmail.modify", "https://www.googleapis.com/auth/calendar"]
+        self.scopes = scopes or ["https://www.googleapis.com/auth/calendar"]
 
         # Create token storage directory if it doesn't exist
         os.makedirs(self.token_storage_path, exist_ok=True)
@@ -43,7 +43,7 @@ class GoogleOAuth:
         if not os.path.exists(self.client_secrets_file):
             logger.warning(f"Google client secrets file not found at {self.client_secrets_file}")
 
-    def create_authorization_url(self, user_id: str = "default_user") -> Tuple[str, str]:
+    def create_authorization_url(self, user_id: str) -> Tuple[str, str]:
         """
         Create a Google OAuth2 authorization URL.
 
@@ -54,7 +54,7 @@ class GoogleOAuth:
             Tuple containing the authorization URL and state
         """
         try:
-            flow = Flow.from_client_secrets_file(self.client_secrets_file, scopes=self.scopes, redirect_uri=f"{self.base_url}/google-auth-callback")
+            flow = Flow.from_client_secrets_file(self.client_secrets_file, scopes=self.scopes, redirect_uri=f"{self.base_callback_url}/google-auth-callback")
 
             # Create a base state for CSRF protection part
             base_csrf_state = uuid.uuid4().hex
@@ -86,6 +86,8 @@ class GoogleOAuth:
             Dictionary with user_id and success status
         """
         try:
+            logger.debug(f"handle_callback: authorization_response: {authorization_response}")
+
             # state (argument to this method) is composite_state from Google callback
             if not state or "|" not in state:
                 logger.error(f"Invalid state parameter received: {state}")
@@ -105,7 +107,7 @@ class GoogleOAuth:
             flow = Flow.from_client_secrets_file(
                 self.client_secrets_file,
                 scopes=self.scopes,
-                redirect_uri=f"{self.base_url}/google-auth-callback",
+                redirect_uri=f"{self.base_callback_url}/google-auth-callback",
                 state=state,  # Use the full composite state received from Google
             )
 
@@ -132,6 +134,8 @@ class GoogleOAuth:
             user_id: Identifier for the user
             credentials: Union[Credentials, ExternalAccountCredentials]
         """
+        logger.debug(f"save_credentials: user_id: {user_id}, credentials: {credentials}")
+
         token_path = os.path.join(self.token_storage_path, f"{user_id}.json")
 
         token_data = {
@@ -157,6 +161,8 @@ class GoogleOAuth:
         Returns:
             Google OAuth credentials if found, None otherwise
         """
+        logger.debug(f"load_credentials: user_id: {user_id}")
+
         token_path = os.path.join(self.token_storage_path, f"{user_id}.json")
 
         if not os.path.exists(token_path):
@@ -192,68 +198,3 @@ class GoogleOAuth:
         """
         credentials = self.load_credentials(user_id)
         return {"authenticated": credentials is not None and not credentials.expired, "user_id": user_id}
-
-
-class GoogleOAuthComponent:
-    """
-    Wrapper for Google OAuth functionality.
-    """
-
-    def __init__(
-        self,
-        client_secrets_file: str,
-        base_url: str,
-        token_storage_path: str,
-        scopes: Optional[List[str]] = None,
-    ):
-        self.oauth = GoogleOAuth(client_secrets_file=client_secrets_file, base_url=base_url, token_storage_path=token_storage_path, scopes=scopes)
-
-    def create_authorization_url(self, user_id: str = "default_user"):
-        """
-        Create a Google OAuth2 authorization URL.
-
-        Args:
-            user_id: Identifier for the user
-
-        Returns:
-            Dictionary with authorization URL and state
-        """
-        authorization_url, state = self.oauth.create_authorization_url(user_id)
-        return {"authorization_url": authorization_url, "state": state}
-
-    def check_auth_status(self, user_id: str = "default_user"):
-        """
-        Check if a user is authenticated.
-
-        Args:
-            user_id: Identifier for the user
-
-        Returns:
-            Dictionary with authentication status
-        """
-        status = self.oauth.check_auth_status(user_id)
-        return status
-
-    def get_credentials(self, user_id: str = "default_user"):
-        """
-        Get user credentials.
-
-        Args:
-            user_id: Identifier for the user
-
-        Returns:
-            Dictionary with credentials or None
-        """
-        credentials = self.oauth.load_credentials(user_id)
-        if credentials:
-            return {
-                "credentials": {
-                    "token": credentials.token,
-                    "refresh_token": credentials.refresh_token,
-                    "token_uri": credentials.token_uri,
-                    "client_id": credentials.client_id,
-                    "scopes": credentials.scopes,
-                    "expiry": credentials.expiry.isoformat() if credentials.expiry else None,
-                }
-            }
-        return {"credentials": None}

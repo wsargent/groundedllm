@@ -2,8 +2,6 @@ import os
 
 import requests
 
-HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL")
-
 
 def extract(url: str) -> str:
     """
@@ -25,8 +23,9 @@ def extract(url: str) -> str:
         A JSON document containing the contents of the pages.
     """
 
+    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
     response = requests.post(
-        f"{HAYHOOKS_BASE_URL}/extract/run",
+        f"{hayhooks_base_url}/extract/run",
         json={"url": url},
     )
     response.raise_for_status()

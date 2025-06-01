@@ -3,8 +3,6 @@ from typing import List, Optional
 
 import requests
 
-HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL")
-
 
 def search_by_error(error_message: str, language: Optional[str] = None, technologies: Optional[List[str]] = None, min_score: Optional[int] = None, include_comments: bool = False, limit: int = 10) -> str:
     """
@@ -37,6 +35,7 @@ def search_by_error(error_message: str, language: Optional[str] = None, technolo
     :return: A string containing the search results retrieved from the server.
     :rtype: str
     """
+    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
 
-    response = requests.post(f"{HAYHOOKS_BASE_URL}/search_by_error/run", json={"error_message": error_message, "language": language, "technologies": technologies, "min_score": min_score, "include_comments": include_comments, "limit": limit})
+    response = requests.post(f"{hayhooks_base_url}/search_by_error/run", json={"error_message": error_message, "language": language, "technologies": technologies, "min_score": min_score, "include_comments": include_comments, "limit": limit})
     return response.json()["result"]

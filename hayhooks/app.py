@@ -23,7 +23,7 @@ from haystack.lazy_imports import LazyImport
 from haystack.tracing.logging_tracer import LoggingTracer
 from letta_client import Letta
 
-from components.google_oauth import GoogleOAuth
+from components.google.google_oauth import GoogleOAuth
 
 with LazyImport("Run 'pip install \"mcp\"' to install MCP.") as mcp_import:
     from mcp.server import Server
@@ -252,11 +252,9 @@ hayhooks.add_route("/sse", handle_sse)
 hayhooks.mount("/messages", mcp_sse.handle_post_message)
 # --- End MCP Server Integration ---
 
-HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL", "https://localhost")
-
 # --- Google OAuth2 Integration ---
 # Initialize the Google OAuth handler
-google_oauth = GoogleOAuth(client_secrets_file=os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json"), base_url=HAYHOOKS_BASE_URL, token_storage_path=os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens"))
+google_oauth = GoogleOAuth()
 
 hayhooks.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -267,7 +265,7 @@ async def test_page():
 
 
 @hayhooks.get("/google-auth-initiate")
-async def google_auth_initiate(user_id: str = "default_user"):
+async def google_auth_initiate(user_id: str):
     """
     Initiates the Google OAuth2 flow.
     Returns the authorization URL that the user should visit to grant permissions.
@@ -295,6 +293,8 @@ async def google_auth_callback(request: Request):
 
         google_oauth.handle_callback(authorization_response, state)
 
+        log.info("Successful callback!")
+
         # Return a success HTML page
         return HTMLResponse(
             content="""
@@ -313,6 +313,7 @@ async def google_auth_callback(request: Request):
         """
         )
     except HTTPException as he:
+        log.error(f"HTTPError in Google OAuth callback: {he}")
         # Re-raise HTTP exceptions
         raise he
     except Exception as e:
@@ -332,7 +333,7 @@ async def google_auth_callback(request: Request):
 
 
 @hayhooks.get("/check-google-auth")
-async def check_google_auth(user_id: str = "default_user"):
+async def check_google_auth(user_id: str):
     """
     Checks if a user is authenticated with Google.
     """

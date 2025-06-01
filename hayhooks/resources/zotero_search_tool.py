@@ -3,8 +3,6 @@ from typing import List
 
 import requests
 
-HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL")
-
 
 def zotero_search(query: List[dict]) -> str:
     """
@@ -90,8 +88,9 @@ def zotero_search(query: List[dict]) -> str:
         Use the excerpt tool with several items URLs to ask an LLM a question about the items.
     """
 
+    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
     response = requests.post(
-        f"{HAYHOOKS_BASE_URL}/zotero_search/run",
+        f"{hayhooks_base_url}/zotero_search/run",
         json={"query": query},  # Keep the parameter name as "jsonpath" for backward compatibility
     )
     return response.json()["result"]
