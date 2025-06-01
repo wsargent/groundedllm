@@ -2,8 +2,6 @@ import os
 
 import requests
 
-HAYHOOKS_BASE_URL = os.getenv("HAYHOOKS_BASE_URL")
-
 
 def search(
     question: str,
@@ -50,8 +48,9 @@ def search(
         If the pipeline fails to retrieve an answer from the LLM.
     """
 
+    hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
     response = requests.post(
-        f"{HAYHOOKS_BASE_URL}/search/run",
+        f"{hayhooks_base_url}/search/run",
         json={"question": question, "max_results": max_results, "search_depth": search_depth, "time_range": time_range, "include_domains": include_domains, "exclude_domains": exclude_domains},
     )
     return response.json()["result"]

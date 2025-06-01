@@ -13,9 +13,24 @@ services:
       - LITELLM_LOG=WARN
       - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
       
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    ports:
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/caddy+2.pem:/etc/caddy/caddy+2.pem
+      - ./caddy/caddy+2-key.pem:/etc/caddy/caddy+2-key.pem
+      - caddy_data:/data
+      - caddy_config:/config
+    command: sh -c "update-ca-certificates && caddy run --config /etc/caddy/Caddyfile"
+
   # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
-    build: hayhooks/
+    build:
+      context: .
+      dockerfile: hayhooks/Dockerfile
     container_name: hayhooks
     ports:
       - 1416:1416
@@ -35,12 +50,16 @@ services:
       - LOG=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYSTACK_LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYHOOKS_SHOW_TRACEBACKS=true
+      # Tell Python's requests library to use the system CA bundle
+      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
       # Connections to other containers
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - OPENAI_API_BASE=http://litellm:4000
       - SEARXNG_BASE_URL=http://searxng:8080
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
+    depends_on:
+      - caddy
       
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
@@ -82,19 +101,22 @@ services:
   # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
   letta:
-    image: letta/letta:0.7.27
+    build:
+      context: .
+      dockerfile: letta/Dockerfile
     container_name: letta
     ports:
       - 8283:8283
     volumes:
       # Mount the MCP configuration file (this points to Hayhooks)
       - ./letta_mcp_config.json:/root/.letta/mcp_config.json
-    environment:    
+    environment:
       LETTA_PG_DB: ${LETTA_PG_DB:-letta}
       LETTA_PG_USER: ${LETTA_PG_USER:-letta}
       LETTA_PG_PASSWORD: ${LETTA_PG_PASSWORD:-letta}
       LETTA_PG_HOST: pgvector_db
       LETTA_PG_PORT: 5432
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
       # https://docs.letta.com/guides/server/providers/anthropic
       ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
       # https://docs.letta.com/guides/server/providers/google
@@ -188,3 +210,5 @@ services:
 
 volumes:
   open-webui:
+  caddy_data:
+  caddy_config:
