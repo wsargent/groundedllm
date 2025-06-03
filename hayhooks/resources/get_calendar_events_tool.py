@@ -10,7 +10,7 @@ DEFAULT_MAX_RESULTS_SEARCH = 10
 
 
 def get_calendar_events(
-    user_id: str = os.getenv("HAYHOOKS_USER_ID", "test_user"),
+    user_id: str = os.getenv("HAYHOOKS_USER_ID"),
     calendar_id: str = DEFAULT_CALENDAR_ID,
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,

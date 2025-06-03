@@ -38,29 +38,6 @@ LOG=DEBUG python app.py
 
 You can see the OpenAPI routes at http://localhost:1416/docs to see what pipelines are available.
 
-### Running HTTPS Front End
-
-To use Google OAuth, you must have HTTPS installed.  The easiest way to do this is to use mkcert and caddy as a frontend.
-
-```
-brew install mkcert caddy
-```
-
-And then make your own local certificates:
-
-```
-mkcert -install
-mkcert localhost 127.0.0.1
-```
-
-And then use the local `Caddyfile`:
-
-```
-caddy run
-```
-
-This will start up a server at `https://localhost` which is the HAYHOOKS_BASE_URL.
-
 ## Pipelines
 
 The pipelines here do not use RAG in the traditional sense of indexing / retrieving from a vector database.  They do retrieve content that assists in generation, but are set up to be as lightweight as possible.
@@ -184,7 +161,7 @@ hayhooks pipeline run google_auth
 Gets your calendar events from Google Calendar.
 
 ```bash
-hayhooks pipeline run get_calendar_events --param 'user_id=test_user' 
+hayhooks pipeline run get_calendar_events --param 'user_id=me' 
 ```
 
 ## Google OAuth2 Integration
@@ -209,17 +186,11 @@ This can be tricky to set up, but it's honestly not that bad using [a step by st
    - Add `https://localhost/google-auth-callback` to the "Authorized redirect URIs"
    - Download the client secrets JSON file
 
-2. Configure environment variables in your `.env` file:
-   ```
-   GOOGLE_CLIENT_SECRETS_FILE=/path/to/your/client_secret.json
-   HAYHOOKS_BASE_URL=https://localhost
-   GOOGLE_TOKEN_STORAGE_PATH=/path/to/store/tokens
-   ```
-
-3. Download the [CLI](https://cloud.google.com/sdk/docs/install-sdk) and enable the google calendar service using [gcloud](https://cloud.google.com/sdk/gcloud/reference/services/enable). 
+3. Download the [CLI](https://cloud.google.com/sdk/docs/install-sdk) and enable the google services using [gcloud](https://cloud.google.com/sdk/gcloud/reference/services/enable). 
 
 ```
 gcloud services enable calendar-json.googleapis.com --project=1070070617610
+gcloud services enable gmail.googleapis.com --project=1070070617610
 ```
 
 4. The OAuth 2 requires HTTPS, so we need to involve Caddy and set up some self signed certificates. You'll need to install certificates using [mkcert](https://github.com/FiloSottile/mkcert) and make them available.
@@ -230,3 +201,5 @@ brew install mkcert
 mkcert caddy localhost 127.0.0.1
 cp "$(mkcert -CAROOT)/rootCA.pem" ./ca.pem
 ```
+
+You can then go to https://localhost and do the google authentication from there. 
