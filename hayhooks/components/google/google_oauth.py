@@ -34,7 +34,7 @@ class GoogleOAuth:
         self.client_secrets_file = client_secrets_file
         self.base_callback_url = base_callback_url
         self.token_storage_path = token_storage_path
-        self.scopes = scopes or ["https://www.googleapis.com/auth/calendar"]
+        self.scopes = scopes or ["https://www.googleapis.com/auth/calendar", "https://www.googleapis.com/auth/gmail.modify"]
 
         # Create token storage directory if it doesn't exist
         os.makedirs(self.token_storage_path, exist_ok=True)

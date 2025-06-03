@@ -9,7 +9,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
-from hayhooks import BasePipelineWrapper, create_app, log
+from hayhooks import BasePipelineWrapper, create_app
 from hayhooks.server.pipelines import registry
 from hayhooks.server.routers import openai as openai_module_to_patch
 from hayhooks.server.routers.openai import ChatCompletion, ChatRequest, Choice, Message, ModelObject, ModelsResponse
@@ -22,6 +22,8 @@ from haystack import tracing
 from haystack.lazy_imports import LazyImport
 from haystack.tracing.logging_tracer import LoggingTracer
 from letta_client import Letta
+from loguru import logger as log
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from components.google.google_oauth import GoogleOAuth
 
@@ -212,6 +214,12 @@ for route_idx, route in enumerate(openai_module_to_patch.router.routes):
 
 hayhooks = create_app()
 
+# Add ProxyHeadersMiddleware to handle X-Forwarded-* headers
+# This is crucial for the app to know it's behind an HTTPS proxy
+# https://github.com/encode/uvicorn/blob/master/uvicorn/middleware/proxy_headers.py
+# This doesn't seem to work in Hayhooks?
+hayhooks.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["localhost", "127.0.0.1"])
+
 # --- MCP Server Integration ---
 mcp_import.check()
 
@@ -283,6 +291,10 @@ async def google_auth_callback(request: Request):
     """
     Handles the callback from Google after user authorization.
     """
+    log.debug(f"Callback received: {request.url}")
+    log.debug(f"Query params: {dict(request.query_params)}")
+    log.debug(f"Headers: {dict(request.headers)}")
+
     try:
         # Get the full URL including query parameters
         authorization_response = str(request.url)

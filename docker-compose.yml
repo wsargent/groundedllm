@@ -25,7 +25,19 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     command: sh -c "update-ca-certificates && caddy run --config /etc/caddy/Caddyfile"
-
+    # See logs in real-time
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "https://127.0.0.1:443/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 5s
+        
   # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
     build:
@@ -49,17 +61,15 @@ services:
       - LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - LOG=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYSTACK_LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
-      - HAYHOOKS_SHOW_TRACEBACKS=true
-      # Tell Python's requests library to use the system CA bundle
-      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+      - HAYHOOKS_SHOW_TRACEBACKS=true      
+      - HAYHOOKS_USER_ID=test_user
+      - OAUTHLIB_INSECURE_TRANSPORT=1
       # Connections to other containers
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283
       - OPENAI_API_BASE=http://litellm:4000
       - SEARXNG_BASE_URL=http://searxng:8080
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
-    depends_on:
-      - caddy
       
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
