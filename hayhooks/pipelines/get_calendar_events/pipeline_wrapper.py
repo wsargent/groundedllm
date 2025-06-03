@@ -26,7 +26,7 @@ class PipelineWrapper(BasePipelineWrapper):
 
     def run_api(
         self,
-        user_id: Optional[str] = None,
+        user_id: str,
         calendar_id: str = DEFAULT_CALENDAR_ID,
         start_time: Optional[Union[str, datetime.datetime, datetime.date]] = None,
         end_time: Optional[Union[str, datetime.datetime, datetime.date]] = None,
@@ -62,7 +62,7 @@ class PipelineWrapper(BasePipelineWrapper):
             # This will be caught by Hayhooks and turned into a 500
             raise RuntimeError("Pipeline not configured due to missing Google OAuth environment variables.")
 
-        selected_user_id = user_id or self.calendar_reader.default_user_id
+        selected_user_id = user_id
         logger.debug(f"Running get_calendar_events with user_id='{selected_user_id}', calendar_id='{calendar_id}', event_id='{event_id}', start_time='{start_time}', end_time='{end_time}', query='{query}', max_results={max_results}")
 
         try:

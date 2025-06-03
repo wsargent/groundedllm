@@ -73,7 +73,7 @@ class PipelineWrapper(BasePipelineWrapper):
         # Run the pipeline providing inputs for components that need them at runtime
         # agent_id is passed internally via connections
         requested_tools = ["search", "extract", "excerpt", "zotero_search", "search_by_error", "google_auth", "get_calendar_events"]
-        tool_env_vars = {"HAYHOOKS_BASE_URL": self._get_hayhooks_base_url()}
+        tool_env_vars = {"HAYHOOKS_BASE_URL": self._get_hayhooks_base_url(), "HAYHOOKS_USER_ID": self._get_hayhooks_user_id()}
         create_agent_args = {
             "agent_name": agent_name,
             "chat_model": chat_model,
@@ -99,3 +99,6 @@ class PipelineWrapper(BasePipelineWrapper):
 
     def _get_hayhooks_base_url(self):
         return os.getenv("HAYHOOKS_BASE_URL")
+
+    def _get_hayhooks_user_id(self):
+        return os.getenv("HAYHOOKS_USER_ID")

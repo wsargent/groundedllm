@@ -4,29 +4,30 @@ import os
 import requests
 
 
-def google_auth() -> str:
+def google_auth(user_id: str = os.getenv("HAYHOOKS_USER_ID", "test_user")) -> str:
     """
     Checks the user's Google authentication, and provides an authorization URL to display to the user.
 
-    The user_id is hardcoded to "test_user" for now.
-
     If the user is authenticated, return {"authenticated":true}
 
-    If the user is not authenticated, returns a JSON message in the form
-
-    {
-      "authorization_url": authorization_url
-      "state": state
-    }
+    If the user is not authenticated, returns a Markdown link that the user should click on.
 
     Please use this information to display a Google authorization message to the user, like this:
 
     "It looks like I need access to Google. Please click this link to authorize:
     [Authorize Google Access]({authorization_url}?user_id={user_id})"
 
-    :return: string indicating the user's authentication status
+    Parameters
+    ----------
+    user_id: str
+      The user id to use for google authentication, will use default if not set.
+
+    Return
+    ------
+      str:
+        The user's authentication status, or a registration link.
     """
-    user_id = "test_user"
+    user_id = os.getenv("HAYHOOKS_USER_ID", "test_user")
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
     response = requests.post(f"{hayhooks_base_url}/google_auth/run", json={"user_id": user_id})
@@ -42,5 +43,6 @@ def google_auth() -> str:
         # this is a GET because it doesn't go through hayhooks pipeline wrapper
         response = requests.get(f"{hayhooks_base_url}/google-auth-initiate", params={"user_id": user_id})
         response.raise_for_status()
-        # XXX return markdown text to the LLM.
-        return json.dumps(response.json())
+        response_json = response.json()
+        url = response_json.get("authorization_url")
+        return f"[Register Link]({url})"
