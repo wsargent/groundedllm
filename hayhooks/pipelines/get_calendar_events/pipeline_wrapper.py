@@ -1,12 +1,14 @@
 import datetime
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union  # Added Dict, Any
 
 from hayhooks import log as logger
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
 from haystack import Pipeline
 
 from components.google.google_calendar_reader import DEFAULT_CALENDAR_ID, DEFAULT_MAX_RESULTS_GET, GoogleCalendarReader
-from components.google.google_errors import GoogleAPIError, GoogleAuthError, InvalidInputError  # To catch and potentially re-wrap if needed, or let Hayhooks handle RFC 7807
+
+# Define a default URI for problem details, similar to the component
+DEFAULT_PROBLEM_TYPE_URI = "https://example.com/probs/"
 
 
 class PipelineWrapper(BasePipelineWrapper):
@@ -35,7 +37,7 @@ class PipelineWrapper(BasePipelineWrapper):
         query: Optional[str] = None,
         single_events: bool = True,
         order_by: str = "startTime",
-    ) -> dict:
+    ) -> Dict[str, Any]:  # Adjusted return type to reflect it can be success or RFC 7807
         """
         Fetches Google Calendar events.
 
@@ -68,7 +70,7 @@ class PipelineWrapper(BasePipelineWrapper):
         try:
             pipeline_input = {
                 "calendar_reader": {
-                    "user_id": selected_user_id,  # Will use component's default_user_id if None
+                    "user_id": selected_user_id,
                     "calendar_id": calendar_id,
                     "event_id": event_id,
                     "start_time": start_time,
@@ -80,13 +82,43 @@ class PipelineWrapper(BasePipelineWrapper):
                 }
             }
 
-            result = self.pipeline.run(pipeline_input)
+            component_result = self.pipeline.run(pipeline_input)
+            logger.debug(f"Raw result from pipeline run: {component_result}")
 
-            return {"events": result.get("calendar_reader", {}).get("events", [])}
+            calendar_reader_output = component_result.get("calendar_reader", {})
 
-        except (GoogleAuthError, GoogleAPIError, InvalidInputError) as e:
-            logger.warning(f"Error during GetCalendarEvents execution: {e}", exc_info=True)
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error in GetCalendarEvents pipeline: {e}", exc_info=True)
-            raise RuntimeError(f"An unexpected error occurred in GetCalendarEvents: {str(e)}")
+            # Check if the output is an RFC 7807 problem details dictionary
+            # A simple check could be for the presence of 'status' and 'title' keys,
+            # which are common in RFC 7807 but not in the success response.
+            if isinstance(calendar_reader_output, dict) and "status" in calendar_reader_output and "title" in calendar_reader_output:
+                logger.warning(f"GetCalendarEvents component returned an RFC 7807 problem: {calendar_reader_output}")
+                # The component itself now returns the RFC 7807 JSON.
+                # The pipeline wrapper should return this directly.
+                return calendar_reader_output
+            elif "events" in calendar_reader_output:  # Success case
+                final_response = {"events": calendar_reader_output.get("events", [])}
+                logger.info(f"GetCalendarEvents pipeline successfully processed request. Returning {len(final_response.get('events', []))} events.")
+                logger.debug(f"GetCalendarEvents pipeline returning: {final_response}")
+                return final_response
+            else:  # Unexpected structure from component
+                logger.error(f"Unexpected output structure from calendar_reader: {calendar_reader_output}", exc_info=True)
+                # Fallback to a generic server error if the component's output is unrecognized
+                return {
+                    "type": f"{DEFAULT_PROBLEM_TYPE_URI}internal-server-error",  # Assuming DEFAULT_PROBLEM_TYPE_URI is accessible or define a local one
+                    "title": "Internal Server Error",
+                    "status": 500,
+                    "detail": "The calendar component returned an unexpected response structure.",
+                    "instance": "/calendar_events/errors/unexpected-component-response",
+                }
+        # The specific Google errors should no longer be raised by the component to this level.
+        # If they are, it's an issue in the component's error handling.
+        except Exception as e:  # Catch truly unexpected errors in the pipeline wrapper itself or if component still raises
+            logger.error(f"Unexpected error in GetCalendarEvents pipeline execution: {e}", exc_info=True)
+            # Return a generic RFC 7807 error
+            return {
+                "type": f"{DEFAULT_PROBLEM_TYPE_URI}internal-server-error",  # Assuming DEFAULT_PROBLEM_TYPE_URI is accessible
+                "title": "Internal Server Error",
+                "status": 500,
+                "detail": f"An unexpected error occurred in the GetCalendarEvents pipeline: {str(e)}",
+                "instance": "/calendar_events/errors/pipeline-unexpected-error",
+            }

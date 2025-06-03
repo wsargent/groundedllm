@@ -15,14 +15,13 @@ from components.google.dataclasses.google_calendar_models import EventAttendee, 
 from components.google.google_errors import (
     GoogleAPIError,
     GoogleAuthError,
-    InsufficientPermissionsError,
     InvalidInputError,
-    RateLimitError,
-    ResourceNotFoundError,
 )
 from components.google.google_oauth import GoogleOAuth
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_PROBLEM_TYPE_URI = "https://example.com/probs/"  # For RFC 7807 type URI prefix
 
 # Consider moving to a shared config or constants file
 DEFAULT_CALENDAR_ID = "primary"
@@ -170,8 +169,22 @@ class GoogleCalendarReader:
             recurringEventId=event_data.get("recurringEventId"),
         )
 
-    def _handle_google_api_error(self, e: GoogleHttpError, resource_type: Optional[str] = None, resource_id: Optional[str] = None) -> None:
-        """Handles GoogleHttpError and raises appropriate custom exceptions."""
+    def _create_rfc7807_problem(self, title: str, status: int, detail: str, error_type: str, instance_suffix: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        """Creates an RFC 7807 problem details dictionary."""
+        problem = {"type": f"{DEFAULT_PROBLEM_TYPE_URI}{error_type.lower().replace('_', '-')}", "title": title, "status": status, "detail": detail, "instance": f"/calendar_events/errors/{instance_suffix or title.lower().replace(' ', '-')}"}
+        problem.update(kwargs)  # Add any additional properties
+        logger.info(f"Creating RFC 7807 Problem for return: {json.dumps(problem)}")
+        return problem
+
+    def _log_rfc7807_intention(self, title: str, status: int, detail: str, error_type: str, instance_suffix: Optional[str] = None) -> None:
+        """Helper to log what an RFC 7807 error would look like (mostly for debugging)."""
+        # This method is now mostly for debugging if we want to log an error intention without returning it.
+        # _create_rfc7807_problem also logs when it's called for an actual return.
+        problem_log = {"type": f"{DEFAULT_PROBLEM_TYPE_URI}{error_type.lower().replace('_', '-')}", "title": title, "status": status, "detail": detail, "instance": f"/calendar_events/errors/{instance_suffix or title.lower().replace(' ', '-')}"}
+        logger.debug(f"Logging RFC 7807 Intention (not for direct return): {json.dumps(problem_log)}")
+
+    def _handle_google_api_error(self, e: GoogleHttpError, resource_type: Optional[str] = None, resource_id: Optional[str] = None) -> Dict[str, Any]:
+        """Handles GoogleHttpError and returns an RFC 7807 problem details dictionary."""
         status_code = e.resp.status
 
         try:
@@ -184,19 +197,21 @@ class GoogleCalendarReader:
         logger.error(f"Google API Error. Status: {status_code}, Message: {message}, Original: {e}")
 
         if status_code == 401:
-            raise GoogleAuthError(message, requires_reauth=True) from e
+            return self._create_rfc7807_problem(title="Authentication Error", status=401, detail=message, error_type="GoogleAuthError", instance_suffix=f"auth-{resource_id or 'general'}", requires_reauth=True)
         elif status_code == 403:
             missing_scopes = None  # Placeholder, parsing actual scopes is complex
-            raise InsufficientPermissionsError(message, missing_scopes=missing_scopes) from e
+            return self._create_rfc7807_problem(title="Insufficient Permissions", status=403, detail=message, error_type="InsufficientPermissionsError", instance_suffix=f"perms-{resource_id or 'general'}", missing_scopes=missing_scopes)
         elif status_code == 404:
             not_found_message = f"Google {resource_type or 'resource'} '{resource_id or ''}' not found. API detail: {message}"
-            raise ResourceNotFoundError(not_found_message, resource_type=resource_type, resource_id=resource_id) from e
+            return self._create_rfc7807_problem(
+                title="Resource Not Found", status=404, detail=not_found_message, error_type="ResourceNotFoundError", instance_suffix=f"notfound-{resource_id or 'general'}", resource_type=resource_type, resource_id=resource_id
+            )
         elif status_code == 429:
-            raise RateLimitError(message) from e
+            return self._create_rfc7807_problem(title="Rate Limit Exceeded", status=429, detail=message, error_type="RateLimitError", instance_suffix=f"ratelimit-{resource_id or 'general'}")
         else:
-            raise GoogleAPIError(message, status_code=status_code, original_error=e) from e
+            return self._create_rfc7807_problem(title="Google API Error", status=status_code, detail=message, error_type="GoogleAPIError", instance_suffix=f"api-{status_code}-{resource_id or 'general'}", original_error_type=type(e).__name__)
 
-    @component.output_types(events=List[GoogleCalendarEvent])
+    @component.output_types(events=List[GoogleCalendarEvent])  # This output_type might need adjustment if errors are returned directly
     def run(
         self,
         user_id: str,
@@ -208,7 +223,7 @@ class GoogleCalendarReader:
         max_results: Optional[int] = None,
         single_events: bool = True,  # For recurring events, return single instances
         order_by: str = "startTime",  # "startTime" or "updated"
-    ) -> Dict[str, List[GoogleCalendarEvent]]:
+    ) -> Dict[str, Any]:  # Changed return type
         """
         Fetches or searches Google Calendar events.
 
@@ -233,9 +248,17 @@ class GoogleCalendarReader:
         """
         active_user_id = user_id or self.default_user_id
         if not active_user_id:
+            # This is a programming error, not a user input error for RFC 7807
+            logger.error("ValueError: No active_user_id found! This indicates a configuration or programming issue.")
             raise ValueError("No active_user_id found!")
 
-        service = self._get_calendar_service(active_user_id)
+        try:
+            service = self._get_calendar_service(active_user_id)
+        except GoogleAuthError as e:
+            logger.warning(f"GoogleAuthError during service acquisition in GoogleCalendarReader: {e}", exc_info=True)
+            # self._log_rfc7807_intention is now mainly for debug, _create_rfc7807_problem logs too
+            return self._create_rfc7807_problem(title="Authentication Error", status=401, detail=str(e), error_type="GoogleAuthError", instance_suffix="auth-service-acquisition", requires_reauth=e.requires_reauth)
+
         events_data: List[Dict[str, Any]] = []
 
         try:
@@ -292,20 +315,27 @@ class GoogleCalendarReader:
                 #     events_data = events_data[:max_results]
 
             parsed_events = [self._parse_event_data(event) for event in events_data]
+            logger.info(f"Successfully fetched and parsed {len(parsed_events)} events.")
+            logger.debug(f"Returning events: {parsed_events}")
             return {"events": parsed_events}
 
         except GoogleHttpError as e:
-            self._handle_google_api_error(e, resource_type="CalendarEvent", resource_id=event_id or calendar_id)
-            return {"events": []}  # Should not be reached due to raise in _handle_google_api_error
-        except InvalidInputError:  # Re-raise to be caught by pipeline
-            raise
-        except GoogleAuthError:  # Re-raise
-            raise
-        except GoogleAPIError:  # Re-raise
-            raise
+            logger.error(f"GoogleHttpError caught in run method: {e}", exc_info=True)
+            # _handle_google_api_error now returns a problem dictionary
+            problem_details = self._handle_google_api_error(e, resource_type="CalendarEvent", resource_id=event_id or calendar_id)
+            return problem_details
+        except InvalidInputError as e:
+            logger.warning(f"InvalidInputError in GoogleCalendarReader: {e}", exc_info=True)
+            return self._create_rfc7807_problem(title="Invalid Input", status=400, detail=str(e), error_type="InvalidInputError", instance_suffix="invalid-input", parameter_name=e.parameter_name)
+        except GoogleAuthError as e:  # Should ideally be caught by the service acquisition block, but as a fallback
+            logger.warning(f"GoogleAuthError in GoogleCalendarReader main block: {e}", exc_info=True)
+            return self._create_rfc7807_problem(title="Authentication Error", status=401, detail=str(e), error_type="GoogleAuthError", instance_suffix="auth-error-main", requires_reauth=e.requires_reauth)
+        except GoogleAPIError as e:  # This includes InsufficientPermissionsError, ResourceNotFoundError, RateLimitError if they were raised directly
+            logger.error(f"GoogleAPIError in GoogleCalendarReader: {e}", exc_info=True)
+            return self._create_rfc7807_problem(title=type(e).__name__, status=e.status_code or 500, detail=str(e), error_type=type(e).__name__, instance_suffix=f"api-error-{type(e).__name__.lower()}-{e.status_code or 'unknown'}")
         except Exception as e:  # Catch any other unexpected errors
             logger.error(f"Unexpected error in GoogleCalendarReader: {e}", exc_info=True)
-            raise GoogleAPIError(f"An unexpected error occurred: {e}") from e
+            return self._create_rfc7807_problem(title="Unexpected Server Error", status=500, detail=f"An unexpected error occurred: {str(e)}", error_type="UnexpectedServerError", instance_suffix="unexpected-server-error")
 
     def _format_datetime_for_api(self, dt_input: Union[str, datetime.datetime, datetime.date], is_start: bool = False, is_end: bool = False) -> str:
         """Formats datetime input to RFC3339 string for Google API."""
