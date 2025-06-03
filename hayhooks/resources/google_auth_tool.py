@@ -4,7 +4,7 @@ import os
 import requests
 
 
-def google_auth(user_id: str = os.getenv("HAYHOOKS_USER_ID", "test_user")) -> str:
+def google_auth(user_id: str = os.getenv("HAYHOOKS_USER_ID")) -> str:
     """
     Checks the user's Google authentication, and provides an authorization URL to display to the user.
 
@@ -27,7 +27,7 @@ def google_auth(user_id: str = os.getenv("HAYHOOKS_USER_ID", "test_user")) -> st
       str:
         The user's authentication status, or a registration link.
     """
-    user_id = os.getenv("HAYHOOKS_USER_ID", "test_user")
+    user_id = os.getenv("HAYHOOKS_USER_ID")
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
     response = requests.post(f"{hayhooks_base_url}/google_auth/run", json={"user_id": user_id})

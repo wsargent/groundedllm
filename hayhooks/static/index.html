@@ -20,7 +20,7 @@
 <script>
     async function startAuth() {
         try {
-            const response = await fetch('/google-auth-initiate?user_id=test_user');
+            const response = await fetch('/google-auth-initiate?user_id=me');
             const data = await response.json();
 
             if (data.authorization_url) {
@@ -36,7 +36,7 @@
 
     async function checkStatus() {
         try {
-            const response = await fetch('/check-google-auth?user_id=test_user');
+            const response = await fetch('/check-google-auth?user_id=me');
             const data = await response.json();
 
             if (data.authenticated) {

@@ -17,7 +17,7 @@ from components.google.google_errors import (
 )
 from components.google.google_oauth import GoogleOAuth
 
-DEFAULT_PROBLEM_TYPE_URI = "https://groundedllm.tersesystems.com/probs/"  # For RFC 7807 type URI prefix
+DEFAULT_PROBLEM_TYPE_URI = "urn:hayhooks:google:calendar:error:"  # For RFC 7807 type URI prefix
 
 # Consider moving to a shared config or constants file
 DEFAULT_CALENDAR_ID = "primary"
@@ -167,7 +167,7 @@ class GoogleCalendarReader:
 
     def _create_rfc7807_problem(self, title: str, status: int, detail: str, error_type: str, instance_suffix: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         """Creates an RFC 7807 problem details dictionary."""
-        problem = {"type": f"{DEFAULT_PROBLEM_TYPE_URI}{error_type.lower().replace('_', '-')}", "title": title, "status": status, "detail": detail, "instance": f"/calendar_events/errors/{instance_suffix or title.lower().replace(' ', '-')}"}
+        problem = {"type": f"{DEFAULT_PROBLEM_TYPE_URI}{error_type}", "title": title, "status": status, "detail": detail, "instance": f"/calendar_events/errors/{instance_suffix or title.lower().replace(' ', '-')}"}
         problem.update(kwargs)  # Add any additional properties
         return problem
 

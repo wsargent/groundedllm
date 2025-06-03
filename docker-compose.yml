@@ -61,8 +61,8 @@ services:
       - LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - LOG=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYSTACK_LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
-      - HAYHOOKS_SHOW_TRACEBACKS=true      
-      - HAYHOOKS_USER_ID=test_user
+      - HAYHOOKS_SHOW_TRACEBACKS=true  
+      - HAYHOOKS_USER_ID=me
       - OAUTHLIB_INSECURE_TRANSPORT=1
       # Connections to other containers
       - OPENWEBUI_BASE_URL=http://open-webui:8080
