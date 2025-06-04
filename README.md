@@ -66,9 +66,9 @@ SearXNG comes for free out of the box, but I recommend disabling SearXNG and goi
 
 If none of these work for you, there is a full list of options [here](https://www.mattcollins.net/web-search-apis-for-llms).
 
-If you want to use Claude Sonnet instead of Google Gemini, you'll want a key for that.  Gemini models are still in preview, and have a tendency to get chopped off mid reply and return internal server errors -- Sonnet is far more consistent in responding without retrying requests.
+If you want to use Claude Sonnet 4 instead of Google Gemini, you'll want a key for that.  Gemini models are still in preview, and have a tendency to get chopped off mid reply and return internal server errors -- Sonnet is far more consistent in responding without retrying requests.
 
-* [Anthropic API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).
+* [Anthropic API Key](https://console.anthropic.com/settings/keys) for Letta.
 
 Claude Sonnet is not a good choice for the models used for excerpting and summarizing content extraction -- for example, if you are using the gmail integration, you can easily get over 100K in a single prompt.  The easiest thing to do is use Claude 3 Haiku, but if you want a cheaper option you can configure LiteLLM to use [OpenRouter](https://openrouter.ai) or [Requesty](https://www.requesty.ai) and use an appropriate model with long context from the list -- [Llama 4 Scout](https://openrouter.ai/meta-llama/llama-4-scout) is a good option.  I do not recommend using Deepseek or Qwen due to [privacy concerns](https://www.thefirewall-blog.com/2025/03/privacy-pitfalls-in-ai-a-closer-look-at-deepseek-and-qwen/).
 
