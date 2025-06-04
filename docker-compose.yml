@@ -13,28 +13,6 @@ services:
       - LITELLM_LOG=WARN
       - LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
       
-  caddy:
-    image: caddy:2
-    container_name: caddy
-    ports:
-      - "443:443"
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-    # See logs in real-time
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "https://127.0.0.1:443/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 18
-      start_period: 5s
-        
   # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
     build:
@@ -58,9 +36,13 @@ services:
       - LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - LOG=${HAYHOOKS_LOG_LEVEL:-WARNING}
       - HAYSTACK_LOG_LEVEL=${HAYHOOKS_LOG_LEVEL:-WARNING}
-      - HAYHOOKS_SHOW_TRACEBACKS=true  
+      - HAYHOOKS_SHOW_TRACEBACKS=true        
+      # Google Authentication Settings
       - HAYHOOKS_USER_ID=me
       - OAUTHLIB_INSECURE_TRANSPORT=1
+      - GOOGLE_TOKEN_STORAGE_PATH=google_tokens
+      - GOOGLE_CLIENT_SECRETS_FILE=client_secret.json
+      - GOOGLE_AUTH_CALLBACK_URL=http://localhost:1416
       # Connections to other containers
       - OPENWEBUI_BASE_URL=http://open-webui:8080
       - LETTA_BASE_URL=http://letta:8283

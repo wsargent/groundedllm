@@ -138,6 +138,38 @@ Because Letta doesn't always store conversations in archival memory, you also wa
 
 Grounding with search can reduce hallucinations, but *will not eliminate them*.  You will still need to check the sources and validate that what Letta is telling you is accurate, especially if you are doing anything critical.  Also, do your own searches!  Search engines are free for humans, and Letta will be happy to give you its reference material.
 
+## Optional Integrations
+
+Awkwardly, this project has grown past the boundaries of being a "grounded" LLM and has started sprouting.  None of these integrations are required, but they do make it much easier to find things if you are an extremely lazy person like me.
+
+### Google Calendar and Email
+
+You can give the search agent access to your Google Calendar and Mail.  This does require you to create a Google Cloud project, details are in the [Hayhooks README.md](hayhooks/README.md).
+
+Once you have a project set up, you can authenticate either by going to https://localhost:1416 and clicking through, or just asking the agent to check your authentication status.
+
+If you hand the agent a gmail or gcal URL it can extract it for you.
+
+### Youtube Transcript Integration
+
+If you give the search agent a Youtube URL i.e. https://www.youtube.com/watch?v=l-9ALe3U-Fg then it will extract the transcript and can summarize the contents for you.
+
+### Zotero Integration
+
+If you use Zotero, you can give the agent access to your repository by adding the [keys](https://www.zotero.org/settings/keys) and setting `ZOTERO_LIBRARY_ID` and `ZOTERO_API_KEY` environment variables in `.env`.  You can search for pretty much anything, but it doesn't do wildcard matches.
+
+Passing the agent a Zotero URL like `zotero://select/items/7WI4QKGX` will search the repository, or a DOI link `https://doi.org/10.1098/rstb.2016.0007` that corresponds to a local document will also go through content extraction.  You can use this to compare many PDFs at once using the excerpt model, which will then summarize it to the agent.
+
+### Stack Overflow Integration
+
+The agent is capable of searching [Stack Overflow](http://stackoverflow.com) using the API, searching for the error and finding the most accepted answers, using the `search_by_error` tool.
+
+### Notion Integration
+
+If you use [Notion](http://notion.so), you can integrate it with the agent through a [custom connection](https://developers.notion.com/docs/create-a-notion-integration#create-your-integration-in-notion).  You need to pick a database and use the "Connections" dropdown to select your integration, and then set `NOTION_API_KEY` in your `.env` file.
+
+If you give the agent a Notion URL or page ID, it can extract or excerpt the contents for you.
+
 ## Management
 
 When you want it to run in the background, you can run it as a daemon:
@@ -159,6 +191,8 @@ docker compose down -v --remove-orphans && docker compose up --build
 ```
 
 If you want to modify functionality, see the Hayhooks [README](./hayhooks/README.md).
+
+
 
 ## Composition
 
