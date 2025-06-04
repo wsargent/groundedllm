@@ -60,6 +60,12 @@ model_list:
     litellm_params:
       model: anthropic/claude-sonnet-4-20250514
       api_key: "os.environ/ANTHROPIC_API_KEY"
+      tags: ["anthropic"]    
+
+  - model_name: claude-3.5-haiku
+    litellm_params:
+      model: anthropic/claude-3-5-haiku-latest
+      api_key: "os.environ/ANTHROPIC_API_KEY"
       tags: ["anthropic"]      
 
   # Expose claude-3-7-sonnet with token-efficient-tools to Hayhooks
