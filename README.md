@@ -6,7 +6,7 @@ If you have the API keys and Docker Compose, you should be able to go to http://
 
 [SearXNG](https://docs.searxng.org) is included as the search engine by default, but I recommend you set up one of the included Search APIs and use those, as they claim to have higher quality search results.
 
-The default option for the chat model is Google's Gemini API using the [free tier](https://ai.google.dev/gemini-api/docs/pricing): I've only hit the tier limit for Gemini once.  Even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus that you would need for longer context windows.
+There are several options available for chat models -- in practice you're using OpenAI, Anthropic, or Gemini for the search agent, as open weight models still do far worse on the [Letta leaderboard](https://docs.letta.com/leaderboard).  However, even if you use a paid model from Anthropic or OpenAI, it's more cost effective to use the API directly compared to the $20 a month for Claude Pro or ChatGPT Plus, and you can get more functionality by going direct to the API.
 
 ## Who's Interested?
 
@@ -64,7 +64,7 @@ cp env.example .env
 
 ### Gemini Config
 
-If you want to use Google AI Gemini models, you will need [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key).
+If you want to use Google AI Gemini models, you will need a [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key).
 
 ```
 GEMINI_API_KEY=...
@@ -75,6 +75,8 @@ HAYHOOKS_SEARCH_MODEL=gemini/gemini-2.0-flash
 HAYHOOKS_EXCERPT_MODEL=gemini/gemini-2.0-flash
 HAYHOOKS_SEARCH_EMAIL_MODEL=gemini/gemini-2.0-flash
 ```
+
+Note that Gemini's privacy policy may be an issue if you are using the gmail/gcalendar integration (privacy policies are at the end of this document).
 
 ### Anthropic Config
 
@@ -115,7 +117,7 @@ SearXNG comes for free out of the box, but I recommend disabling SearXNG and goi
 * [Brave API key](https://api-dashboard.search.brave.com/app/keys) -- free is 1 rps, 2k requests a month.
 * [Jina API key](https://jina.ai/api-dashboard/key-manager) -- free, there's a limited number of tokens.
 
-If none of these work for you, there is a full list of options [here](https://www.mattcollins.net/web-search-apis-for-llms).
+If none of these work for you, there is a full list of options [here](https://www.mattcollins.net/web-search-apis-for-llms), and writing another web search integration is very easy to do.
 
 ## Starting It Up
 
@@ -139,7 +141,7 @@ When you see that, you should be good to go.  Open a browser at http://localhost
 
 ## Working with Letta
 
-The first thing you'll want to do is tell Letta your name and location -- this will help it understand where and when you are.
+The first thing you'll want to do is tell Letta your name, timezone, and location -- this will help it understand who, when, and where you are.
 
 After that, you will want to give it preferences, using the phrase "store this in your core memory" so that it can remember it for later.
 
