@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from haystack.utils import Secret
 from linkup.types import LinkupSearchResults
 
-from components.linkup_web_search import LinkupWebSearch
+from components.web_search.linkup_web_search import LinkupWebSearch
 
 
 class TestLinkupWebSearch(unittest.TestCase):

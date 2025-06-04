@@ -8,12 +8,12 @@ from haystack.components.generators import OpenAIGenerator
 from haystack.components.joiners import DocumentJoiner
 from haystack.utils import Secret
 
-from components.brave_web_search import BraveWebSearch
 from components.content_extraction import build_search_extraction_component
-from components.exa_web_search import ExaWebSearch
-from components.linkup_web_search import LinkupWebSearch
-from components.searxng_web_search import SearXNGWebSearch
-from components.tavily_web_search import TavilyWebSearch
+from components.web_search.brave_web_search import BraveWebSearch
+from components.web_search.exa_web_search import ExaWebSearch
+from components.web_search.linkup_web_search import LinkupWebSearch
+from components.web_search.searxng_web_search import SearXNGWebSearch
+from components.web_search.tavily_web_search import TavilyWebSearch
 from resources.utils import read_resource_file
 
 
