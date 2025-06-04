@@ -182,9 +182,8 @@ This can be tricky to set up, but it's honestly not that bad using [a step by st
    - Navigate to "APIs & Services" > "Credentials"
    - Click "Create Credentials" > "OAuth client ID"
    - Select "Web application" as the application type
-   - Add your Hayhooks server URL to the "Authorized JavaScript origins"
-   - Add `https://localhost/google-auth-callback` to the "Authorized redirect URIs"
-   - Download the client secrets JSON file
+   - Add `http://localhost:1416/google-auth-callback` to the "Authorized redirect URIs"
+   - Download the client secrets JSON file to your Hayhooks directory or modify `GOOGLE_CLIENT_SECRETS_FILE`.
 
 3. Download the [CLI](https://cloud.google.com/sdk/docs/install-sdk) and enable the google services using [gcloud](https://cloud.google.com/sdk/gcloud/reference/services/enable). 
 
@@ -193,4 +192,4 @@ gcloud services enable calendar-json.googleapis.com --project=1070070617610
 gcloud services enable gmail.googleapis.com --project=1070070617610
 ```
 
-You can then go to https://localhost and do the google authentication from there. 
+You can then go to http://localhost:1416/ and do the google authentication from there. 
