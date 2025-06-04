@@ -49,9 +49,7 @@ This is useful when the search engine hasn't picked up information on the pages.
 
 ## Getting Started
 
-You will need Docker Compose set up, and you will need API access to a frontier (OpenAI/Anthropic/Gemini) model.
-
-* [Docker Compose](https://docs.docker.com/compose/install/).
+You will need [Docker Compose](https://docs.docker.com/compose/install/) set up, and you will need API access to a frontier (OpenAI/Anthropic/Gemini) model.
 
 If you do not have these accounts or API keys, it is *very* simple to set them up if you have a Google or Github account.  Gemini will ask you to sign in with your Google account, then give you a free key.  If you want to upgrade, you can set up a  [billing account](https://ai.google.dev/gemini-api/docs/billing) for PAYG.  Tavily is the same way; there's no [credit card required](https://docs.tavily.com/documentation/api-credits) and PAYG is opt in.
 
