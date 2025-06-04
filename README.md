@@ -102,7 +102,6 @@ LETTA_CHAT_MODEL=openrouter/anthropic/claude-sonnet-4
 HAYHOOKS_EXCERPT_MODEL=openrouter/meta-llama/llama-4-scout
 HAYHOOKS_SEARCH_MODEL=openrouter/meta-llama/llama-4-scout
 HAYHOOKS_SEARCH_EMAIL_MODEL=openrouter/meta-llama/llama-4-scout
-HAYHOOKS_SEARCH_MODEL=openrouter/meta-llama/llama-4-scout
 ```
 
 ### Search Engine Configuration
