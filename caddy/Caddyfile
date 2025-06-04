@@ -4,7 +4,7 @@ localhost:443 {
         level INFO
     }
 
-    tls /etc/caddy/caddy+2.pem /etc/caddy/caddy+2-key.pem
+    tls internal
     
     reverse_proxy http://hayhooks:1416 {
         header_up X-Forwarded-For {remote_host}

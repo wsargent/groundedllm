@@ -12,16 +12,5 @@ COPY hayhooks/ /app/
 WORKDIR /app
 RUN uv sync --frozen --no-cache
 
-# Copy Caddy's self-signed certificate
-# The build context is the project root (.), so caddy/ refers to the project's caddy directory
-COPY caddy/ca.pem /usr/local/share/ca-certificates/mkcert-ca.crt
-
-# Install CA certificates package and update the system's trust store
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends ca-certificates curl && \
-    update-ca-certificates && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
 # Run the application.
 CMD ["/app/.venv/bin/python", "/app/app.py"]

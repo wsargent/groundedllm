@@ -20,11 +20,8 @@ services:
       - "443:443"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy/caddy+2.pem:/etc/caddy/caddy+2.pem
-      - ./caddy/caddy+2-key.pem:/etc/caddy/caddy+2-key.pem
       - caddy_data:/data
       - caddy_config:/config
-    command: sh -c "update-ca-certificates && caddy run --config /etc/caddy/Caddyfile"
     # See logs in real-time
     logging:
       driver: "json-file"
