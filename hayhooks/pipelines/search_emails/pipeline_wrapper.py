@@ -9,7 +9,7 @@ from haystack.components.generators.openai import OpenAIGenerator
 from haystack.dataclasses.document import Document
 from haystack.utils.auth import Secret
 
-from components.google.google_mail_reader import GoogleMailMessageLister
+from components.google.google_mail_reader import GoogleMailReader
 from resources.utils import read_resource_file
 
 # Define a default URI for problem details
@@ -31,7 +31,7 @@ class PipelineWrapper(BasePipelineWrapper):
         logger.info("Setting up SearchEmails pipeline...")
 
         pipe = Pipeline()
-        mail_lister = GoogleMailMessageLister()  # OAuth handled internally
+        mail_lister = GoogleMailReader()  # OAuth handled internally
         # The prompt_builder will receive 'documents' from mail_lister
         # and 'query' from the run_api's 'instruction' input.
         prompt_builder = PromptBuilder(template=self.template)
