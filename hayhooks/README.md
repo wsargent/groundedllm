@@ -126,12 +126,12 @@ hayhooks pipeline run analyze_trace \
     --param 'language=java'
 ```
 
-### Search By Error
+### Search Stackoverflow
 
-The Analyze trace pipeline takes a stacktrace (or fragment) and sends it to Stack Overflow.
+The search_stackoverflow pipeline takes an error and sends it to Stack Overflow.
 
 ```bash
-hayhooks pipeline run search_by_error \
+hayhooks pipeline run search_stackoverflow \
     --param 'error_message=error:0308010C:digital envelope routines::unsupported'
 ```
 

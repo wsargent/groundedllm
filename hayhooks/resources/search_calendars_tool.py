@@ -9,7 +9,7 @@ DEFAULT_MAX_RESULTS_GET = 50
 DEFAULT_MAX_RESULTS_SEARCH = 10
 
 
-def get_calendar_events(
+def search_calendars(
     user_id: str = os.getenv("HAYHOOKS_USER_ID"),
     calendar_id: str = DEFAULT_CALENDAR_ID,
     start_time: Optional[str] = None,
@@ -54,7 +54,7 @@ def get_calendar_events(
     }
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
-    response = requests.post(f"{hayhooks_base_url}/get_calendar_events/run", json=payload)
+    response = requests.post(f"{hayhooks_base_url}/search_calendars/run", json=payload)
 
     response_json = response.json()
     print(response_json)

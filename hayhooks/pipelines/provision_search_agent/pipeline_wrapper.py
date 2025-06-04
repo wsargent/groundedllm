@@ -73,15 +73,14 @@ class PipelineWrapper(BasePipelineWrapper):
         # Run the pipeline providing inputs for components that need them at runtime
         # agent_id is passed internally via connections
         requested_tools = [
-            "search",  # calls search engines
             "extract",  # extracts full text
             "excerpt",  # queries an LLM that was given the full text
-            "zotero_search",  # search zotero repository
-            "search_by_error",  # searches stack overflow
             "google_auth",  # check google authentication
-            "get_calendar_events",  # check calendar events
-            "get_email_message",  # gets specific email
-            "summarize_emails",
+            "search",  # calls search engines
+            "search_zotero",  # search zotero repository
+            "search_stackoverflow",  # searches stack overflow
+            "search_calendars",  # search calendars
+            "search_emails",  # search emails
         ]
         tool_env_vars = {
             "HAYHOOKS_BASE_URL": self._get_hayhooks_base_url(),  # base url for tools

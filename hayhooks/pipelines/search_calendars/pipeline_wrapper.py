@@ -18,7 +18,7 @@ GOOGLE_CALENDAR_SCOPES_ENV = "GOOGLE_CALENDAR_SCOPES"
 
 class PipelineWrapper(BasePipelineWrapper):
     """
-    Pipeline wrapper for the 'search_calendar_events' MCP tool.
+    Pipeline wrapper for the 'search_calendars' MCP tool.
     Searches Google Calendar events based on a query.
     """
 
@@ -100,7 +100,7 @@ class PipelineWrapper(BasePipelineWrapper):
         if not query or not isinstance(query, str):
             raise InvalidInputError("A non-empty 'query' string parameter is required for searching calendar events.")
 
-        logger.debug(f"Running search_calendar_events with user_id='{user_id or self.calendar_reader.default_user_id}', calendar_id='{calendar_id}', query='{query}', max_results={max_results}")
+        logger.debug(f"Running search_calendars with user_id='{user_id or self.calendar_reader.default_user_id}', calendar_id='{calendar_id}', query='{query}', max_results={max_results}")
 
         try:
             pipeline_input = {
