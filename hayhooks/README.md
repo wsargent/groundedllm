@@ -193,13 +193,4 @@ gcloud services enable calendar-json.googleapis.com --project=1070070617610
 gcloud services enable gmail.googleapis.com --project=1070070617610
 ```
 
-4. The OAuth 2 requires HTTPS, so we need to involve Caddy and set up some self signed certificates. You'll need to install certificates using [mkcert](https://github.com/FiloSottile/mkcert) and make them available.
-
-```
-cd caddy
-brew install mkcert
-mkcert caddy localhost 127.0.0.1
-cp "$(mkcert -CAROOT)/rootCA.pem" ./ca.pem
-```
-
 You can then go to https://localhost and do the google authentication from there. 
