@@ -49,12 +49,63 @@ This is useful when the search engine hasn't picked up information on the pages.
 
 ## Getting Started
 
-You will need the following:
+You will need Docker Compose set up, and you will need API access to a frontier (OpenAI/Anthropic/Gemini) model.
 
 * [Docker Compose](https://docs.docker.com/compose/install/).
-* [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key).
 
-See the env.example file for more details.
+If you do not have these accounts or API keys, it is *very* simple to set them up if you have a Google or Github account.  Gemini will ask you to sign in with your Google account, then give you a free key.  If you want to upgrade, you can set up a  [billing account](https://ai.google.dev/gemini-api/docs/billing) for PAYG.  Tavily is the same way; there's no [credit card required](https://docs.tavily.com/documentation/api-credits) and PAYG is opt in.
+
+To configure the API keys, start by creating an `.env` file from the `env.example` file:
+
+```
+cp env.example .env
+# edit .env file with your own API keys.
+```
+
+### Gemini Config
+
+If you want to use Google AI Gemini models, you will need [Gemini API key](https://ai.google.dev/gemini-api/docs/api-key).
+
+```
+GEMINI_API_KEY=...
+
+LETTA_CHAT_MODEL=google_ai/gemini-2.5-flash-preview-05-20
+
+HAYHOOKS_SEARCH_MODEL=gemini/gemini-2.0-flash
+HAYHOOKS_EXCERPT_MODEL=gemini/gemini-2.0-flash
+HAYHOOKS_SEARCH_EMAIL_MODEL=gemini/gemini-2.0-flash
+```
+
+### Anthropic Config
+
+If you want to use Claude Sonnet 4 instead of Google Gemini, you'll want an [Anthropic API Key](https://console.anthropic.com/settings/keys).
+
+```
+ANTHROPIC_API_KEY=...
+
+LETTA_CHAT_MODEL=anthropic/claude-sonnet-4-20250514
+
+HAYHOOKS_EXCERPT_MODEL=anthropic/claude-3-5-haiku-latest
+HAYHOOKS_SEARCH_MODEL=anthropic/claude-3-5-haiku-latest
+HAYHOOKS_SEARCH_EMAIL_MODEL=anthropic/claude-3-5-haiku-latest
+```
+
+### OpenRouter Config
+
+If you want a cheaper option for summarization, you can configure LiteLLM to use [OpenRouter](https://openrouter.ai) or [Requesty](https://www.requesty.ai) and use an appropriate model with long context from the list -- [Llama 4 Scout](https://openrouter.ai/meta-llama/llama-4-scout) is a good option.  I do not recommend using Deepseek or Qwen due to [privacy concerns](https://www.thefirewall-blog.com/2025/03/privacy-pitfalls-in-ai-a-closer-look-at-deepseek-and-qwen/).
+
+```
+OPENROUTER_API_KEY=...
+
+LETTA_CHAT_MODEL=openrouter/anthropic/claude-sonnet-4
+
+HAYHOOKS_EXCERPT_MODEL=openrouter/meta-llama/llama-4-scout
+HAYHOOKS_SEARCH_MODEL=openrouter/meta-llama/llama-4-scout
+HAYHOOKS_SEARCH_EMAIL_MODEL=openrouter/meta-llama/llama-4-scout
+HAYHOOKS_SEARCH_MODEL=openrouter/meta-llama/llama-4-scout
+```
+
+### Search Engine Configuration
 
 SearXNG comes for free out of the box, but I recommend disabling SearXNG and going with one of the following search APIs that may produce better results:
 
@@ -66,25 +117,12 @@ SearXNG comes for free out of the box, but I recommend disabling SearXNG and goi
 
 If none of these work for you, there is a full list of options [here](https://www.mattcollins.net/web-search-apis-for-llms).
 
-If you want to use Claude Sonnet 4 instead of Google Gemini, you'll want a key for that.  Gemini models are still in preview, and have a tendency to get chopped off mid reply and return internal server errors -- Sonnet is far more consistent in responding without retrying requests.
-
-* [Anthropic API Key](https://console.anthropic.com/settings/keys) for Letta.
-
-Claude Sonnet is not a good choice for the models used for excerpting and summarizing content extraction -- for example, if you are using the gmail integration, you can easily get over 100K in a single prompt.  The easiest thing to do is use Claude 3 Haiku, but if you want a cheaper option you can configure LiteLLM to use [OpenRouter](https://openrouter.ai) or [Requesty](https://www.requesty.ai) and use an appropriate model with long context from the list -- [Llama 4 Scout](https://openrouter.ai/meta-llama/llama-4-scout) is a good option.  I do not recommend using Deepseek or Qwen due to [privacy concerns](https://www.thefirewall-blog.com/2025/03/privacy-pitfalls-in-ai-a-closer-look-at-deepseek-and-qwen/).
-
-If you do not have these accounts or API keys, it is *very* simple to set them up if you have a Google or Github account.  Gemini will ask you to sign in with your Google account, then give you a free key.  If you want to upgrade, you can set up a  [billing account](https://ai.google.dev/gemini-api/docs/billing) for PAYG.  Tavily is the same way; there's no [credit card required](https://docs.tavily.com/documentation/api-credits) and PAYG is opt in.
-
-To configure the API keys, start by creating an `.env` file from the `env.example` file:
-
-```
-cp env.example .env
-# edit .env file with your own API keys and change LETTA_CHAT_MODEL if you want Anthropic
-```
+## Starting It Up
 
 To start the services, run the following:
 
 ```bash
-docker compose up --build
+docker compose up
 ```
 
 You will see a bunch of text in the logs, but the important bit is this line:
@@ -129,6 +167,12 @@ To rebuild a container (probably Hayhooks or a new MCP container you're adding):
 
 ```
 docker compose up --build 'hayhooks'
+```
+
+To rebuild everything, use:
+
+```
+docker compose up --build
 ```
 
 To completely destroy all resources (including all your data!) and rebuild from scratch:
