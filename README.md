@@ -94,10 +94,13 @@ HAYHOOKS_SEARCH_EMAIL_MODEL=anthropic/claude-3-5-haiku-latest
 
 If you want a cheaper option for summarization, you can configure LiteLLM to use [OpenRouter](https://openrouter.ai) or [Requesty](https://www.requesty.ai) and use an appropriate model with long context from the list -- [Llama 4 Scout](https://openrouter.ai/meta-llama/llama-4-scout) is a good option.  I do not recommend using Deepseek or Qwen due to [privacy concerns](https://www.thefirewall-blog.com/2025/03/privacy-pitfalls-in-ai-a-closer-look-at-deepseek-and-qwen/).
 
+You will want to look at Letta's [OpenAI compatible](https://docs.letta.com/guides/server/providers/openai-proxy) settings and edit the docker-compose.yml to set up the Letta container `OPENAI_API_BASE="https://openrouter.ai/api/v1"`, as setting up openrouter through LiteLLM to Letta is very unlikely to work:
+
 ```
 OPENROUTER_API_KEY=...
 
-LETTA_CHAT_MODEL=openrouter/anthropic/claude-sonnet-4
+# set through openai-compatible endpoint
+LETTA_CHAT_MODEL=anthropic/claude-sonnet-4
 
 HAYHOOKS_EXCERPT_MODEL=openrouter/meta-llama/llama-4-scout
 HAYHOOKS_SEARCH_MODEL=openrouter/meta-llama/llama-4-scout
