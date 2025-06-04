@@ -19,7 +19,7 @@ from components.google.google_oauth import GoogleOAuth
 
 
 @component
-class GoogleMailMessageLister:
+class GoogleMailReader:
     """
     A Haystack component to list email messages from Google Mail (Gmail).
     Uses GoogleOAuth for authentication.
