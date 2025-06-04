@@ -156,12 +156,20 @@ Calling `google_auth` will either tell you if you're authenticated or kick off a
 hayhooks pipeline run google_auth
 ```
 
-## Get Calendar Events
+## Search calendars
 
-Gets your calendar events from Google Calendar.
+Searches calendar events from Google Calendar.  You must be authenticated for this to work.
 
 ```bash
-hayhooks pipeline run get_calendar_events --param 'user_id=me' 
+hayhooks pipeline run search_calendars --param 'user_id=me' 
+```
+
+## Search Email
+
+Searches emails from Google Mail.  You must be authenticated for this to work.
+
+```bash
+hayhooks pipeline run search_emails --param 'user_id=me' 
 ```
 
 ## Google OAuth2 Integration
@@ -172,20 +180,21 @@ Hayhooks includes a Google OAuth2 integration that allows your AI agents to acce
 2. The agent directs the user to authorize access via a Google consent screen
 3. After authorization, the agent can access the requested Google services
 
-This can be tricky to set up, but it's honestly not that bad using [a step by step guide](https://blog.futuresmart.ai/integrating-google-authentication-with-fastapi-a-step-by-step-guide).
+This can be tricky to set up, but it's honestly not that bad using [a step by step guide](https://blog.futuresmart.ai/integrating-google-authentication-with-fastapi-a-step-by-step-guide).  There are also some [Youtube Videos](https://www.youtube.com/watch?v=A3838fq6j4U) that can help walk you through the process.
 
-### Setup
+### Configure Cloud Project
 
-1. Create a Google Cloud Project and OAuth 2.0 credentials:
-   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project or select an existing one
-   - Navigate to "APIs & Services" > "Credentials"
-   - Click "Create Credentials" > "OAuth client ID"
-   - Select "Web application" as the application type
-   - Add `http://localhost:1416/google-auth-callback` to the "Authorized redirect URIs"
-   - Download the client secrets JSON file to your Hayhooks directory or modify `GOOGLE_CLIENT_SECRETS_FILE`.
+- Go to the [Google Cloud Console](https://console.cloud.google.com/)
+- Create a new project or select an existing one
+- Navigate to "APIs & Services" > "Credentials"
+- Click "Create Credentials" > "OAuth client ID"
+- Select "Web application" as the application type
+- Add `http://localhost:1416/google-auth-callback` to the "Authorized redirect URIs"
+- Download the client secrets JSON file to your Hayhooks directory as `client_secret.json` so it matches the `GOOGLE_CLIENT_SECRETS_FILE` environment variable.
 
-3. Download the [CLI](https://cloud.google.com/sdk/docs/install-sdk) and enable the google services using [gcloud](https://cloud.google.com/sdk/gcloud/reference/services/enable). 
+### Enable Services
+
+Download the [CLI](https://cloud.google.com/sdk/docs/install-sdk) and enable the google services using [gcloud](https://cloud.google.com/sdk/gcloud/reference/services/enable). 
 
 ```
 gcloud services enable calendar-json.googleapis.com --project=1070070617610
