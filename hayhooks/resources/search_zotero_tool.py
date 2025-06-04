@@ -4,7 +4,7 @@ from typing import List
 import requests
 
 
-def zotero_search(query: List[dict]) -> str:
+def search_zotero(query: List[dict]) -> str:
     """
     Search the Zotero database using a MongoDB-style query object or a list of query objects logically ANDed together.
 

@@ -4,7 +4,7 @@ from typing import List, Optional
 import requests
 
 
-def search_by_error(error_message: str, language: Optional[str] = None, technologies: Optional[List[str]] = None, min_score: Optional[int] = None, include_comments: bool = False, limit: int = 10) -> str:
+def search_stackoverflow(error_message: str, language: Optional[str] = None, technologies: Optional[List[str]] = None, min_score: Optional[int] = None, include_comments: bool = False, limit: int = 10) -> str:
     """
     Uses Stack Overflow to search for error-related questions and returns a summary of results.
 
