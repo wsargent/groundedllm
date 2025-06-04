@@ -70,7 +70,7 @@ If you want to use Claude Sonnet instead of Google Gemini, you'll want a key for
 
 * [Anthropic API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).
 
-Likewise, if you have issues with Gemini's privacy policies (particularly if you have gmail/gcal integration), you can configure LiteLLM to use [OpenRouter](https://openrouter.ai) or [Requesty](https://www.requesty.ai) and using an appropriate model with long context from the list -- [Llama 4 Scout](https://openrouter.ai/meta-llama/llama-4-scout) is a good option.  I do not recommend using Qwen Turbo due to [privacy concerns](https://www.thefirewall-blog.com/2025/03/privacy-pitfalls-in-ai-a-closer-look-at-deepseek-and-qwen/).
+Claude Sonnet is not a good choice for the models used for excerpting and summarizing content extraction -- for example, if you are using the gmail integration, you can easily get over 100K in a single prompt.  To pick out different models, you can configure LiteLLM to use [OpenRouter](https://openrouter.ai) or [Requesty](https://www.requesty.ai) and using an appropriate model with long context from the list -- [Llama 4 Scout](https://openrouter.ai/meta-llama/llama-4-scout) is a good option.  I do not recommend using Qwen Turbo due to [privacy concerns](https://www.thefirewall-blog.com/2025/03/privacy-pitfalls-in-ai-a-closer-look-at-deepseek-and-qwen/).
 
 If you do not have these accounts or API keys, it is *very* simple to set them up if you have a Google or Github account.  Gemini will ask you to sign in with your Google account, then give you a free key.  If you want to upgrade, you can set up a  [billing account](https://ai.google.dev/gemini-api/docs/billing) for PAYG.  Tavily is the same way; there's no [credit card required](https://docs.tavily.com/documentation/api-credits) and PAYG is opt in.
 
@@ -262,7 +262,7 @@ Brave's [privacy policy](https://api-dashboard.search.brave.com/privacy-policy) 
 
 ### Google
 
-Google's [privacy policy](https://support.google.com/gemini/answer/13594961) states that your conversations with Gemini may be used to improve and develop their products and services, including machine learning technologies.  The [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing) page says the free tier does your conversations to train their models. They do use human reviewers and there is a note saying **Please don’t enter confidential information in your conversations or any data you wouldn’t want a reviewer to see or Google to use to improve our products, services, and machine-learning technologies.**
+Google's [privacy policy](https://support.google.com/gemini/answer/13594961) states that your conversations with Gemini may be used to improve and develop their products and services, including machine learning technologies.  The [Gemini Pricing](https://ai.google.dev/gemini-api/docs/pricing) page says the free tier does your conversations to train their models. They do use human reviewers and there is a note saying **Please don’t enter confidential information in your conversations or any data you wouldn’t want a reviewer to see or Google to use to improve our products, services, and machine-learning technologies.**  This might be an issue for you if you are using the Gmail or Google Calendar integrations.
 
 ### Anthropic
 
