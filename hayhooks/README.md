@@ -192,6 +192,8 @@ This can be tricky to set up, but it's honestly not that bad using [a step by st
 - Add `http://localhost:1416/google-auth-callback` to the "Authorized redirect URIs"
 - Download the client secrets JSON file to your Hayhooks directory as `client_secret.json` so it matches the `GOOGLE_CLIENT_SECRETS_FILE` environment variable.
 
+Once you have the `client_secret.json` file in the `hayhooks` directory, then you should do `docker compose up --build` so that the new container has the json file included.
+
 ### Enable Services
 
 Download the [CLI](https://cloud.google.com/sdk/docs/install-sdk) and enable the google services using [gcloud](https://cloud.google.com/sdk/gcloud/reference/services/enable). 
@@ -201,4 +203,14 @@ gcloud services enable calendar-json.googleapis.com --project=1070070617610
 gcloud services enable gmail.googleapis.com --project=1070070617610
 ```
 
+If you do *not* have it configured, you will run into something like this:
+
+```
+Encountered 403 Forbidden with reason "accessNotConfigured"
+```
+
+### Running Google Authentication
+
 You can then go to http://localhost:1416/ and do the google authentication from there. 
+
+Google authentication does not auto-renew -- the existing token will timeout every so often and you will have to click on the page again.  I'm actually fine with this, as I don't want to have the model have permanent access to email and calendar information anyway.
