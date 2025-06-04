@@ -17,29 +17,6 @@ This project may be of interest to you if:
 * **You are interested in RAG pipelines.**  [Haystack](https://haystack.deepset.ai/) toolkit has several options to deal with document conversion, cleaning, and extraction.  The search and extract tools plug into these.
 * **You're interested in [Open WebUI](https://github.com/open-webui/open-webui).** You shouldn't need to use a different UI when you ask questions that require searching.  Open WebUI is powerful and popular, so let's keep using that.
 
-## Other Options?
-
-I am specifically interested in research agents -- chat interfaces with search attached, rather than search interfaces with chat attached.  I am also not including things like [duck.ai](https://duck.ai) that have chat, but do not attach to the search engine.
-
-I have not researched these deeply, but this gives you an idea of what I'm going for.
-
-### Self Hosted
-
-* [Khoj](https://docs.khoj.dev) has a self-hosting option and appears pretty sane.
-* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) uses SearXNG and a reranker to feed into an LLM.
-* [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
-* [Deer-Flow](https://deerflow.tech) is a self-hosted deep research tool using Tavily.  It produces *long* reports.
-* [Morphic](https://www.morphic.sh) is an OSS project on [github](https://github.com/miurla/morphic) that can use Tavily, SearXNG, or Exa.
-
-### Cloud
-
-* [Jina Search](https://search.jina.ai) seems pretty good but it will chew through tokens very fast.
-* [Phind](https://www.phind.com) is more chat oriented and has good diagrams.
-* [Tak](https://tak.phospho.ai) is another chat oriented search engine, powered by [Linkup](https://www.linkup.so/blog/linkup-phospho-partnership).
-* [Morphic](https://www.morphic.sh) also has a free hosted option.
-
-I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).  
-
 ## Description
 
 This project helps ground your LLM from hallucination by providing it with search and page extraction tools and the ability to remember things through [Letta](https://docs.letta.com/letta-platform), an agent framework with memory and tool capabilities.  Every time it searches or extracts a web page, it will save a summary of the search and the results into archival memory, and can refer back to them.
@@ -89,9 +66,11 @@ SearXNG comes for free out of the box, but I recommend disabling SearXNG and goi
 
 If none of these work for you, there is a full list of options [here](https://www.mattcollins.net/web-search-apis-for-llms).
 
-In addition, if you want to use Claude Sonnet instead of Google Gemini, you'll want a key for that.  Gemini models are still in preview, and have a tendency to get chopped off mid reply and return internal server errors -- Sonnet is far more consistent in responding without retrying requests.
+If you want to use Claude Sonnet instead of Google Gemini, you'll want a key for that.  Gemini models are still in preview, and have a tendency to get chopped off mid reply and return internal server errors -- Sonnet is far more consistent in responding without retrying requests.
 
 * [Anthropic API Key](https://console.anthropic.com/settings/keys) for Letta (Claude Sonnet 3.7, gpt4, etc).
+
+Likewise, if you have issues with Gemini's privacy policies (particularly if you have gmail/gcal integration), you can configure LiteLLM to use [OpenRouter](https://openrouter.ai) or [Requesty](https://www.requesty.ai) and using an appropriate model with long context from the list -- [Llama 4 Scout](https://openrouter.ai/meta-llama/llama-4-scout) is a good option.  I do not recommend using Qwen Turbo due to [privacy concerns](https://www.thefirewall-blog.com/2025/03/privacy-pitfalls-in-ai-a-closer-look-at-deepseek-and-qwen/).
 
 If you do not have these accounts or API keys, it is *very* simple to set them up if you have a Google or Github account.  Gemini will ask you to sign in with your Google account, then give you a free key.  If you want to upgrade, you can set up a  [billing account](https://ai.google.dev/gemini-api/docs/billing) for PAYG.  Tavily is the same way; there's no [credit card required](https://docs.tavily.com/documentation/api-credits) and PAYG is opt in.
 
@@ -138,6 +117,28 @@ Because Letta doesn't always store conversations in archival memory, you also wa
 
 Grounding with search can reduce hallucinations, but *will not eliminate them*.  You will still need to check the sources and validate that what Letta is telling you is accurate, especially if you are doing anything critical.  Also, do your own searches!  Search engines are free for humans, and Letta will be happy to give you its reference material.
 
+## Management
+
+When you want it to run in the background, you can run it as a daemon:
+
+```bash
+docker compose up -d
+```
+
+To rebuild a container (probably Hayhooks or a new MCP container you're adding):
+
+```
+docker compose up --build 'hayhooks'
+```
+
+To completely destroy all resources (including all your data!) and rebuild from scratch:
+
+```bash
+docker compose down -v --remove-orphans && docker compose up --build
+```
+
+If you want to modify functionality, see the Hayhooks [README](./hayhooks/README.md).
+
 ## Optional Integrations
 
 Awkwardly, this project has grown past the boundaries of being a "grounded" LLM and has started sprouting.  None of these integrations are required, but they do make it much easier to find things if you are an extremely lazy person like me.
@@ -169,30 +170,6 @@ The agent is capable of searching [Stack Overflow](http://stackoverflow.com) usi
 If you use [Notion](http://notion.so), you can integrate it with the agent through a [custom connection](https://developers.notion.com/docs/create-a-notion-integration#create-your-integration-in-notion).  You need to pick a database and use the "Connections" dropdown to select your integration, and then set `NOTION_API_KEY` in your `.env` file.
 
 If you give the agent a Notion URL or page ID, it can extract or excerpt the contents for you.
-
-## Management
-
-When you want it to run in the background, you can run it as a daemon:
-
-```bash
-docker compose up -d
-```
-
-To rebuild a container (probably Hayhooks or a new MCP container you're adding):
-
-```
-docker compose up --build 'hayhooks'
-```
-
-To completely destroy all resources (including all your data!) and rebuild from scratch:
-
-```bash
-docker compose down -v --remove-orphans && docker compose up --build
-```
-
-If you want to modify functionality, see the Hayhooks [README](./hayhooks/README.md).
-
-
 
 ## Composition
 
@@ -293,4 +270,28 @@ Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: 
 
 ### Jina
 
-Jina's [privacy policy](https://jina.ai/legal#privacy-policy).  They are a German company, so GDPR applies. 
+Jina's [privacy policy](https://jina.ai/legal#privacy-policy).  They are a German company, so GDPR applies.
+
+## Other Options?
+
+I am specifically interested in research agents -- chat interfaces with search attached, rather than search interfaces with chat attached.  I am also not including things like [duck.ai](https://duck.ai) that have chat, but do not attach to the search engine.
+
+I have not researched these deeply, but this gives you an idea of what I'm going for.
+
+### Self Hosted
+
+* [Khoj](https://docs.khoj.dev) has a self-hosting option and appears pretty sane.
+* [Perplexica](https://github.com/ItzCrazyKns/Perplexica) uses SearXNG and a reranker to feed into an LLM.
+* [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
+* [Deer-Flow](https://deerflow.tech) is a self-hosted deep research tool using Tavily.  It produces *long* reports.
+* [Morphic](https://www.morphic.sh) is an OSS project on [github](https://github.com/miurla/morphic) that can use Tavily, SearXNG, or Exa.
+
+### Cloud
+
+* [Jina Search](https://search.jina.ai) seems pretty good but it will chew through tokens very fast.
+* [Phind](https://www.phind.com) is more chat oriented and has good diagrams.
+* [Tak](https://tak.phospho.ai) is another chat oriented search engine, powered by [Linkup](https://www.linkup.so/blog/linkup-phospho-partnership).
+* [Morphic](https://www.morphic.sh) also has a free hosted option.
+
+I do not recommend Perplexity due to their [stance on targeted advertising](https://techcrunch.com/2025/04/24/perplexity-ceo-says-its-browser-will-track-everything-users-do-online-to-sell-hyper-personalized-ads/).  
+
