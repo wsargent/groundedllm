@@ -9,6 +9,13 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from hayhooks import log as logger
 
+DEFAULT_SCOPES = [
+    # https://developers.google.com/workspace/calendar/api/auth
+    "https://www.googleapis.com/auth/calendar.readonly",
+    # https://developers.google.com/workspace/gmail/api/auth/scopes
+    "https://www.googleapis.com/auth/gmail.readonly",
+]
+
 
 class GoogleOAuth:
     """
@@ -18,7 +25,7 @@ class GoogleOAuth:
     def __init__(
         self,
         client_secrets_file: str = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json"),
-        base_callback_url: str = os.getenv("GOOGLE_AUTH_CALLBACK_URL", "https://localhost"),
+        base_callback_url: str = os.getenv("GOOGLE_AUTH_CALLBACK_URL", "http://localhost:1416"),
         token_storage_path: str = os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens"),
         scopes: Optional[List[str]] = None,
     ):
@@ -34,7 +41,7 @@ class GoogleOAuth:
         self.client_secrets_file = client_secrets_file
         self.base_callback_url = base_callback_url
         self.token_storage_path = token_storage_path
-        self.scopes = scopes or ["https://www.googleapis.com/auth/calendar", "https://www.googleapis.com/auth/gmail.modify"]
+        self.scopes = scopes or DEFAULT_SCOPES
 
         # Create token storage directory if it doesn't exist
         os.makedirs(self.token_storage_path, exist_ok=True)

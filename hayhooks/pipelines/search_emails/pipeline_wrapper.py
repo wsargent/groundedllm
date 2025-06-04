@@ -9,7 +9,7 @@ from haystack.components.generators.openai import OpenAIGenerator
 from haystack.dataclasses.document import Document
 from haystack.utils.auth import Secret
 
-from components.google.google_mail_message_lister import GoogleMailMessageLister
+from components.google.google_mail_reader import GoogleMailMessageLister
 from resources.utils import read_resource_file
 
 # Define a default URI for problem details
