@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
@@ -17,6 +18,7 @@ from haystack.components.routers import FileTypeRouter
 from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
 
+from components.google.google_oauth import GoogleOAuth
 from components.notion import NotionContentResolver
 from components.stackoverflow import StackOverflowContentResolver
 from components.youtube_transcript import YouTubeTranscriptResolver
@@ -506,9 +508,14 @@ def build_content_extraction_component(
         jina_retry_attempts=2,
     )
 
+    user_id = os.environ.get("HAYHOOKS_USER_ID", "me")
+    google_oauth = GoogleOAuth()
+
     # Create YouTube transcript resolver
     youtube_resolver = YouTubeTranscriptResolver(
+        oauth_provider=google_oauth,
         raise_on_failure=raise_on_failure,
+        user_id=user_id,
     )
 
     notion_resolver = NotionContentResolver(raise_on_failure=raise_on_failure)

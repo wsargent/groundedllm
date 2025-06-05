@@ -201,6 +201,7 @@ Download the [CLI](https://cloud.google.com/sdk/docs/install-sdk) and enable the
 ```
 gcloud services enable calendar-json.googleapis.com --project=1070070617610
 gcloud services enable gmail.googleapis.com --project=1070070617610
+gcloud services enable youtube.googleapis.com --project=1070070617610
 ```
 
 If you do *not* have it configured, you will run into something like this:
