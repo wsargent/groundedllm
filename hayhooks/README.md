@@ -210,6 +210,8 @@ If you do *not* have it configured, you will run into something like this:
 Encountered 403 Forbidden with reason "accessNotConfigured"
 ```
 
+If you want to reset or add any permissions, you should revoke access in [Google Third-party apps & services](ccount.google.com/connections?filters=3,4&hl=en) and then walk through the authorization flow again.
+
 ### Running Google Authentication
 
 You can then go to http://localhost:1416/ and do the google authentication from there. 
