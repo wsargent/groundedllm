@@ -14,6 +14,9 @@ DEFAULT_SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly",
     # https://developers.google.com/workspace/gmail/api/auth/scopes
     "https://www.googleapis.com/auth/gmail.readonly",
+    # https://developers.google.com/youtube/v3/guides/auth/installed-apps#identify-access-scopes
+    "https://www.googleapis.com/auth/youtube.readonly",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
 ]
 
 

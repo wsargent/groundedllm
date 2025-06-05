@@ -93,7 +93,7 @@ class LettaChatGenerator:
             completion: LettaResponse = client.agents.messages.create(agent_id=agent_id, messages=messages)
             completions = [self._build_message(completion)]
 
-        logger.debug(f"run: completions={completions}")
+        # logger.debug(f"run: completions={completions}")
 
         return {"replies": completions}
 
@@ -105,7 +105,7 @@ class LettaChatGenerator:
         """
         Creates a single ChatMessage from the streamed chunks. Some data is retrieved from the completion chunk.
         """
-        logger.debug(f"_create_message_from_chunks: completion_chunk={completion_chunk}, streamed_chunks={streamed_chunks}")
+        # logger.debug(f"_create_message_from_chunks: completion_chunk={completion_chunk}, streamed_chunks={streamed_chunks}")
 
         # "".join([chunk.content for chunk in streamed_chunks])
         complete_response = ChatMessage.from_assistant("")
@@ -136,7 +136,7 @@ class LettaChatGenerator:
         """
         Process a streaming chunk based on its type and invoke the streaming callback.
         """
-        logger.debug(f"Processing streaming chunk: {chunk}")
+        # logger.debug(f"Processing streaming chunk: {chunk}")
         if isinstance(chunk, ReasoningMessage):
             self.send_end_think = True
             reasoning_chunk: ReasoningMessage = chunk
@@ -187,7 +187,7 @@ class LettaChatGenerator:
             # Assistant message is the last chunk so we need to close the <think> tag
             return StreamingChunk(content=content, meta=meta_dict)
         else:
-            logger.debug(f"Ignoring streaming chunk type: {type(chunk)}")
+            # logger.debug(f"Ignoring streaming chunk type: {type(chunk)}")
             return None
 
     def _build_message(self, response: LettaResponse):
@@ -199,7 +199,7 @@ class LettaChatGenerator:
         :returns:
             The ChatMessage.
         """
-        logger.debug(f"_build_message: response={response}")
+        # logger.debug(f"_build_message: response={response}")
 
         messages: List[LettaMessageUnion] = response.messages
         usage: LettaUsageStatistics = response.usage
