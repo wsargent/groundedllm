@@ -89,6 +89,8 @@ services:
   # https://docs.letta.com/quickstart/docker
   letta:
     image: letta/letta:0.8.3
+    volumes:
+      - ./letta/letta_mcp_config.json:/root/.letta/mcp_config.json
     ports:
       - 8283:8283    
     environment:
