@@ -299,9 +299,7 @@ LiteLLM is mostly commented out here to focus attention on Letta.  However, it i
 
 Since you're using this for search, you may want to know how your queries are processed.
 
-There are three different services involved in search, each with their own privacy policy.
-
-You do have options for customization.  Since the tools go through Hayhooks, you can write a [ConditionalRouter](https://docs.haystack.deepset.ai/docs/conditionalrouter) that will send different queries to different services or evaluate them before they are processed, or break out the search components into their own pipelines.
+Every search company and every model provider has its own privacy policy, some clearer than others.
 
 ### Linkup
 
