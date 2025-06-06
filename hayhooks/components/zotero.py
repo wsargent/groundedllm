@@ -12,7 +12,26 @@ from haystack.utils.auth import Secret
 from pyzotero import zotero
 
 # Check if the URL is from an academic site
-ACADEMIC_DOMAINS = ["researchgate.net", "academia.edu", "arxiv.org", "sciencedirect.com", "springer.com", "ieee.org", "acm.org", "jstor.org", "nature.com", "wiley.com", "tandfonline.com", "sagepub.com", "oup.com", "elsevier.com"]
+ACADEMIC_DOMAINS = [
+    "researchgate.net",  #
+    "academia.edu",  #
+    "arxiv.org",  #
+    "sciencedirect.com",  #
+    "springer.com",  #
+    "ieee.org",
+    "acm.org",  #
+    "jstor.org",  #
+    "nature.com",  #
+    "wiley.com",  #
+    "tandfonline.com",  #
+    "sagepub.com",  #
+    "oup.com",  #
+    "elsevier.com",  #
+    "apa.org"  #
+    "taylorfrancis.com"  #
+    "sagepub.com"  #
+    "royalsocietypublishing.org",
+]
 
 
 class ZoteroDatabase:
