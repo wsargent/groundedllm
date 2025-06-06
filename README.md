@@ -78,7 +78,7 @@ Note that Gemini's privacy policy may be an issue if you are using the gmail/gca
 
 ### Anthropic Config
 
-If you want to use Claude Sonnet 4 instead of Google Gemini, you'll want an [Anthropic API Key](https://console.anthropic.com/settings/keys).
+If you want to use Claude Sonnet 4, you'll want an [Anthropic API Key](https://console.anthropic.com/settings/keys).
 
 ```
 ANTHROPIC_API_KEY=...
@@ -88,6 +88,19 @@ LETTA_CHAT_MODEL=anthropic/claude-sonnet-4-20250514
 HAYHOOKS_EXCERPT_MODEL=anthropic/claude-3-5-haiku-latest
 HAYHOOKS_SEARCH_MODEL=anthropic/claude-3-5-haiku-latest
 HAYHOOKS_SEARCH_EMAIL_MODEL=anthropic/claude-3-5-haiku-latest
+```
+
+### OpenAI Config
+
+If you want to use OpenAI, you'll want an [OpenAI API Key](https://platform.openai.com/api-keys).
+
+```
+OPENAI_API_KEY=...
+
+LETTA_CHAT_MODEL=openai/gpt-4.1
+HAYHOOKS_EXCERPT_MODEL=openai/gpt-4o-mini
+HAYHOOKS_SEARCH_MODEL=openai/gpt-4o-mini
+HAYHOOKS_SEARCH_EMAIL_MODEL=openai/gpt-4o-mini
 ```
 
 ### OpenRouter Config
@@ -209,13 +222,13 @@ Passing the agent a Zotero URL like `zotero://select/items/7WI4QKGX` will search
 
 ### Stack Overflow Integration
 
-The agent is capable of searching [Stack Overflow](http://stackoverflow.com) using the API, searching for the error and finding the most accepted answers, using the `search_by_error` tool.
+The agent is capable of searching [Stack Overflow](http://stackoverflow.com) using the API, searching for the error and finding the most accepted answers.
 
 ### Notion Integration
 
 If you use [Notion](http://notion.so), you can integrate it with the agent through a [custom connection](https://developers.notion.com/docs/create-a-notion-integration#create-your-integration-in-notion).  You need to pick a database and use the "Connections" dropdown to select your integration, and then set `NOTION_API_KEY` in your `.env` file.
 
-If you give the agent a Notion URL or page ID, it can extract or excerpt the contents for you.
+If you give the agent a Notion URL, it can extract or excerpt the contents for you. There is no search integration right now.
 
 ## Composition
 
