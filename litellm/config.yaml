@@ -13,13 +13,13 @@ model_list:
 
   # This is the primary model used by Hayhooks for search and extract
 
-  - model_name: "gemini/gemini-2.5-pro-preview-05-06"
+  - model_name: "gemini/gemini-2.5-pro"
     litellm_params:
-      model: "gemini/gemini-2.5-pro-preview-05-06"
+      model: "gemini/gemini-2.5-pro-preview-06-05"
       api_key: "os.environ/GEMINI_API_KEY"
       tags: ["gemini"]
 
-  - model_name: "gemini/gemini-2.5-flash-preview-05-20"
+  - model_name: "gemini/gemini-2.5-flash"
     litellm_params:
       model: "gemini/gemini-2.5-flash-preview-05-20"
       api_key: "os.environ/GEMINI_API_KEY"
