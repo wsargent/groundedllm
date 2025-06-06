@@ -98,5 +98,8 @@ class NotionContentResolver:
         if self.exporter is None:
             return False
 
-        page_ids = self._extract_page_ids([url])
-        return len(page_ids) == 1
+        if url.startswith("https://www.notion.so"):
+            page_ids = self._extract_page_ids([url])
+            return len(page_ids) == 1
+        else:
+            return False
