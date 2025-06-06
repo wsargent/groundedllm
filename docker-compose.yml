@@ -16,13 +16,12 @@ services:
   # This is the tool server and also provisions Letta & Open WebUI
   hayhooks:
     build:
-      context: .
-      dockerfile: hayhooks/Dockerfile
+      context: hayhooks      
     container_name: hayhooks
     ports:
       - 1416:1416
     volumes:
-      - ./hayhooks/pipelines:/pipelines
+      - ./pipelines:/pipelines
       # https://stackoverflow.com/questions/39172652/using-docker-compose-to-set-containers-timezones
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
