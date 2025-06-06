@@ -1,0 +1,12 @@
+{
+  "mcpServers": {    
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/sse",
+      "alwaysAllow": [
+        "read_wiki_structure",
+        "read_wiki_contents",
+        "ask_question"
+      ]
+    }
+  }
+}
