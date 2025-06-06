@@ -325,6 +325,10 @@ Google's [privacy policy](https://support.google.com/gemini/answer/13594961) sta
 
 Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: they do not use personal data for model training [without explicit consent](https://privacy.anthropic.com/en/articles/10023580-is-my-data-used-for-model-training).
 
+### OpenAI
+
+OpenAI's [privacy policy](https://openai.com/policies/jun-2023-privacy-policy/?utm_source=chatgpt.com): data submitted via OpenAI's API is not used to train models unless you explicitly opt in.  Data submitted through the API is retained for 30 days for abuse monitoring and then deleted, unless longer retention is required by law.
+
 ### Jina
 
 Jina's [privacy policy](https://jina.ai/legal#privacy-policy).  They are a German company, so GDPR applies.
