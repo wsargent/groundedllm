@@ -327,7 +327,7 @@ Anthropic's [privacy policy](https://www.anthropic.com/legal/privacy) is clear: 
 
 ### OpenAI
 
-OpenAI's [privacy policy](https://openai.com/policies/jun-2023-privacy-policy/?utm_source=chatgpt.com): data submitted via OpenAI's API is not used to train models unless you explicitly opt in.  Data submitted through the API is retained for 30 days for abuse monitoring and then deleted, unless longer retention is required by law.
+OpenAI's [privacy policy](https://openai.com/policies/privacy-policy/): data submitted via OpenAI's API is not used to train models unless you explicitly opt in.  Data submitted through the API is retained for 30 days for abuse monitoring and then deleted, unless longer retention is required by law.
 
 ### Jina
 
