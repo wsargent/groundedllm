@@ -6,7 +6,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 # Copy the application into the container.
 # Copy the hayhooks application files into /app in the image.
 # The build context is the project root, so 'hayhooks/' refers to the subfolder.
-COPY . /app/
+COPY . /app
 
 # Install the application dependencies.
 WORKDIR /app
