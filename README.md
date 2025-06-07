@@ -251,6 +251,8 @@ For example, this instance is configured to use Gemini embedding so that it does
 
 It is not possible to upload files into Letta through the Open WebUI interface right now.  The functionality does exist in Letta through the [data sources](https://docs.letta.com/guides/agents/sources) feature, but it might be easier to use a OWUI plugin to send it to Hayhooks and keep it in a document store.
 
+As Hayhooks is an [OpenAPI server](https://docs.openwebui.com/openapi-servers/), you can use the Hayhooks tools directly in *any* model in Open WebUI directly through the Tools setting and adding `http://hayhooks:1416` as a connection.  You do *not* need to use MCPO or configure MCP in Open WebUI.   Using tools directly is very useful when the model is not "Letta capable" or you don't want the model making multiple tool calls.
+
 ### Letta
 
 [Letta](https://docs.letta.com) is an agent framework that has built-in self editing memory and built-in tooling for editing the behavior of the agent, including adding new tools.
@@ -271,15 +273,25 @@ Start the docker compose app *first* and *then* open up Letta Desktop, as it is 
 
 ### Hayhooks
 
-[Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs.  It's great for processing content and providing a simple interface to Letta.  It also exposes Letta agents as an OpenAI-compatable endpoint.
+[Hayhooks](https://github.com/deepset-ai/hayhooks/) is a FastAPI-based server that exposes [Haystack Pipelines](https://docs.haystack.deepset.ai/docs/intro) through REST APIs.  It's great for processing content and providing a simple interface to Letta.  
 
-In this case, the tools use Google Flash 2.0 to process the search output and run searches through cheaper models to ameliorate Anthropic's brutally low rate limits and higher costs.  Unlike Letta, Hayhooks is very flexible about the models it uses, and you can swap to other models if that works better for you.
+Hayhooks fills multiple roles that make it very useful:
+
+* Hayhooks exposes Letta agents as an OpenAI-compatable endpoint to Open WebUI.
+* Hayhooks is an MCP server, so tools are available to Cline / Claude Code, etc.
+* Hayhooks is an OpenAPI server, so tools are available to Open WebUI.
+* Hayhooks is an HTTP server, so it is an endpoint for Google's OAuth 2 authentication.
+* Hayhooks has access to Haystack's rich functionality, including calling LLMs for filtering and processing.
+
+The primary focus is on search, excerpt (aka answering), and extraction.
+
+In the case of search and excerpt, the tools use Google Flash 2.0 to process the search output and run searches through cheaper models to ameliorate Anthropic's brutally low rate limits and higher costs.  Unlike Letta, Hayhooks is very flexible about the models it uses, and you can swap to other models if that works better for you.
 
 The search tool extracts the full text of each search result and adds it as context to a long context search model following [search best practices](https://docs.tavily.com/documentation/best-practices/best-practices-search).  It also recommends possible follow up queries and [query expansion](https://haystack.deepset.ai/blog/query-expansion) along with the search results.
 
-The extract tool converts a single web page to Markdown and does some document cleanup before sending it directly to Letta.  The content extraction is internal to Haystack and comes for free.  It does not attempt any kind of bot evasion.  There is a fallback option to use [Jina Reader](https://github.com/jina-ai/reader) if the internal content extraction fails.
-
 The excerpt tool does content extraction like the extract tool, but sends it to a long context model which will answer the question given to it by Letta, using the provided context.  This is useful when there's a small amount of focused data that's inside many URLs.
+
+The extract tool converts a single web page to Markdown and does some document cleanup before sending it directly to Letta.  The content extraction is internal to Haystack and comes for free.  It does not attempt any kind of bot evasion.  There is a fallback option to use [Jina Reader](https://github.com/jina-ai/reader) if the internal content extraction fails.
 
 There is no vector/embeddings/database RAG involved in this project, although you have the option to use your own by plugging it into Hayhooks.  In addition, Letta's archival memory is technically a RAG implementation based on pgvector.
 
