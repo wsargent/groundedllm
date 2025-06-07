@@ -261,9 +261,9 @@ The search technique is pulled from this academic paper on [DeepRAG](https://arx
 
 #### Picking a Model Provider
 
-The model is set up with Gemini 2.5 Pro Preview, although Claude Sonnet 3.7 is recommended as it is much more proactive about calling tools until it gets a good answer.
+Letta requires models that have a [minimum amount of complexity](https://tersesystems.com/blog/2025/03/07/llm-complexity-and-pricing/) and will not work reliably with smaller models.  Check the [Letta Leaderboard](https://docs.letta.com/leaderboard) to see what models do the best and worst.
 
-Letta can be very finicky when it comes to the models it supports.  I've had the best luck with the Gemma3 models, but other models have completely crashed and burned.  If you want to be experimental, try [Google Cloud Run](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama) which will give you $300 in credits or the free [Openrouter](https://openrouter.ai/google/gemma-3-27b-it:free) models.
+When using local models, I've had the best luck with the Gemma3 models at or above 12B.  If you want to be experimental, try [Google Cloud Run](https://cloud.google.com/run/docs/tutorials/gpu-gemma-with-ollama) which will give you $300 in credits or the free [Openrouter](https://openrouter.ai/google/gemma-3-27b-it:free) models.
 
 #### Letta Desktop
 
