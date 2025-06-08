@@ -34,10 +34,11 @@ class PipelineWrapper(BasePipelineWrapper):
 
         # Revert to using os.getenv
         letta_base_url = os.getenv("LETTA_BASE_URL")
+        letta_token = os.getenv("LETTA_API_TOKEN")
         if letta_base_url is None:
             raise ValueError("LETTA_BASE_URL is not defined!")
         logger.info(f"Using Letta base URL: {letta_base_url}")
-        letta = Letta(base_url=letta_base_url)
+        letta = Letta(base_url=letta_base_url, token=letta_token)
         create_agent = LettaCreateAgent(letta=letta)
 
         pipe.add_component("create_agent", create_agent)
