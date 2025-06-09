@@ -350,8 +350,8 @@ async def check_google_auth(user_id: str):
     Checks if a user is authenticated with Google.
     """
     try:
-        status = google_oauth.check_auth_status(user_id)
-        return status
+        is_authenticated = google_oauth.check_auth_status(user_id)
+        return {"authenticated": is_authenticated, "user_id": user_id}
     except Exception as e:
         log.error(f"Error checking Google auth status: {e}")
         raise HTTPException(status_code=500, detail=f"Error checking Google auth status: {e}")
