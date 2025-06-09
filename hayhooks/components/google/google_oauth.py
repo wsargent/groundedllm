@@ -182,8 +182,18 @@ class GoogleOAuth:
             with open(token_path, "r") as token_file:
                 token_data = json.load(token_file)
 
+            from datetime import datetime
+
+            # Parse expiry if present
+            expiry = None
+            if token_data.get("expiry"):
+                try:
+                    expiry = datetime.fromisoformat(token_data["expiry"].replace("Z", "+00:00"))
+                except ValueError:
+                    logger.warning(f"Could not parse expiry date for user {user_id}: {token_data.get('expiry')}")
+
             credentials = Credentials(
-                token=token_data["token"], refresh_token=token_data.get("refresh_token"), token_uri=token_data["token_uri"], client_id=token_data["client_id"], client_secret=token_data["client_secret"], scopes=token_data["scopes"]
+                token=token_data["token"], refresh_token=token_data.get("refresh_token"), token_uri=token_data["token_uri"], client_id=token_data["client_id"], client_secret=token_data["client_secret"], scopes=token_data["scopes"], expiry=expiry
             )
 
             # Refresh token if expired
@@ -196,7 +206,7 @@ class GoogleOAuth:
             logger.error(f"Error loading credentials for user {user_id}: {e}")
             return None
 
-    def check_auth_status(self, user_id: str) -> Dict:
+    def check_auth_status(self, user_id: str) -> bool:
         """
         Check if a user is authenticated.
 
@@ -204,7 +214,7 @@ class GoogleOAuth:
             user_id: Identifier for the user
 
         Returns:
-            Dictionary with authentication status
+            True if authenticated and not expired, False otherwise
         """
         credentials = self.load_credentials(user_id)
-        return {"authenticated": credentials is not None and not credentials.expired, "user_id": user_id}
+        return credentials is not None and not credentials.expired

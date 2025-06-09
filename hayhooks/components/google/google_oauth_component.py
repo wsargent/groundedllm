@@ -37,10 +37,9 @@ class GoogleOAuthComponent:
             user_id: Identifier for the user
 
         Returns:
-            Dictionary with authentication status
+            True if authenticated and not expired, False otherwise
         """
-        status = self.oauth.check_auth_status(user_id)
-        return status
+        return self.oauth.check_auth_status(user_id)
 
     def get_credentials(self, user_id: str):
         """
@@ -71,8 +70,8 @@ class GoogleOAuthComponent:
         logger.debug(f"Running google_auth for user_id='{user_id}'")
 
         try:
-            auth_status = self.check_auth_status(user_id=user_id)
-            if auth_status.get("authenticated"):
+            is_authenticated = self.check_auth_status(user_id=user_id)
+            if is_authenticated:
                 logger.info(f"User '{user_id}' is already authenticated.")
                 return {"authenticated": True, "user_id": user_id}
             else:
