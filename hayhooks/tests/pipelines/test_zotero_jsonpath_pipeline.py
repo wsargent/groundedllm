@@ -6,7 +6,7 @@ import tempfile
 import pytest
 
 from components.zotero import ZoteroDatabase
-from pipelines.zotero_search.pipeline_wrapper import PipelineWrapper
+from pipelines.search_zotero.pipeline_wrapper import PipelineWrapper
 
 
 @pytest.fixture
@@ -64,9 +64,10 @@ def test_pipeline_search_by_short_title(zotero_db):
     pipeline.setup()
 
     # Test searching by shortTitle
-    results = pipeline.run_api({"shortTitle": "TP1"})
+    json_results = pipeline.run_api({"shortTitle": "TP1"})
+    results = json.loads(json_results)
     assert len(results) == 1
-    assert results[0]["key"] == "item1"
+    assert results[0].get("key") == "item1"
 
 
 def test_pipeline_search_by_title(zotero_db):
@@ -75,7 +76,8 @@ def test_pipeline_search_by_title(zotero_db):
     pipeline.setup()
 
     # Test searching by title
-    results = pipeline.run_api({"title": "Another Paper"})
+    json_results = pipeline.run_api({"title": "Another Paper"})
+    results = json.loads(json_results)
     assert len(results) == 1
     assert results[0]["key"] == "item3"
 
@@ -86,7 +88,8 @@ def test_pipeline_search_by_doi(zotero_db):
     pipeline.setup()
 
     # Test searching by DOI
-    results = pipeline.run_api({"DOI": "10.1234/test1"})
+    json_results = pipeline.run_api({"DOI": "10.1234/test1"})
+    results = json.loads(json_results)
     assert len(results) == 1
     assert results[0]["key"] == "item1"
 
@@ -97,7 +100,8 @@ def test_pipeline_search_no_results(zotero_db):
     pipeline.setup()
 
     # Test searching with no matches
-    results = pipeline.run_api({"shortTitle": "NonExistent"})
+    json_results = pipeline.run_api({"shortTitle": "NonExistent"})
+    results = json.loads(json_results)
     assert len(results) == 0
 
 
@@ -108,7 +112,8 @@ def test_pipeline_invalid_query(zotero_db):
 
     # Test with invalid query object
     # This should not raise an exception but return an empty list
-    results = pipeline.run_api({})
+    json_results = pipeline.run_api({})
+    results = json.loads(json_results)
     assert len(results) == 0
 
 
@@ -118,15 +123,17 @@ def test_pipeline_multiple_query_objects(zotero_db):
     pipeline.setup()
 
     # Test with multiple query objects that should match one item
-    results = pipeline.run_api([{"title": "Test Paper 1"}, {"DOI": "10.1234/test1"}])
-    assert len(results) == 1
-    assert results[0]["key"] == "item1"
+    json_results = pipeline.run_api([{"title": "Test Paper 1"}, {"DOI": "10.1234/test1"}])
+    results1 = json.loads(json_results)
+    assert len(results1) == 1
+    assert results1[0]["key"] == "item1"
 
     # Test with multiple query objects that should not match any items
-    results = pipeline.run_api([{"title": "Test Paper 1"}, {"DOI": "10.1234/test2"}])
-    assert len(results) == 0
+    results2 = pipeline.run_api([{"title": "Test Paper 1"}, {"DOI": "10.1234/test2"}])
+    assert len(json.loads(results2)) == 0
 
     # Test with multiple fields in a single query object
     single_query = pipeline.run_api({"title": "Test Paper 2", "DOI": "10.1234/test2"})
-    assert len(single_query) == 1
-    assert single_query[0]["key"] == "item2"
+    result = json.loads(single_query)
+    assert len(result) == 1
+    assert result[0]["key"] == "item2"

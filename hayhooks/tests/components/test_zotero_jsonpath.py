@@ -77,44 +77,44 @@ def zotero_db():
 
 def test_search_by_short_title(zotero_db):
     # Test searching by shortTitle
-    results = zotero_db.search_json_by_jsonpath({"shortTitle": "TP1"})
+    results = zotero_db.find_items_by_mongo_query({"shortTitle": "TP1"})
     assert len(results) == 1
     assert results[0]["key"] == "item1"
 
     # Test searching by shortTitle with another value
-    results = zotero_db.search_json_by_jsonpath({"shortTitle": "TP2"})
+    results = zotero_db.find_items_by_mongo_query({"shortTitle": "TP2"})
     assert len(results) == 1
     assert results[0]["key"] == "item2"
 
 
 def test_search_by_title(zotero_db):
     # Test searching by title
-    results = zotero_db.search_json_by_jsonpath({"title": "Another Paper"})
+    results = zotero_db.find_items_by_mongo_query({"title": "Another Paper"})
     assert len(results) == 1
     assert results[0]["key"] == "item3"
 
 
 def test_search_by_doi(zotero_db):
     # Test searching by DOI
-    results = zotero_db.search_json_by_jsonpath({"DOI": "10.1234/test1"})
+    results = zotero_db.find_items_by_mongo_query({"DOI": "10.1234/test1"})
     assert len(results) == 1
     assert results[0]["key"] == "item1"
 
 
 def test_search_no_results(zotero_db):
     # Test searching with no matches
-    results = zotero_db.search_json_by_jsonpath({"shortTitle": "NonExistent"})
+    results = zotero_db.find_items_by_mongo_query({"shortTitle": "NonExistent"})
     assert len(results) == 0
 
 
 def test_invalid_query(zotero_db):
     # Test with invalid query object
-    results = zotero_db.search_json_by_jsonpath({})
+    results = zotero_db.find_items_by_mongo_query({})
     assert len(results) == 0
 
 
 def test_search_by_creator_lastname(zotero_db):
-    results = zotero_db.search_json_by_jsonpath({"creators.lastName": "Brooker"})
+    results = zotero_db.find_items_by_mongo_query({"creators.lastName": "Brooker"})
     assert len(results) == 2
     assert "item1" in [item["key"] for item in results]
     assert "item3" in [item["key"] for item in results]
@@ -122,15 +122,15 @@ def test_search_by_creator_lastname(zotero_db):
 
 def test_search_with_multiple_expressions(zotero_db):
     # Test searching with multiple query objects (logical AND)
-    results = zotero_db.search_json_by_jsonpath([{"title": "Test Paper 1"}, {"DOI": "10.1234/test1"}])
+    results = zotero_db.find_items_by_mongo_query([{"title": "Test Paper 1"}, {"DOI": "10.1234/test1"}])
     assert len(results) == 1
     assert results[0]["key"] == "item1"
 
     # Test with no matches (one condition matches, the other doesn't)
-    results = zotero_db.search_json_by_jsonpath([{"title": "Test Paper 1"}, {"DOI": "10.1234/test2"}])
+    results = zotero_db.find_items_by_mongo_query([{"title": "Test Paper 1"}, {"DOI": "10.1234/test2"}])
     assert len(results) == 0
 
     # Test with multiple expressions including array query
-    results = zotero_db.search_json_by_jsonpath([{"creators.lastName": "Brooker"}, {"title": "Another Paper"}])
+    results = zotero_db.find_items_by_mongo_query([{"creators.lastName": "Brooker"}, {"title": "Another Paper"}])
     assert len(results) == 1
     assert results[0]["key"] == "item3"
