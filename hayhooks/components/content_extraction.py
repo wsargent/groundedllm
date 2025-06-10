@@ -25,41 +25,6 @@ from components.youtube_transcript import YouTubeTranscriptResolver
 from components.zotero import ZoteroContentResolver
 
 
-class URLContentResolver:
-    """Base class for URL content resolvers."""
-
-    def __init__(self, raise_on_failure: bool = False):
-        """Initialize the URL content resolver.
-
-        Args:
-            raise_on_failure: Whether to raise an exception if fetching fails.
-        """
-        self.raise_on_failure = raise_on_failure
-
-    @component.output_types(streams=List[ByteStream])
-    def run(self, urls: List[str]):
-        """Fetch content from URLs.
-
-        Args:
-            urls: A list of URLs to fetch content from.
-
-        Returns:
-            A dictionary with a "streams" key containing a list of ByteStream objects.
-        """
-        raise NotImplementedError("Subclasses must implement this method")
-
-    def can_handle(self, url: str) -> bool:
-        """Check if this resolver can handle the given URL.
-
-        Args:
-            url: The URL to check.
-
-        Returns:
-            True if this resolver can handle the URL, False otherwise.
-        """
-        raise NotImplementedError("Subclasses must implement this method")
-
-
 @component
 class GenericURLContentResolver:
     """A resolver that uses the existing FallbackLinkContentFetcher for generic URLs."""

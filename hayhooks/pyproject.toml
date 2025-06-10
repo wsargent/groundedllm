@@ -28,6 +28,7 @@ dependencies = [
     "tavily-python>=0.7.3",
     "trafilatura>=2.0.0",
     "youtube-transcript-api>=1.0.3",
+    "github-haystack>=1.0.0",
 ]
 
 [tool.setuptools]
