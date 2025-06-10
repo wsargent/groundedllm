@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Hayhooks extends the basic Hayhooks tool server to create a comprehensive MCP (Model Context Protocol) server that bridges Haystack Pipelines with AI agents like Letta. The application serves as both a pipeline API server and an MCP server, providing tools for content extraction, web search, Google Workspace integration, and AI agent communication.
 
+## Documentation Resources
+
+- Haystack documentation is available at https://docs.haystack.deepset.ai/docs and can be accessed through extract and excerpt tools
+- Haystack API reference is available at https://docs.haystack.deepset.ai/reference/agents-api 
+
 ## Development Commands
 
 ```bash

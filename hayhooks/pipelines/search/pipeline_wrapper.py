@@ -8,8 +8,8 @@ from haystack.components.generators import OpenAIGenerator
 from haystack.components.joiners import DocumentJoiner
 from haystack.utils import Secret
 
-from components.content_extraction import build_search_extraction_component
 from components.web_search.brave_web_search import BraveWebSearch
+from components.web_search.document_extract import DocumentContentExtractor
 from components.web_search.exa_web_search import ExaWebSearch
 from components.web_search.linkup_web_search import LinkupWebSearch
 from components.web_search.searxng_web_search import SearXNGWebSearch
@@ -58,7 +58,7 @@ class PipelineWrapper(BasePipelineWrapper):
         retry_attempts = int(os.getenv("HAYHOOKS_SEARCH_RETRY_ATTEMPTS", "3"))
         timeout = int(os.getenv("HAYHOOKS_SEARCH_TIMEOUT", "3"))
         raise_on_failure = bool(os.getenv("HAYHOOKS_SEARCH_RAISE_ON_FAILURE", "False"))
-        content_extractor = build_search_extraction_component(
+        content_extractor = DocumentContentExtractor(
             raise_on_failure=raise_on_failure,
             user_agents=[default_user_agent],
             retry_attempts=retry_attempts,
