@@ -6,7 +6,7 @@ import tempfile
 import pytest
 
 from components.zotero import ZoteroDatabase
-from pipelines.zotero_search.pipeline_wrapper import PipelineWrapper
+from pipelines.search_zotero.pipeline_wrapper import PipelineWrapper
 
 
 @pytest.fixture
