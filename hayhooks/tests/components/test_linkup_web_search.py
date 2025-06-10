@@ -8,7 +8,7 @@ from components.web_search.linkup_web_search import LinkupWebSearch
 
 
 class TestLinkupWebSearch(unittest.TestCase):
-    @patch("components.linkup_web_search.LinkupClient")
+    @patch("components.web_search.linkup_web_search.LinkupClient")
     def test_with_valid_api_key(self, mock_linkup_client):
         # Setup mock
         mock_instance = MagicMock()
@@ -46,7 +46,7 @@ class TestLinkupWebSearch(unittest.TestCase):
         self.assertEqual(result["documents"], [])
         self.assertEqual(result["urls"], [])
 
-    @patch("components.linkup_web_search.Secret")
+    @patch("haystack.utils.Secret")
     def test_with_missing_api_key(self, mock_secret):
         # Setup mock to raise an exception when resolve_value is called
         mock_secret_instance = MagicMock()
