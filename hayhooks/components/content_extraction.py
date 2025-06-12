@@ -100,7 +100,11 @@ class URLContentRouter:
 
         for resolver, urls in resolver_urls.items():
             result = resolver.run(urls)
-            all_streams.extend(result["streams"])
+            if "streams" in result:
+                streams = result["streams"]
+                all_streams.extend(streams)
+            else:
+                logger.debug(f"No streams found for {resolver}")
 
         return {"streams": all_streams}
 
@@ -486,7 +490,13 @@ def build_content_extraction_component(
 
     notion_resolver = NotionContentResolver(raise_on_failure=raise_on_failure)
 
-    github_issue_resolver = GithubIssueContentResolver(raise_on_failure=raise_on_failure)
+    github_token = None
+    if os.getenv("GITHUB_API_KEY"):
+        github_token = Secret.from_env_var("GITHUB_API_KEY")
+    github_issue_resolver = GithubIssueContentResolver(
+        github_token=github_token,  # use api key to get private content and avoid rate limits
+        raise_on_failure=raise_on_failure,
+    )
 
     # Create router with all resolvers (generic resolver must be last)
     url_router = URLContentRouter(
@@ -515,6 +525,7 @@ def build_content_extraction_component(
     ]
     additional_mimetypes = {"text/mdx": ".mdx"}
 
+    # This should use MultiFileConverter
     file_type_router = FileTypeRouter(mime_types=mime_types, additional_mimetypes=additional_mimetypes)
     text_file_converter = TextFileToDocument()
     html_converter = HTMLToDocument()
@@ -525,9 +536,13 @@ def build_content_extraction_component(
     # docx_converter = DOCXToDocument() # If needed later
     document_joiner = DocumentJoiner()
 
+    # Should add warnings to this so it doesn't just fall through
+    unclassified_file_converter = TextFileToDocument()
+
     # Add components to the internal pipeline
     preprocessing_pipeline.add_component(instance=url_router, name="url_router")
     preprocessing_pipeline.add_component(instance=file_type_router, name="file_type_router")
+    preprocessing_pipeline.add_component(instance=unclassified_file_converter, name="unclassified_file_converter")
     preprocessing_pipeline.add_component(instance=text_file_converter, name="text_file_converter")
     preprocessing_pipeline.add_component(instance=markdown_converter, name="markdown_converter")
     preprocessing_pipeline.add_component(instance=html_converter, name="html_converter")
@@ -547,8 +562,10 @@ def build_content_extraction_component(
     preprocessing_pipeline.connect("file_type_router.application/pdf", "pypdf_converter.sources")
     preprocessing_pipeline.connect("file_type_router.text/markdown", "markdown_converter.sources")
     preprocessing_pipeline.connect("file_type_router.text/mdx", "mdx_converter.sources")  # Route mdx to markdown converter
+    preprocessing_pipeline.connect("file_type_router.unclassified", "unclassified_file_converter.sources")  # Route unclassified to text converter as fallback
     # preprocessing_pipeline.connect("file_type_router.application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx_converter.sources") # If needed later
 
+    preprocessing_pipeline.connect("unclassified_file_converter", "document_joiner")
     preprocessing_pipeline.connect("text_file_converter", "document_joiner")
     preprocessing_pipeline.connect("html_converter", "document_joiner")
     preprocessing_pipeline.connect("csv_converter", "document_joiner")
