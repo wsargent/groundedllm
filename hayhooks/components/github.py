@@ -5,7 +5,7 @@ from haystack import component
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
-from haystack_integrations.components.connectors.github import GitHubIssueViewer
+from haystack_integrations.components.connectors.github import GitHubIssueViewer, GitHubRepoViewer
 from loguru import logger
 
 from resources.utils import read_resource_file
@@ -66,3 +66,75 @@ class GithubIssueContentResolver:
 
     def can_handle(self, url: str) -> bool:
         return self.issue_regex.match(url) is not None
+
+
+@component
+class GithubRepoContentResolver:
+    """This class looks for files and directories in a github repository and sends them to GitHubRepoViewer"""
+
+    def __init__(self, github_token: Optional[Secret] = None, raise_on_failure: bool = False):
+        # This matches every github repo file.
+        repo_pattern = r"^(?:https?:\/\/)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)(?:\/(?:blob|tree|raw|commit)\/([a-zA-Z0-9._-]+)\/(.*))?$"
+
+        self.github_token = github_token
+        self.raise_on_failure = raise_on_failure
+        self.github_regex = re.compile(repo_pattern)
+
+    def _parse_github_url(self, url):
+        match = self.github_regex.match(url)
+        if match:
+            owner = match.group(1)
+            repo = match.group(2)
+            branch_or_commit = match.group(3)
+            path = match.group(4)
+            return {
+                "owner": owner,
+                "repository": repo,
+                "branch_or_commit": branch_or_commit if branch_or_commit else None,
+                "path": path if path else None,
+            }
+        return None
+
+    @component.output_types(streams=List[ByteStream])
+    def run(self, urls: List[str]) -> Dict[str, list[ByteStream]]:
+        logger.debug(f"Using GithubIssueContentResolver for urls: {urls}")
+        # https://docs.haystack.deepset.ai/docs/githubissueviewer
+        # https://docs.haystack.deepset.ai/reference/integrations-github#githubissueviewer
+        streams: List[ByteStream] = []
+        try:
+            viewer = GitHubRepoViewer(github_token=self.github_token, raise_on_failure=self.raise_on_failure)
+
+            for url in urls:
+                github_dict = self._parse_github_url(url)
+                logger.debug(f"GithubRepoContentResolver github_dict: {github_dict}")
+
+                repo = github_dict["repository"]
+                branch_or_commit = github_dict["branch_or_commit"]
+                owner = github_dict["owner"]
+                path = github_dict["path"]
+
+                result = viewer.run(path=path, repo=f"{owner}/{repo}", branch=branch_or_commit)
+                logger.debug(f"GithubRepoContentResolver result: {result}")
+                if "documents" in result:
+                    documents = result["documents"]
+                    if documents:
+                        for document in documents:
+                            stream = ByteStream.from_string(text=document.content, meta=document.meta, mime_type="text/html")
+                            streams.append(stream)
+                    else:
+                        logger.error(f"No documents for url: {url}")
+                else:
+                    logger.warning(f"Using GithubRepoContentResolver: no documents in {url}")
+
+            logger.debug(f"GithubRepoContentResolver streams: {streams}")
+            return {"streams": streams}
+        except Exception as e:
+            logger.warning(f"Failed to fetch {urls} using Github: {str(e)}")
+            if self.raise_on_failure:
+                raise e
+            else:
+                logger.debug(f"GithubRepoContentResolver error streams: {streams}")
+                return {"streams": streams}
+
+    def can_handle(self, url: str) -> bool:
+        return self.github_regex.match(url) is not None
