@@ -1,12 +1,12 @@
 import os
-from typing import List
+from typing import List, Optional
 
 import haystack
-from hayhooks.server.logger import log
 from hayhooks.server.utils.base_pipeline_wrapper import BasePipelineWrapper
 from haystack import Pipeline
 from haystack.components.generators import OpenAIGenerator
 from haystack.utils import Secret
+from loguru import logger as log
 
 from components.content_extraction import build_content_extraction_component
 
@@ -73,12 +73,18 @@ class PipelineWrapper(BasePipelineWrapper):
         try:
             result = self.pipeline.run({"content_extractor": {"urls": [url]}})
 
-            documents: List[haystack.Document] = result["content_extractor"]["documents"]
+            documents: Optional[List[haystack.Document]] = None
+            if "content_extractor" in result:
+                content_extractor = result["content_extractor"]
+                documents: List[haystack.Document] = content_extractor["documents"]
+            else:
+                log.error(f"No content_extractor in result {result} found for url: {url} ", result)
+
             content = None
             if documents:
                 content = documents[0].content or None
 
             return content
         except Exception as e:
-            log.error(f"Error extracting content from {url}", exc_info=e)
+            log.exception(f"Error extracting content from {url}", e)
             return f"Error: {str(e)}"
