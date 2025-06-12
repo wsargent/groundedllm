@@ -28,15 +28,6 @@ def test_content_extraction_component_run():
 
 def test_content_extraction_component_github_issue():
     """Test that we can run the extractor and get content from GitHub issues."""
-
-    import sys
-
-    from loguru import logger
-
-    logger.add(sys.stdout, level="DEBUG")
-    tracing.tracer.is_content_tracing_enabled = True
-    tracing.enable_tracing(LoggingTracer())
-
     extraction_component = build_content_extraction_component(http2=True, raise_on_failure=False)
     result = extraction_component.run(urls=["https://github.com/letta-ai/letta/issues/2681"])
 
@@ -58,7 +49,7 @@ def test_content_extraction_component_github_repo():
     tracing.enable_tracing(LoggingTracer())
 
     extraction_component = build_content_extraction_component(http2=True, raise_on_failure=False)
-    result = extraction_component.run(urls=["https://github.com/letta-ai/letta/blob/main/README.md"])
+    result = extraction_component.run(urls=["https://github.com/wsargent/recipellm/blob/main/README.md"])
 
     assert "documents" in result
     assert isinstance(result["documents"], list)
