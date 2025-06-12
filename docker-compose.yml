@@ -142,6 +142,7 @@ services:
       - ENABLE_EVALUATION_ARENA_MODELS=false
       - ENABLE_AUTOCOMPLETE_GENERATION=false
       - ENABLE_RETRIEVAL_QUERY_GENERATION=false
+      - ENABLE_FOLLOW_UP_GENERATION=false
       # OpenAI selection should go to Hayhooks to show agents
       - ENABLE_OPENAI_API=true
       - OPENAI_API_BASE_URL=http://hayhooks:1416
