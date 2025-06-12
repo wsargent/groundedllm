@@ -49,7 +49,7 @@ services:
       - OPENAI_API_KEY=$LITELLM_MASTER_KEY
       
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:1416/status"]
+      test: ["CMD", "curl", "-f", "http://localhost:1416/status"]
       interval: 10s
       timeout: 5s
       retries: 18
@@ -181,7 +181,7 @@ services:
       letta:
         condition: service_healthy
       hayhooks:
-        condition: service_started
+        condition: service_healthy
       searxng:
         condition: service_healthy
     environment:
