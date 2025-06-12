@@ -34,7 +34,7 @@ class PipelineWrapper(BasePipelineWrapper):
         mail_lister = GoogleMailReader()  # OAuth handled internally
         # The prompt_builder will receive 'documents' from mail_lister
         # and 'query' from the run_api's 'instruction' input.
-        prompt_builder = PromptBuilder(template=self.template)
+        prompt_builder = PromptBuilder(template=self.template, required_variables=["query", "documents"])
 
         model_name = os.getenv("HAYHOOKS_SEARCH_EMAIL_MODEL")
         if not model_name:

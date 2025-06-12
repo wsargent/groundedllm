@@ -1,4 +1,5 @@
 FROM python:3.12-slim-bullseye
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # curl is needed for docker compose healthcheck
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*

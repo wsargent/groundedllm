@@ -18,6 +18,7 @@ from haystack.components.routers import FileTypeRouter
 from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
 
+from components.github import GithubIssueContentResolver
 from components.google.google_oauth import GoogleOAuth
 from components.notion import NotionContentResolver
 from components.stackoverflow import StackOverflowContentResolver
@@ -485,6 +486,8 @@ def build_content_extraction_component(
 
     notion_resolver = NotionContentResolver(raise_on_failure=raise_on_failure)
 
+    github_issue_resolver = GithubIssueContentResolver(raise_on_failure=raise_on_failure)
+
     # Create router with all resolvers (generic resolver must be last)
     url_router = URLContentRouter(
         resolvers=[
@@ -492,6 +495,7 @@ def build_content_extraction_component(
             zotero_resolver,
             youtube_resolver,
             notion_resolver,
+            github_issue_resolver,
             generic_resolver,  # Must be last
         ]
     )
