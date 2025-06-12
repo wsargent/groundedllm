@@ -41,6 +41,7 @@ class TestGithubRepoContentResolver:
             "github.com/owner/repo/blob/develop/src/main.py",
             "https://github.com/owner-with-dash/repo-name/tree/feature-branch/dir/file.js",
             "https://github.com/owner123/repo_name/blob/v1.0.0/package.json",
+            "https://github.com/wsargent/recipellm/blob/main/README.md",
         ]
 
         for url in valid_urls:
@@ -156,7 +157,7 @@ class TestGithubRepoContentResolver:
         assert "streams" in result
         assert len(result["streams"]) == 2
         assert all(isinstance(stream, ByteStream) for stream in result["streams"])
-        assert all(stream.mime_type == "text/plain" for stream in result["streams"])
+        assert all(stream.mime_type == "text/html" for stream in result["streams"])
 
         # Verify viewer was called correctly
         mock_viewer_class.assert_called_once_with(github_token=None, raise_on_failure=False)
@@ -321,7 +322,7 @@ class TestGithubRepoContentResolver:
 
         # Verify result
         assert len(result["streams"]) == 1
-        assert result["streams"][0].mime_type == "text/plain"
+        assert result["streams"][0].mime_type == "text/html"
 
     @patch("components.github.GitHubRepoViewer")
     def test_run_with_different_branch_types(self, mock_viewer_class):
