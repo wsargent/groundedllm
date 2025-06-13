@@ -1,3 +1,4 @@
+import mimetypes
 import re
 from typing import Dict, List, Optional
 
@@ -119,7 +120,12 @@ class GithubRepoContentResolver:
                     documents = result["documents"]
                     if documents:
                         for document in documents:
-                            stream = ByteStream.from_string(text=document.content, meta=document.meta, mime_type="text/html")
+                            # can we guess the mime type from the file suffix?
+                            path = document.meta.get("path")
+                            # deprecated in 3.13 but we're on 3.12 here...
+                            mime_type = mimetypes.guess_type(path, strict=False)[0]
+                            logger.debug(f"GithubRepoContentResolver mime type for path {path} is {mime_type}")
+                            stream = ByteStream.from_string(text=document.content, meta=document.meta, mime_type=mime_type)
                             streams.append(stream)
                     else:
                         logger.error(f"No documents for url: {url}")
