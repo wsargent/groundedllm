@@ -96,12 +96,16 @@ class GithubRepoContentResolver:
     def __init__(self, github_token: Optional[Secret] = None, raise_on_failure: bool = False):
         # This matches every github repo file.
         repo_pattern = r"^(?:https?:\/\/)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)(?:\/(?:blob|tree|raw|commit)\/([a-zA-Z0-9._-]+)\/(.*))?$"
+        # This matches raw.githubusercontent.com URLs
+        raw_pattern = r"^(?:https?:\/\/)?raw\.githubusercontent\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/(.+)$"
 
         self.github_token = github_token
         self.raise_on_failure = raise_on_failure
         self.github_regex = re.compile(repo_pattern)
+        self.raw_github_regex = re.compile(raw_pattern)
 
     def _parse_github_url(self, url):
+        # Try regular GitHub URL first
         match = self.github_regex.match(url)
         if match:
             owner = match.group(1)
@@ -114,6 +118,34 @@ class GithubRepoContentResolver:
                 "branch_or_commit": branch_or_commit if branch_or_commit else None,
                 "path": path if path else None,
             }
+
+        # Try raw GitHub URL
+        raw_match = self.raw_github_regex.match(url)
+        if raw_match:
+            owner = raw_match.group(1)
+            repo = raw_match.group(2)
+            remaining_path = raw_match.group(3)
+
+            # Split the remaining path to extract branch and file path
+            path_parts = remaining_path.split("/")
+
+            # Handle complex branch names like refs/heads/master
+            if len(path_parts) >= 3 and path_parts[0] == "refs":
+                # For refs/heads/master, take first 3 parts as branch
+                branch_or_commit = "/".join(path_parts[:3])
+                path = "/".join(path_parts[3:])
+            else:
+                # For simple branch names, take first part as branch
+                branch_or_commit = path_parts[0]
+                path = "/".join(path_parts[1:]) if len(path_parts) > 1 else ""
+
+            return {
+                "owner": owner,
+                "repository": repo,
+                "branch_or_commit": branch_or_commit,
+                "path": path,
+            }
+
         return None
 
     @component.output_types(streams=List[ByteStream])
@@ -163,4 +195,4 @@ class GithubRepoContentResolver:
                 return {"streams": streams}
 
     def can_handle(self, url: str) -> bool:
-        return self.github_regex.match(url) is not None
+        return self.github_regex.match(url) is not None or self.raw_github_regex.match(url) is not None

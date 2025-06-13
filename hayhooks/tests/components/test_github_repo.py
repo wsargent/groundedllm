@@ -43,6 +43,9 @@ class TestGithubRepoContentResolver:
             "https://github.com/owner123/repo_name/blob/v1.0.0/package.json",
             "https://github.com/wsargent/recipellm/blob/main/README.md",
             "https://raw.githubusercontent.com/wsargent/jmxmvc/refs/heads/master/README.md",
+            "https://raw.githubusercontent.com/octocat/Spoon-Knife/main/README.md",
+            "http://raw.githubusercontent.com/torvalds/linux/master/Documentation/admin-guide/devices.rst",
+            "raw.githubusercontent.com/owner/repo/main/file.py",
         ]
 
         for url in valid_urls:
@@ -61,6 +64,7 @@ class TestGithubRepoContentResolver:
             "",
             "https://example.com",
             "ftp://github.com/owner/repo",
+            "https://raw.example.com/owner/repo/main/file.py",
         ]
 
         for url in invalid_urls:
@@ -138,6 +142,58 @@ class TestGithubRepoContentResolver:
         result = resolver._parse_github_url("https://invalid-url.com")
 
         assert result is None
+
+    def test_parse_raw_github_url_basic(self):
+        """Test parsing basic raw GitHub URL."""
+        resolver = GithubRepoContentResolver()
+
+        result = resolver._parse_github_url("https://raw.githubusercontent.com/owner/repo/main/README.md")
+
+        assert result == {
+            "owner": "owner",
+            "repository": "repo",
+            "branch_or_commit": "main",
+            "path": "README.md",
+        }
+
+    def test_parse_raw_github_url_with_subdirectory(self):
+        """Test parsing raw GitHub URL with subdirectory path."""
+        resolver = GithubRepoContentResolver()
+
+        result = resolver._parse_github_url("https://raw.githubusercontent.com/owner/repo/develop/src/components/file.py")
+
+        assert result == {
+            "owner": "owner",
+            "repository": "repo",
+            "branch_or_commit": "develop",
+            "path": "src/components/file.py",
+        }
+
+    def test_parse_raw_github_url_with_refs_heads(self):
+        """Test parsing raw GitHub URL with refs/heads branch reference."""
+        resolver = GithubRepoContentResolver()
+
+        result = resolver._parse_github_url("https://raw.githubusercontent.com/wsargent/jmxmvc/refs/heads/master/README.md")
+
+        assert result == {
+            "owner": "wsargent",
+            "repository": "jmxmvc",
+            "branch_or_commit": "refs/heads/master",
+            "path": "README.md",
+        }
+
+    def test_parse_raw_github_url_without_protocol(self):
+        """Test parsing raw GitHub URL without protocol."""
+        resolver = GithubRepoContentResolver()
+
+        result = resolver._parse_github_url("raw.githubusercontent.com/owner/repo/main/file.txt")
+
+        assert result == {
+            "owner": "owner",
+            "repository": "repo",
+            "branch_or_commit": "main",
+            "path": "file.txt",
+        }
 
     @patch("components.github.GitHubRepoViewer")
     def test_run_successful_single_url(self, mock_viewer_class):
@@ -353,3 +409,46 @@ class TestGithubRepoContentResolver:
         # Test with version tag
         resolver.run(urls=["https://github.com/owner/repo/blob/v1.2.3/file.py"])
         mock_viewer_instance.run.assert_called_with(path="file.py", repo="owner/repo", branch="v1.2.3")
+
+    @patch("components.github.GitHubRepoViewer")
+    def test_run_raw_github_url(self, mock_viewer_class):
+        """Test processing raw GitHub URL."""
+        # Setup mocks
+        mock_viewer_instance = Mock()
+        doc = Document(content="Raw file content", meta={"path": "README.md"})
+        mock_viewer_instance.run.return_value = {"documents": [doc]}
+        mock_viewer_class.return_value = mock_viewer_instance
+
+        # Run test
+        resolver = GithubRepoContentResolver()
+        result = resolver.run(urls=["https://raw.githubusercontent.com/owner/repo/main/README.md"])
+
+        # Verify viewer was called correctly with parsed raw URL
+        mock_viewer_instance.run.assert_called_once_with(path="README.md", repo="owner/repo", branch="main")
+
+        # Verify result
+        assert len(result["streams"]) == 1
+        assert result["streams"][0].mime_type == "text/markdown"
+
+    @patch("components.github.GitHubRepoViewer")
+    def test_run_mixed_github_urls(self, mock_viewer_class):
+        """Test processing mixed regular and raw GitHub URLs."""
+        # Setup mocks
+        mock_viewer_instance = Mock()
+        doc = Document(content="File content", meta={"path": "file.py"})
+        mock_viewer_instance.run.return_value = {"documents": [doc]}
+        mock_viewer_class.return_value = mock_viewer_instance
+
+        # Run test with mixed URL types
+        resolver = GithubRepoContentResolver()
+        urls = ["https://github.com/owner/repo/blob/main/file.py", "https://raw.githubusercontent.com/owner/repo/main/README.md"]
+        result = resolver.run(urls=urls)
+
+        # Verify both URLs were processed
+        assert len(result["streams"]) == 2
+        assert mock_viewer_instance.run.call_count == 2
+
+        # Verify calls were made with correct parameters
+        calls = mock_viewer_instance.run.call_args_list
+        assert calls[0] == ((), {"path": "file.py", "repo": "owner/repo", "branch": "main"})
+        assert calls[1] == ((), {"path": "README.md", "repo": "owner/repo", "branch": "main"})
