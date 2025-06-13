@@ -232,7 +232,7 @@ If you give the agent a Notion URL, it can extract or excerpt the contents for y
 
 ### Github Integration
 
-If you use Github, you can create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and set it to `GITHUB_API_TOKEN` environment variable -- this will enable the extract and excerpt tools to read private Github issues if you pass in the URL, and will also give you higher rate limits.
+If you use Github, you can create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and set it to `GITHUB_API_TOKEN` environment variable -- this will enable the extract and excerpt tools to read private Github issues and repositories if you pass in the URL, and will also give you higher rate limits.
 
 ## Composition
 
