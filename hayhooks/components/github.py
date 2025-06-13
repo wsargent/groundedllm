@@ -11,6 +11,10 @@ from loguru import logger
 
 from resources.utils import read_resource_file
 
+raw_url1 = "https://raw.githubusercontent.com/wsargent/jmxmvc/refs/heads/master/README.md"
+raw_url2 = "http://raw.githubusercontent.com/octocat/Spoon-Knife/main/README.md"
+raw_url3 = "https://raw.githubusercontent.com/torvalds/linux/master/Documentation/admin-guide/devices.rst"
+
 
 @component
 class GithubIssueContentResolver:
@@ -24,6 +28,22 @@ class GithubIssueContentResolver:
 
         # Compile it for better performance if using multiple times
         self.issue_regex = re.compile(issue_pattern)
+        self.raw_github_content_regex = re.compile(r"^(?:https?:\/\/)?raw\.githubusercontent\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9._\/-]+)\/(.*)$")
+
+    def parse_raw_github_url(self, url):
+        match = self.raw_github_content_regex.match(url)
+        if match:
+            owner = match.group(1)
+            repo = match.group(2)
+            branch_or_commit = match.group(3)
+            path = match.group(4)
+            return {
+                "owner": owner,
+                "repository": repo,
+                "branch_or_commit": branch_or_commit,
+                "path": path,
+            }
+        return None
 
     @component.output_types(streams=List[ByteStream])
     def run(self, urls: List[str]) -> Dict[str, list[ByteStream]]:

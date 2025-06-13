@@ -42,6 +42,7 @@ class TestGithubRepoContentResolver:
             "https://github.com/owner-with-dash/repo-name/tree/feature-branch/dir/file.js",
             "https://github.com/owner123/repo_name/blob/v1.0.0/package.json",
             "https://github.com/wsargent/recipellm/blob/main/README.md",
+            "https://raw.githubusercontent.com/wsargent/jmxmvc/refs/heads/master/README.md",
         ]
 
         for url in valid_urls:
