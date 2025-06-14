@@ -33,16 +33,18 @@ def google_auth(user_id: str = os.getenv("HAYHOOKS_USER_ID")) -> str:
     response = requests.post(f"{hayhooks_base_url}/google_auth/run", json={"user_id": user_id})
 
     response.raise_for_status()
-    json_body = response.json()
-    result = json_body["result"]
-    print("result", result)
-    authenticated = result.get("authenticated")
-    if authenticated:
-        return json.dumps(result)
+    json_response = response.json()
+    if "result" in json_response:
+        result = json_response["result"]
+        authenticated = result.get("authenticated")
+        if authenticated:
+            return json.dumps(result)
+        else:
+            # this is a GET because it doesn't go through hayhooks pipeline wrapper
+            response = requests.get(f"{hayhooks_base_url}/google-auth-initiate", params={"user_id": user_id})
+            response.raise_for_status()
+            response_json = response.json()
+            url = response_json.get("authorization_url")
+            return f"[Register Link]({url})"
     else:
-        # this is a GET because it doesn't go through hayhooks pipeline wrapper
-        response = requests.get(f"{hayhooks_base_url}/google-auth-initiate", params={"user_id": user_id})
-        response.raise_for_status()
-        response_json = response.json()
-        url = response_json.get("authorization_url")
-        return f"[Register Link]({url})"
+        return f"Internal error: {json_response}"

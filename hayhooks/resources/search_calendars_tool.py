@@ -1,4 +1,3 @@
-import json
 import os
 from typing import Optional
 
@@ -56,10 +55,11 @@ def search_calendars(
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
     response = requests.post(f"{hayhooks_base_url}/search_calendars/run", json=payload)
 
-    response_json = response.json()
-    print(response_json)
-
     response.raise_for_status()
+    json_response = response.json()
 
-    result = response_json.get("result")
-    return json.dumps(result)
+    if "result" in json_response:
+        result = json_response["result"]
+        return result
+    else:
+        return f"Internal error: {json_response}"

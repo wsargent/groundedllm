@@ -28,8 +28,7 @@ def search_stackoverflow(error_message: str, language: Optional[str] = None, tec
         search results. Defaults to False.
     :type include_comments: bool
 
-    :param limit: An integer specifying the maximum number of results to return.
-        Defaults to 10.
+    :param limit: An integer specifying the maximum number of results to return, defaults to 10.
     :type limit: int
 
     :return: A string containing the search results retrieved from the server.
@@ -38,4 +37,11 @@ def search_stackoverflow(error_message: str, language: Optional[str] = None, tec
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
 
     response = requests.post(f"{hayhooks_base_url}/search_by_error/run", json={"error_message": error_message, "language": language, "technologies": technologies, "min_score": min_score, "include_comments": include_comments, "limit": limit})
-    return response.json()["result"]
+    response.raise_for_status()
+    json_response = response.json()
+
+    if "result" in json_response:
+        result = json_response["result"]
+        return result
+    else:
+        return f"Internal error: {json_response}"
