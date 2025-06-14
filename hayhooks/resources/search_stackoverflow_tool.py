@@ -36,7 +36,7 @@ def search_stackoverflow(error_message: str, language: Optional[str] = None, tec
     """
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
 
-    response = requests.post(f"{hayhooks_base_url}/search_by_error/run", json={"error_message": error_message, "language": language, "technologies": technologies, "min_score": min_score, "include_comments": include_comments, "limit": limit})
+    response = requests.post(f"{hayhooks_base_url}/search_stackoverflow/run", json={"error_message": error_message, "language": language, "technologies": technologies, "min_score": min_score, "include_comments": include_comments, "limit": limit})
     response.raise_for_status()
     json_response = response.json()
 
