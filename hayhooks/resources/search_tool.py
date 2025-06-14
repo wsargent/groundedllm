@@ -53,4 +53,11 @@ def search(
         f"{hayhooks_base_url}/search/run",
         json={"question": question, "max_results": max_results, "search_depth": search_depth, "time_range": time_range, "include_domains": include_domains, "exclude_domains": exclude_domains},
     )
-    return response.json()["result"]
+    response.raise_for_status()
+    json_response = response.json()
+
+    if "result" in json_response:
+        result = json_response["result"]
+        return result
+    else:
+        return f"Internal error: {json_response}"
