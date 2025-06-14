@@ -29,5 +29,10 @@ def extract(url: str) -> str:
         json={"url": url},
     )
     response.raise_for_status()
-    json_body = response.json()
-    return json_body["result"]
+    json_response = response.json()
+
+    if "result" in json_response:
+        result = json_response["result"]
+        return result
+    else:
+        return f"Internal error: {json_response}"

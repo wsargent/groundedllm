@@ -93,4 +93,11 @@ def search_zotero(query: List[dict]) -> str:
         f"{hayhooks_base_url}/search_zotero/run",
         json={"query": query},  # Keep the parameter name as "jsonpath" for backward compatibility
     )
-    return response.json()["result"]
+    response.raise_for_status()
+    json_response = response.json()
+
+    if "result" in json_response:
+        result = json_response["result"]
+        return result
+    else:
+        return f"Internal error: {json_response}"
