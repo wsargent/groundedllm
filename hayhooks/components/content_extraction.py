@@ -99,12 +99,15 @@ class URLContentRouter:
         all_streams = []
 
         for resolver, urls in resolver_urls.items():
-            result = resolver.run(urls)
-            if "streams" in result:
-                streams = result["streams"]
-                all_streams.extend(streams)
-            else:
-                logger.debug(f"No streams found for {resolver}")
+            try:
+                result = resolver.run(urls)
+                if "streams" in result:
+                    streams = result["streams"]
+                    all_streams.extend(streams)
+                else:
+                    logger.debug(f"No streams found for {resolver}")
+            except Exception:
+                logger.exception(f"Exception in {resolver} run with {urls}")
 
         return {"streams": all_streams}
 
