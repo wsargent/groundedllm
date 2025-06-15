@@ -49,7 +49,7 @@ def test_content_extraction_component_github_repo():
     tracing.enable_tracing(LoggingTracer())
 
     extraction_component = build_content_extraction_component(http2=True, raise_on_failure=False)
-    result = extraction_component.run(urls=["https://github.com/wsargent/recipellm/blob/main/README.md"])
+    result = extraction_component.run(urls=["https://github.com/mikeroyal/Self-Hosting-Guide"])
 
     assert "documents" in result
     assert isinstance(result["documents"], list)
