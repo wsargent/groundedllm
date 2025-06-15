@@ -234,6 +234,12 @@ If you give the agent a Notion URL, it can extract or excerpt the contents for y
 
 If you use Github, you can create a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) and set it to `GITHUB_API_TOKEN` environment variable -- this will enable the extract and excerpt tools to read private Github issues and repositories if you pass in the URL, and will also give you higher rate limits.
 
+### Customizable Content Extraction
+
+If the URL is not recognized as "special" (Github, Notion, etc), then Hayhooks will try to fetch content using a content fetcher.   Some URLs are on websites that have complex page structure or special hoops to jump through: you can use the `ContentFetcherResolver` to map URL patterns and domains to particular fetchers.  There are two fetchers configured right now, one which uses [Scrapling](https://scrapling.readthedocs.io/en/latest/), and the fallback which uses [LinkContentFetcher](https://docs.haystack.deepset.ai/docs/linkcontentfetcher) and tries using [Jina Reader](https://jina.ai/reader/) based fetcher if that fails.
+
+You can change Scrapling to use a headless browser based scraper, but you must run `scrapling install` to install the browser and libraries, so right now it just uses the basic `Fetcher`.
+
 ## Composition
 
 The docker compose file integrates several key components:

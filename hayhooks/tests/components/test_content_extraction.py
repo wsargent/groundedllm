@@ -1,6 +1,7 @@
 """Test content extraction."""
 
 from haystack import Document, Pipeline, tracing
+from haystack.dataclasses import ByteStream
 from haystack.tracing.logging_tracer import LoggingTracer
 
 from components.content_extraction import build_content_extraction_component
@@ -86,19 +87,21 @@ def test_scrapling_link_content_fetcher():
     assert fetcher.is_available() is True
 
     # Test fetching a simple URL
-    result = fetcher.run(urls=["http://example.com"])
+    result = fetcher.run(urls=["https://medium.com/data-science-at-microsoft/how-large-language-models-work-91c362f5b78f"])
 
     assert "streams" in result
     assert isinstance(result["streams"], list)
     assert len(result["streams"]) > 0
 
     # Check stream properties
-    stream = result["streams"][0]
+    stream: ByteStream = result["streams"][0]
     assert hasattr(stream, "data")
     assert hasattr(stream, "meta")
     assert stream.data is not None
+    assert len(stream.data) > 0
+    assert stream.data != b"None"
     assert "url" in stream.meta
-    assert stream.meta["url"] == "http://example.com"
+    assert stream.meta["url"] == "https://medium.com/data-science-at-microsoft/how-large-language-models-work-91c362f5b78f"
 
 
 def test_content_fetcher_router():
