@@ -298,8 +298,8 @@ class ScraplingLinkContentFetcher:
             raise RuntimeError(f"HTTP {response.status}: {response.reason}")
 
         # Extract text content from the response
-        # The .text property returns a TextHandler with the cleaned text content
-        content = str(response.text)
+        # Use get_all_text() method for proper text extraction
+        content = str(response.get_all_text())
 
         # Get content type from headers, default to text/html
         content_type = response.headers.get("content-type", "text/html")
