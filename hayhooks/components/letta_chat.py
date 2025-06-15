@@ -79,16 +79,22 @@ class LettaChatGenerator:
             chunks = [think_chunk]
             streaming_callback(think_chunk)
             last_chunk = None
-            for chunk in stream_completion:
-                last_chunk = chunk
+            # Sometimes the response will time out while streaming, so we need a try / catch
+            try:
+                for chunk in stream_completion:
+                    last_chunk = chunk
 
-                chunk_delta: Optional[StreamingChunk] = self._process_streaming_chunk(chunk)
-                if chunk_delta:
-                    chunks.append(chunk_delta)
-                    streaming_callback(chunk_delta)
+                    chunk_delta: Optional[StreamingChunk] = self._process_streaming_chunk(chunk)
+                    if chunk_delta:
+                        chunks.append(chunk_delta)
+                        streaming_callback(chunk_delta)
 
-            assert last_chunk is not None
-            completions = [self._create_message_from_chunks(last_chunk, chunks)]
+                assert last_chunk is not None
+                completions = [self._create_message_from_chunks(last_chunk, chunks)]
+            except Exception as e:
+                logger.exception("An error occurred while processing a streaming chunk")
+                completions = [ChatMessage.from_assistant(f"An error occurred while streaming response: {str(e)}")]
+
         else:
             completion: LettaResponse = client.agents.messages.create(agent_id=agent_id, messages=messages)
             completions = [self._build_message(completion)]
