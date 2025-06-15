@@ -2,7 +2,8 @@ import mimetypes
 import re
 from typing import Dict, List, Optional
 
-from haystack import component
+import httpx
+from haystack import Document, component
 from haystack.components.builders.prompt_builder import PromptBuilder
 from haystack.dataclasses import ByteStream
 from haystack.utils import Secret
@@ -98,11 +99,14 @@ class GithubRepoContentResolver:
         repo_pattern = r"^(?:https?:\/\/)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)(?:\/(?:blob|tree|raw|commit)\/([a-zA-Z0-9._-]+)\/(.*))?$"
         # This matches raw.githubusercontent.com URLs
         raw_pattern = r"^(?:https?:\/\/)?raw\.githubusercontent\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/(.+)$"
+        # This matches GitHub pull request URLs
+        pr_pattern = r"^(?:https?:\/\/)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/pull\/(\d+)(?:[/?#].*)?$"
 
         self.github_token = github_token
         self.raise_on_failure = raise_on_failure
         self.github_regex = re.compile(repo_pattern)
         self.raw_github_regex = re.compile(raw_pattern)
+        self.pr_regex = re.compile(pr_pattern)
 
     def _parse_github_url(self, url):
         # Try regular GitHub URL first
@@ -115,8 +119,8 @@ class GithubRepoContentResolver:
             return {
                 "owner": owner,
                 "repository": repo,
-                "branch_or_commit": branch_or_commit if branch_or_commit else "main",
-                "path": path if path else "/",
+                "branch_or_commit": branch_or_commit if branch_or_commit else None,
+                "path": path if path else None,
             }
 
         # Try raw GitHub URL
@@ -166,7 +170,7 @@ class GithubRepoContentResolver:
                 owner = github_dict["owner"]
                 path = github_dict["path"]
 
-                result = viewer.run(path=path, repo=f"{owner}/{repo}", branch=branch_or_commit)
+                result = viewer.run(path=path or "", repo=f"{owner}/{repo}", branch=branch_or_commit)
                 logger.debug(f"GithubRepoContentResolver result: {result}")
                 if "documents" in result:
                     documents = result["documents"]
@@ -196,3 +200,201 @@ class GithubRepoContentResolver:
 
     def can_handle(self, url: str) -> bool:
         return self.github_regex.match(url) is not None or self.raw_github_regex.match(url) is not None
+
+
+@component
+class GithubPRContentResolver:
+    """This class looks for GitHub pull requests and directs them to GitHubPRViewer"""
+
+    def __init__(self, github_token: Optional[Secret] = None, raise_on_failure: bool = False):
+        pr_pattern = r"https?://(?:(?:www|m)\.)?github\.com/([^/]+)/([^/]+)/pull/(\d+)(?:[/?#].*)?$"
+
+        self.github_token = github_token
+        self.raise_on_failure = raise_on_failure
+        self.pr_regex = re.compile(pr_pattern)
+
+    @component.output_types(streams=List[ByteStream])
+    def run(self, urls: List[str]) -> Dict[str, list[ByteStream]]:
+        logger.debug(f"Using GithubPRContentResolver for urls: {urls}")
+        streams: List[ByteStream] = []
+        try:
+            viewer = GitHubPRViewer(github_token=self.github_token, raise_on_failure=self.raise_on_failure)
+
+            for url in urls:
+                result = viewer.run(url)
+                logger.debug(f"GitHubPRViewer result: {result}")
+                if "documents" in result:
+                    documents = result["documents"]
+                    if documents:
+                        for document in documents:
+                            # PR content is markdown by default
+                            content = document.content or ""
+                            stream = ByteStream.from_string(text=content, meta=document.meta, mime_type="text/markdown")
+                            streams.append(stream)
+                    else:
+                        logger.error(f"No documents for url: {url}")
+                else:
+                    logger.warning(f"Using GithubPRContentResolver: no documents in {url}")
+
+            logger.debug(f"GithubPRContentResolver streams: {streams}")
+            return {"streams": streams}
+        except Exception as e:
+            logger.warning(f"Failed to fetch {urls} using GitHub PR: {str(e)}")
+            if self.raise_on_failure:
+                raise e
+            else:
+                logger.debug(f"GithubPRContentResolver error streams: {streams}")
+                return {"streams": streams}
+
+    def can_handle(self, url: str) -> bool:
+        return self.pr_regex.match(url) is not None
+
+
+@component
+class GitHubPRViewer:
+    """
+    Fetches and parses GitHub pull requests into Haystack documents.
+
+    The component takes a GitHub pull request URL and returns a list of documents where:
+    - First document contains the main pull request content (title, description, metadata)
+    - Additional documents can contain PR review comments if needed
+
+    ### Usage example
+    ```python
+    viewer = GitHubPRViewer()
+    docs = viewer.run(
+        url="https://github.com/owner/repo/pull/123"
+    )["documents"]
+    ```
+    """
+
+    def __init__(self, github_token: Optional[Secret] = None, raise_on_failure: bool = False):
+        """
+        Initialize GitHubPRViewer.
+
+        Args:
+            github_token: GitHub token for API access
+            raise_on_failure: Whether to raise an exception on failure
+        """
+        self.github_token = github_token
+        self.raise_on_failure = raise_on_failure
+        self.pr_regex = re.compile(r"https?://(?:(?:www|m)\.)?github\.com/([^/]+)/([^/]+)/pull/(\d+)(?:[/?#].*)?$")
+
+    def _parse_pr_url(self, url: str) -> Optional[Dict[str, str]]:
+        """Parse a GitHub PR URL to extract owner, repo, and PR number."""
+        match = self.pr_regex.match(url)
+        if match:
+            return {
+                "owner": match.group(1),
+                "repo": match.group(2),
+                "pr_number": match.group(3),
+            }
+        return None
+
+    def _fetch_pr_data(self, owner: str, repo: str, pr_number: str) -> Optional[Dict]:
+        """Fetch pull request data from GitHub API."""
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}"
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+
+        if self.github_token:
+            token = self.github_token.resolve_value()
+            headers["Authorization"] = f"Bearer {token}"
+
+        try:
+            with httpx.Client() as client:
+                response = client.get(url, headers=headers)
+                response.raise_for_status()
+                return response.json()
+        except Exception as e:
+            logger.error(f"Failed to fetch PR data for {owner}/{repo}/pull/{pr_number}: {str(e)}")
+            if self.raise_on_failure:
+                raise e
+            return None
+
+    @component.output_types(documents=List[Document])
+    def run(self, url: str) -> Dict[str, List[Document]]:
+        """
+        Fetch and parse a GitHub pull request.
+
+        Args:
+            url: GitHub pull request URL
+
+        Returns:
+            Dictionary with "documents" key containing list of Documents
+        """
+        pr_info = self._parse_pr_url(url)
+        if not pr_info:
+            error_msg = f"Invalid GitHub PR URL: {url}"
+            logger.error(error_msg)
+            if self.raise_on_failure:
+                raise ValueError(error_msg)
+            return {"documents": []}
+
+        pr_data = self._fetch_pr_data(pr_info["owner"], pr_info["repo"], pr_info["pr_number"])
+        if not pr_data:
+            return {"documents": []}
+
+        # Create document with PR content
+        content = self._format_pr_content(pr_data)
+
+        document = Document(
+            content=content,
+            meta={
+                "url": url,
+                "source": "github_pr",
+                "pr_number": pr_data.get("number"),
+                "title": pr_data.get("title"),
+                "state": pr_data.get("state"),
+                "user": pr_data.get("user", {}).get("login"),
+                "created_at": pr_data.get("created_at"),
+                "updated_at": pr_data.get("updated_at"),
+                "merged_at": pr_data.get("merged_at"),
+                "head_sha": pr_data.get("head", {}).get("sha"),
+                "base_ref": pr_data.get("base", {}).get("ref"),
+                "head_ref": pr_data.get("head", {}).get("ref"),
+            },
+        )
+
+        return {"documents": [document]}
+
+    def _format_pr_content(self, pr_data: Dict) -> str:
+        """Format PR data into readable content."""
+        content_parts = []
+
+        # Title
+        title = pr_data.get("title", "")
+        content_parts.append(f"# {title}")
+
+        # Basic info
+        content_parts.append(f"**PR Number:** #{pr_data.get('number', 'N/A')}")
+        content_parts.append(f"**State:** {pr_data.get('state', 'N/A')}")
+        content_parts.append(f"**Author:** {pr_data.get('user', {}).get('login', 'N/A')}")
+        content_parts.append(f"**Created:** {pr_data.get('created_at', 'N/A')}")
+        content_parts.append(f"**Updated:** {pr_data.get('updated_at', 'N/A')}")
+
+        # Branch info
+        base_ref = pr_data.get("base", {}).get("ref", "N/A")
+        head_ref = pr_data.get("head", {}).get("ref", "N/A")
+        content_parts.append(f"**Branches:** {head_ref} → {base_ref}")
+
+        # Merge status
+        if pr_data.get("merged"):
+            content_parts.append(f"**Merged:** {pr_data.get('merged_at', 'N/A')}")
+
+        # Description/body
+        body = pr_data.get("body")
+        if body:
+            content_parts.append("\n## Description")
+            content_parts.append(body)
+
+        # Stats
+        content_parts.append("\n## Statistics")
+        content_parts.append(f"**Commits:** {pr_data.get('commits', 'N/A')}")
+        content_parts.append(f"**Additions:** {pr_data.get('additions', 'N/A')}")
+        content_parts.append(f"**Deletions:** {pr_data.get('deletions', 'N/A')}")
+        content_parts.append(f"**Changed Files:** {pr_data.get('changed_files', 'N/A')}")
+
+        return "\n\n".join(content_parts)
