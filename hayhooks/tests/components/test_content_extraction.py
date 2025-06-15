@@ -3,7 +3,8 @@
 from haystack import Document, Pipeline, tracing
 from haystack.tracing.logging_tracer import LoggingTracer
 
-from components.content_extraction import ContentFetcherRouter, ScraplingLinkContentFetcher, build_content_extraction_component, build_smart_content_extraction_component
+from components.content_extraction import build_content_extraction_component
+from components.fetchers import ContentFetcherResolver, ScraplingLinkContentFetcher
 
 
 def test_build_content_extraction_component():
@@ -102,7 +103,7 @@ def test_scrapling_link_content_fetcher():
 
 def test_content_fetcher_router():
     """Test the ContentFetcherRouter component."""
-    router = ContentFetcherRouter(raise_on_failure=False)
+    router = ContentFetcherResolver(raise_on_failure=False)
 
     # Test that it initializes correctly
     assert "scrapling" in router.fetchers
@@ -127,7 +128,7 @@ def test_content_fetcher_router():
 
 def test_smart_content_extraction_component():
     """Test the smart content extraction component with Scrapling routing."""
-    extraction_component = build_smart_content_extraction_component(raise_on_failure=False)
+    extraction_component = build_content_extraction_component(raise_on_failure=False)
 
     # Test that the component can be built
     pipe = Pipeline()
@@ -135,7 +136,7 @@ def test_smart_content_extraction_component():
     assert "smart_extractor" in pipe.graph.nodes
 
     # Test running with a news-like URL that should use Scrapling
-    result = extraction_component.run(urls=["http://example.com"])
+    result = extraction_component.run(urls=["https://news.ycombinator.com"])
 
     assert "documents" in result
     assert isinstance(result["documents"], list)
@@ -148,7 +149,7 @@ def test_scrapling_with_news_content():
     # Test with custom configuration for news sites
     fetcher_configs = [{"name": "scrapling", "patterns": ["*article*", "*news*"], "domains": ["example.com"], "priority": 1}, {"name": "fallback", "patterns": ["*"], "domains": ["*"], "priority": 999}]
 
-    router = ContentFetcherRouter(fetcher_configs=fetcher_configs, raise_on_failure=False)
+    router = ContentFetcherResolver(fetcher_configs=fetcher_configs, raise_on_failure=False)
 
     # Test that news URLs get routed to Scrapling
     news_url = "http://example.com/article/test"
