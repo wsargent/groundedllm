@@ -115,8 +115,8 @@ class GithubRepoContentResolver:
             return {
                 "owner": owner,
                 "repository": repo,
-                "branch_or_commit": branch_or_commit if branch_or_commit else None,
-                "path": path if path else None,
+                "branch_or_commit": branch_or_commit if branch_or_commit else "main",
+                "path": path if path else "/",
             }
 
         # Try raw GitHub URL
