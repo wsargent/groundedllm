@@ -29,6 +29,7 @@ dependencies = [
     "trafilatura>=2.0.0",
     "youtube-transcript-api>=1.0.3",
     "github-haystack>=1.0.0",
+    "scrapling>=0.2.99",
 ]
 
 [tool.setuptools]
