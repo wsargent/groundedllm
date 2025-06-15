@@ -8,7 +8,12 @@ def extract(url: str) -> str:
     Extract page from a URL and returns the full contents.
 
     This tool will fetch HTML, Markdown, PDF, or a plain text web page from a URL
-    and returns the contents as JSON.  If given a youtube URL, it will return the transcript.
+    and returns the contents as JSON.
+
+    If given a youtube URL, it will return the transcript.
+    If given a github issue URL, it will return the contents as Markdown.
+    If given a github repository URL to a file, it will return the contents of the file.
+    If given a github repository URL to a directory, it will return documents representing the directory listing.
 
     If you want to get a summary of a web page or want specific information, use the excerpt tool instead.
 

@@ -55,3 +55,23 @@ def test_content_extraction_component_github_repo():
     assert isinstance(result["documents"], list)
     assert len(result["documents"]) > 0
     assert isinstance(result["documents"][0], Document)
+
+
+def test_content_extraction_component_github_pr():
+    """Test that we can run the extractor and get content from GitHub Pull Request."""
+
+    import sys
+
+    from loguru import logger
+
+    logger.add(sys.stdout, level="DEBUG")
+    tracing.tracer.is_content_tracing_enabled = True
+    tracing.enable_tracing(LoggingTracer())
+
+    extraction_component = build_content_extraction_component(http2=True, raise_on_failure=False)
+    result = extraction_component.run(urls=["https://github.com/deepset-ai/haystack-core-integrations/pull/1000"])
+
+    assert "documents" in result
+    assert isinstance(result["documents"], list)
+    assert len(result["documents"]) > 0
+    assert isinstance(result["documents"][0], Document)

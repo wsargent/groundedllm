@@ -374,8 +374,8 @@ class TestGithubRepoContentResolver:
         resolver = GithubRepoContentResolver()
         result = resolver.run(urls=["https://github.com/owner/repo"])
 
-        # Verify viewer was called with None for path and branch
-        mock_viewer_instance.run.assert_called_once_with(path=None, repo="owner/repo", branch=None)
+        # Verify viewer was called with empty string for path and None for branch
+        mock_viewer_instance.run.assert_called_once_with(path="", repo="owner/repo", branch=None)
 
         # Verify result
         assert len(result["streams"]) == 1
