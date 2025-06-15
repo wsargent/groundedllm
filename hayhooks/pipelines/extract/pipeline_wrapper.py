@@ -1,3 +1,4 @@
+import json
 import os
 from typing import List, Optional
 
@@ -54,8 +55,9 @@ class PipelineWrapper(BasePipelineWrapper):
         """Extract pages from URL.
 
         This tool will fetch HTML, Markdown, PDF, or plain text web pages from URLs.
-        and returns the content as Markdown. If given a youtube URL, it will return
-        the transcript.
+        and returns the content, using Markdown if possible.
+
+        If given a youtube URL, it will return the transcript.
 
         Parameters
         ----------
@@ -65,8 +67,7 @@ class PipelineWrapper(BasePipelineWrapper):
         Returns
         -------
         str
-            The content of the page, or null if the page could not be processed.
-
+            The JSON serialization of documents associated with the page, or a problem JSON.
         """
         log.info(f"Running Extract pipeline with URL: {url}")
 
@@ -78,13 +79,18 @@ class PipelineWrapper(BasePipelineWrapper):
                 content_extractor = result["content_extractor"]
                 documents: List[haystack.Document] = content_extractor["documents"]
             else:
-                log.error(f"No content_extractor in result {result} found for url: {url} ", result)
+                log.error(f"No contents found for url: {url} ", result)
 
-            content = None
+            contents = None
             if documents:
-                content = documents[0].content or None
+                contents = [doc.content for doc in documents]
 
-            return content
+            if contents is None:
+                problem = {"type": "urn:hayhooks:extract:error", "title": "No content extracted", "status": "404", "detail": f"There is no good way to extract the contents of url {url}, i.e. it may be a video that has no available transcript."}
+                return json.dumps(problem)
+
+            return json.dumps(contents)
         except Exception as e:
             log.exception(f"Error extracting content from {url}", e)
-            return f"Error: {str(e)}"
+            problem = {"type": "urn:hayhooks:extract:error", "title": "Exception", "status": "500", "detail": f"Error extracting content from {url}: {str(e)}"}
+            return json.dumps(problem)
