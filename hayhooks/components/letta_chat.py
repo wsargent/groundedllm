@@ -8,6 +8,7 @@ from haystack.dataclasses import ChatMessage, StreamingChunk, select_streaming_c
 from haystack.utils import Secret
 from letta_client import Letta, MessageCreate, TextContent
 from letta_client.agents.messages.types.letta_streaming_response import LettaStreamingResponse
+from letta_client.core import RequestOptions
 from letta_client.types.assistant_message import AssistantMessage
 from letta_client.types.letta_message_union import LettaMessageUnion
 from letta_client.types.letta_response import LettaResponse
@@ -48,6 +49,7 @@ class LettaChatGenerator:
         self.send_end_think = False
         self.generation_kwargs = generation_kwargs
         self.streaming_callback = streaming_callback
+        self.request_options = RequestOptions(timeout_in_seconds=300, max_retries=3)
 
     @component.output_types(replies=List[str], meta=List[Dict[str, Any]])
     def run(self, prompt: str, agent_id: str, streaming_callback: Optional[Callable[[StreamingChunk], None]] = None):
@@ -72,7 +74,7 @@ class LettaChatGenerator:
 
         completions: List[ChatMessage] = []
         if streaming_callback is not None:
-            stream_completion: Iterator[LettaStreamingResponse] = client.agents.messages.create_stream(agent_id=agent_id, messages=messages)
+            stream_completion: Iterator[LettaStreamingResponse] = client.agents.messages.create_stream(agent_id=agent_id, messages=messages, request_options=self.request_options)
 
             meta_dict = {"type": "assistant", "received_at": datetime.now().isoformat()}
             think_chunk = StreamingChunk(content="<think>", meta=meta_dict)
@@ -92,12 +94,16 @@ class LettaChatGenerator:
                 assert last_chunk is not None
                 completions = [self._create_message_from_chunks(last_chunk, chunks)]
             except Exception as e:
-                logger.exception("An error occurred while processing a streaming chunk")
+                logger.exception("An error occurred while processing a streaming response")
                 completions = [ChatMessage.from_assistant(f"An error occurred while streaming response: {str(e)}")]
 
         else:
-            completion: LettaResponse = client.agents.messages.create(agent_id=agent_id, messages=messages)
-            completions = [self._build_message(completion)]
+            try:
+                completion: LettaResponse = client.agents.messages.create(agent_id=agent_id, messages=messages, request_options=self.request_options)
+                completions = [self._build_message(completion)]
+            except Exception as e:
+                logger.exception("An error occurred while processing a response")
+                completions = [ChatMessage.from_assistant(f"An error occurred while waiting for response: {str(e)}")]
 
         # logger.debug(f"run: completions={completions}")
 
