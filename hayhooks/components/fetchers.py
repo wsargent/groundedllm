@@ -63,8 +63,8 @@ class ContentFetcherResolver:
         # Initialize Jina fetcher
         self.fetchers["jina"] = JinaLinkContentFetcher()
 
-        # Initialize fallback fetcher
-        self.fetchers["fallback"] = HaystackLinkContentFetcher(raise_on_failure=False)
+        # Initialize default fetcher
+        self.fetchers["default"] = HaystackLinkContentFetcher(raise_on_failure=False)
 
     def _match_url_pattern(self, url: str, pattern: str) -> bool:
         """Check if URL matches a given pattern."""

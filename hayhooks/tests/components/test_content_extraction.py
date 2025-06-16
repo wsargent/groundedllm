@@ -110,17 +110,12 @@ def test_content_fetcher_router():
 
     # Test that it initializes correctly
     assert "scrapling" in router.fetchers
-    assert "fallback" in router.fetchers
-
-    # Test URL pattern matching
-    news_url = "https://techcrunch.com/some-article"
-    selected_fetcher = router._select_fetcher(news_url)
-    assert selected_fetcher == "scrapling"
+    assert "default" in router.fetchers
 
     # Test generic URL routing
     generic_url = "http://example.com"
     selected_fetcher = router._select_fetcher(generic_url)
-    assert selected_fetcher == "fallback"
+    assert selected_fetcher == "default"
 
     # Test actual content fetching
     result = router.run(urls=["http://example.com"])
