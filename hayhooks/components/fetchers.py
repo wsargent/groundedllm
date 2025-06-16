@@ -35,11 +35,13 @@ class ContentFetcherResolver:
 
         # Default configuration
         if fetcher_configs is None:
-            patterns = ["*news*", "*article*", "*blog*", "*content*", "*post*"]
-            domains = ["medium.com", "substack.com"]
+            # patterns = ["*news*", "*article*", "*blog*", "*content*", "*post*"]
+            # domains = ["medium.com", "substack.com"]
+            # scrapling_config = {"name": "scrapling", "patterns": patterns, "domains": domains, "priority": 1}
+            fallback_config = {"name": "fallback", "patterns": ["*"], "domains": ["*"], "priority": 999}
             fetcher_configs = [
-                {"name": "scrapling", "patterns": patterns, "domains": domains, "priority": 1},
-                {"name": "fallback", "patterns": ["*"], "domains": ["*"], "priority": 999},
+                # scrapling_config,
+                fallback_config,
             ]
 
         self.fetcher_configs = fetcher_configs
@@ -289,7 +291,8 @@ class ScraplingLinkContentFetcher:
         Returns:
             A tuple containing metadata and ByteStream.
         """
-        # Use Scrapling's basic Fetcher for HTTP requests
+
+        # response = StealthyFetcher.fetch(url, timeout=self.timeout, headless=True, block_images=True, disable_resources=True)
         response = Fetcher.get(url, timeout=self.timeout)
 
         # Check for successful response
