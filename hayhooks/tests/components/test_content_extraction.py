@@ -128,6 +128,13 @@ def test_content_fetcher_router():
 
 def test_smart_content_extraction_component():
     """Test the smart content extraction component with Scrapling routing."""
+
+    import sys
+
+    from loguru import logger
+
+    logger.add(sys.stdout, level="DEBUG")
+
     extraction_component = build_content_extraction_component(raise_on_failure=False)
 
     # Test that the component can be built
@@ -139,9 +146,17 @@ def test_smart_content_extraction_component():
     result = extraction_component.run(urls=["https://news.ycombinator.com"])
 
     assert "documents" in result
-    assert isinstance(result["documents"], list)
-    assert len(result["documents"]) > 0
-    assert isinstance(result["documents"][0], Document)
+    documents = result["documents"]
+    assert isinstance(documents, list)
+    assert len(documents) > 0
+
+    document = documents[0]
+    assert isinstance(document, Document)
+
+    content = document.content
+    assert len(content) > 0
+    assert content != "None"
+    logger.info(content)
 
 
 def test_scrapling_with_news_content():
