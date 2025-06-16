@@ -19,7 +19,7 @@ class ContentFetcherResolver:
     def __init__(
         self,
         fetcher_configs: Optional[List[Dict[str, Any]]] = None,
-        default_fetcher: str = "fallback",
+        default_fetcher: str = "default",
         raise_on_failure: bool = False,
     ):
         """
@@ -38,10 +38,10 @@ class ContentFetcherResolver:
             # patterns = ["*news*", "*article*", "*blog*", "*content*", "*post*"]
             # domains = ["medium.com", "substack.com"]
             # scrapling_config = {"name": "scrapling", "patterns": patterns, "domains": domains, "priority": 1}
-            fallback_config = {"name": "fallback", "patterns": ["*"], "domains": ["*"], "priority": 999}
+            default_config = {"name": "default", "patterns": ["*"], "domains": ["*"], "priority": 999}
             fetcher_configs = [
                 # scrapling_config,
-                fallback_config,
+                default_config,
             ]
 
         self.fetcher_configs = fetcher_configs
@@ -64,7 +64,7 @@ class ContentFetcherResolver:
         self.fetchers["jina"] = JinaLinkContentFetcher()
 
         # Initialize fallback fetcher
-        self.fetchers["fallback"] = FallbackLinkContentFetcher(raise_on_failure=False)
+        self.fetchers["fallback"] = HaystackLinkContentFetcher(raise_on_failure=False)
 
     def _match_url_pattern(self, url: str, pattern: str) -> bool:
         """Check if URL matches a given pattern."""
@@ -301,7 +301,6 @@ class ScraplingLinkContentFetcher:
             raise RuntimeError(f"HTTP {response.status}: {response.reason}")
 
         # Extract text content from the response
-        # Use get_all_text() method for proper text extraction
         content = str(response.get_all_text())
 
         # Get content type from headers, default to text/html
@@ -335,10 +334,9 @@ class ScraplingLinkContentFetcher:
 
 
 @component
-class FallbackLinkContentFetcher:
+class HaystackLinkContentFetcher:
     """
-    A component that tries to fetch content using LinkContentFetcher first,
-    and falls back to JinaLinkContentFetcher if it fails.
+    A component that tries to fetch content using LinkContentFetcher.
     """
 
     def __init__(
@@ -349,8 +347,6 @@ class FallbackLinkContentFetcher:
         timeout: int = 3,
         http2: bool = False,
         client_kwargs: Optional[Dict] = None,
-        jina_timeout: int = 10,
-        jina_retry_attempts: int = 2,
     ):
         """
         Initialize the FallbackLinkContentFetcher.
@@ -373,30 +369,15 @@ class FallbackLinkContentFetcher:
             http2=http2,
             client_kwargs=client_kwargs,
         )
-        self.fallback_fetcher = JinaLinkContentFetcher(
-            timeout=jina_timeout,
-            retry_attempts=jina_retry_attempts,
-        )
         self.raise_on_failure = raise_on_failure
-        self._available: Optional[bool] = None  # Cache availability status
 
     def is_available(self) -> bool:
-        """Check if the fallback fetcher is available."""
-        if self._available is not None:
-            return self._available
-
-        # Available if either primary or fallback fetcher is available
-        primary_available = True  # LinkContentFetcher is usually always available
-        fallback_available = self.fallback_fetcher.is_available()
-
-        self._available = primary_available or fallback_available
-        return self._available
+        return True
 
     @component.output_types(streams=List[ByteStream])
     def run(self, urls: List[str]):
         """
-        Fetch content from URLs using the primary fetcher first,
-        and fall back to the fallback fetcher if it fails.
+        Fetch content from URLs.
 
         Args:
             urls: A list of URLs to fetch content from.
@@ -420,37 +401,6 @@ class FallbackLinkContentFetcher:
                 logger.info(f"Primary fetcher failed to fetch {url}, trying fallback fetcher")
             else:
                 successful_streams.append(stream)
-
-        # If there are any failed URLs, try the fallback fetcher
-        if failed_urls:
-            try:
-                fallback_result = self.fallback_fetcher.run(failed_urls)
-                fallback_streams = fallback_result["streams"]
-
-                # Process fallback streams to match LinkContentFetcher format
-                for i, item in enumerate(fallback_streams):
-                    if isinstance(item, dict) and "metadata" in item and "stream" in item:
-                        # Extract metadata and stream from dictionary
-                        metadata = item["metadata"]
-                        stream = item["stream"]
-                        # Update stream metadata
-                        stream.meta.update(metadata)
-                        stream.mime_type = stream.meta.get("content_type", None)
-                        successful_streams.append(stream)
-                        # Log successful fallbacks
-                        url = metadata.get("url", "")
-                        logger.debug(f"Successfully fetched {url} using fallback fetcher")
-                    else:
-                        # If already in the right format, just add it
-                        successful_streams.append(item)
-                        # Log successful fallbacks
-                        url = item.meta.get("url", "")
-                        logger.debug(f"Successfully fetched {url} using fallback fetcher")
-
-            except Exception as e:
-                logger.exception(f"Fallback fetcher failed: {str(e)}")
-                if self.raise_on_failure:
-                    raise e
 
         return {"streams": successful_streams}
 

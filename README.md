@@ -236,9 +236,15 @@ If you use Github, you can create a [personal access token](https://docs.github.
 
 ### Customizable Content Extraction
 
-If the URL is not recognized as "special" (Github, Notion, etc), then Hayhooks will try to fetch content using a content fetcher.   Some URLs are on websites that have complex page structure or special hoops to jump through: you can use the `ContentFetcherResolver` to map URL patterns and domains to particular fetchers.  There are two fetchers configured right now, one which uses [Scrapling](https://scrapling.readthedocs.io/en/latest/), and the fallback which uses [LinkContentFetcher](https://docs.haystack.deepset.ai/docs/linkcontentfetcher) and tries using [Jina Reader](https://jina.ai/reader/) based fetcher if that fails.
+If the URL is not recognized as "special" (Github, Notion, etc), then Hayhooks will try to fetch content using a content fetcher.   Some URLs are on websites that have complex page structure or special hoops to jump through: you can use the `ContentFetcherResolver` to map URL patterns and domains to particular fetchers.  
 
-You can change Scrapling to use a headless browser based scraper, but you must run `scrapling install` to install the browser and libraries, so right now it just uses the basic `Fetcher`.
+There are three possible fetchers, but only the default is set up out of the box:
+
+* The default `HaystackLinkContentFetcher`, which uses [LinkContentFetcher](https://docs.haystack.deepset.ai/docs/linkcontentfetcher).
+* `ScraplingLinkContentFetcher`, which uses [Scrapling](https://scrapling.readthedocs.io/en/latest/) and can be configured with a headless browser for dynamic sites.
+* `JinaLinkContentFetcher` which uses [Jina Reader](https://jina.ai/reader/).
+
+You must run `scrapling install` to install the browser and libraries, so right now it just uses the basic `Fetcher` which does not use a headless browser.
 
 ## Composition
 
