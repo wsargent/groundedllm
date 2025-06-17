@@ -733,7 +733,7 @@ requires-dist = [
     { name = "google-api-python-client", specifier = ">=2.118.0" },
     { name = "google-auth", specifier = ">=2.28.1" },
     { name = "google-auth-oauthlib", specifier = ">=1.2.0" },
-    { name = "hayhooks", extras = ["mcp"], specifier = ">=0.8.0" },
+    { name = "hayhooks", extras = ["mcp"], specifier = ">=0.9.1" },
     { name = "haystack-ai", specifier = ">=2.14.1" },
     { name = "httpx", extras = ["http2"], specifier = ">=0.27.0" },
     { name = "letta-client", specifier = ">=0.1.146" },
@@ -787,7 +787,7 @@ wheels = [
 
 [[package]]
 name = "hayhooks"
-version = "0.8.0"
+version = "0.9.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docstring-parser" },
@@ -802,9 +802,9 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/55/d9/2465654b10d8437d4bbeef8109cf709edb752831da7e2c59967165eca807/hayhooks-0.8.0.tar.gz", hash = "sha256:4c0740f73e6bc28b0d2a9530a8ed5578405bc826a12d5e33c5889bd73d5c4c21", size = 11523706 }
+sdist = { url = "https://files.pythonhosted.org/packages/e2/de/a3135e3afc68b86e746ab44d68e984af42e9cbff4f54993791eacc7e2f9e/hayhooks-0.9.1.tar.gz", hash = "sha256:5c527e53504dd5353e26433c1c9b67b95ec21ca286640e0858027037678e057b", size = 12154284 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cb/a5/8a3226af0e82d67ae4c1944cd6135b14b163e5504c2c3da910ba444383fb/hayhooks-0.8.0-py3-none-any.whl", hash = "sha256:4c942d9d444e1a0c17071073a6088d7dbb591d641b1ff12b5a7a22f70032ba40", size = 47215 },
+    { url = "https://files.pythonhosted.org/packages/46/cc/975e05eac773fe04160fd63a82c7c443ab6b080f73663b90d7c51e875cbb/hayhooks-0.9.1-py3-none-any.whl", hash = "sha256:add3b38a22d8f652215b9d9820f7d08972cffead8e9c49950ab7a4c402267aba", size = 50512 },
 ]
 
 [package.optional-dependencies]
