@@ -141,10 +141,12 @@ This pipeline provisions a search agent in Letta, and sets it up with tools.
 
 This pipeline is called by an initializer docker container that runs after Letta is healthy.
 
+You'll need to set `LETTA_BASE_URL` and `LETTA_API_TOKEN` environment variables to run this pipeline to specify where you want the agent installed.
+
 ```bash
 hayhooks pipeline run provision_search_agent \
     --param 'agent_name=letta-agent' \
-    --param 'chat_model=anthropic/claude-3-7-sonnet-20250219" \
+    --param 'chat_model=anthropic/claude-sonnet-4-20250514' \
     --param 'embedding_model=letta/letta-free'
 ```
 
