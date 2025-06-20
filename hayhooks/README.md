@@ -38,6 +38,18 @@ LOG=DEBUG python app.py
 
 You can see the OpenAPI routes at http://localhost:1416/docs to see what pipelines are available.
 
+## Tracing
+
+```
+
+uv run opentelemetry-instrument \
+    --traces_exporter console \
+    --metrics_exporter console \
+    --logs_exporter console \
+    --service_name hayhooks \
+    python app.py
+```
+
 ## Pipelines
 
 The pipelines here do not use RAG in the traditional sense of indexing / retrieving from a vector database.  They do retrieve content that assists in generation, but are set up to be as lightweight as possible.
