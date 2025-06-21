@@ -185,7 +185,7 @@ class PipelineWrapper(BasePipelineWrapper):
             If the pipeline fails to retrieve an answer from the LLM.
 
         """
-        logger.debug(f"Running answer pipeline with question: {question}")
+        logger.debug(f"Running search pipeline with question: {question}")
 
         result = self.pipeline.run(
             {

@@ -1,4 +1,6 @@
+import fnmatch
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlparse
 
 import httpx
 from hayhooks import log as logger
@@ -62,19 +64,14 @@ class ContentFetcherResolver:
         self.fetchers["jina"] = JinaLinkContentFetcher()
 
         # Initialize default fetcher
-        self.fetchers["default"] = HaystackLinkContentFetcher()
+        self.fetchers["default"] = HaystackLinkContentFetcher(http2=True)
 
     def _match_url_pattern(self, url: str, pattern: str) -> bool:
         """Check if URL matches a given pattern."""
-        import fnmatch
-
         return fnmatch.fnmatch(url.lower(), pattern.lower())
 
     def _match_domain(self, url: str, domain: str) -> bool:
         """Check if URL domain matches a given domain pattern."""
-        import fnmatch
-        from urllib.parse import urlparse
-
         parsed = urlparse(url)
         return fnmatch.fnmatch(parsed.netloc.lower(), domain.lower())
 
@@ -347,20 +344,10 @@ class HaystackLinkContentFetcher:
         client_kwargs: Optional[Dict] = None,
     ):
         """
-        Initialize the FallbackLinkContentFetcher.
-
-        Args:
-            raise_on_failure: Whether to raise an exception if both fetchers fail.
-            user_agents: A list of user agents to use for the primary fetcher.
-            retry_attempts: The number of retry attempts for the primary fetcher.
-            timeout: The timeout for the primary fetcher in seconds.
-            http2: Whether to use HTTP/2 for the primary fetcher.
-            client_kwargs: Additional kwargs for the primary fetcher's HTTP client.
-            jina_timeout: The timeout for the fallback fetcher in seconds.
-            jina_retry_attempts: The number of retry attempts for the fallback fetcher.
+        Initialize the HaystackLinkContentFetcher.
         """
         self.primary_fetcher = LinkContentFetcher(
-            raise_on_failure=False,  # We handle failures ourselves
+            raise_on_failure=raise_on_failure,
             user_agents=user_agents,
             retry_attempts=retry_attempts,
             timeout=timeout,
@@ -396,7 +383,6 @@ class HaystackLinkContentFetcher:
             # Check if the stream is empty (failed to fetch)
             if stream.data == b"":
                 failed_urls.append(url)
-                logger.info(f"Primary fetcher failed to fetch {url}, trying fallback fetcher")
             else:
                 successful_streams.append(stream)
 
