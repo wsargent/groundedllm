@@ -128,7 +128,7 @@ class JoinWithContent:
                 logger.warning(f"No content found in {content_doc}, skipping")
                 continue
 
-            if len(content) == 0:
+            if len(content.strip()) == 0:
                 logger.warning(f"Empty content found in {content_doc}, skipping")
                 continue
 
