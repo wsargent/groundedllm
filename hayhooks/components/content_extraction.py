@@ -120,10 +120,24 @@ class JoinWithContent:
                 return doc.meta["link"]
             return None
 
+        # If the content extraction produced invalid documents, skip them and
+        # use the original scored ones.
         for content_doc in content_documents:
+            content = content_doc.content
+            if content is None:
+                logger.warning(f"No content found in {content_doc}, skipping")
+                continue
+
+            if len(content) == 0:
+                logger.warning(f"Empty content found in {content_doc}, skipping")
+                continue
+
             url = get_url(content_doc)
-            if url:
-                extracted_content[url] = content_doc.content
+            if url is None:
+                logger.warning(f"No url found in {content_doc}, skipping")
+                continue
+
+            extracted_content[url] = content
 
         for scored_document in scored_documents:
             url = get_url(scored_document)

@@ -102,10 +102,7 @@ class LettaCreateAgent:
             return {"agent_id": agent_id}
 
         except Exception as e:
-            logger.error(
-                f"An unexpected error occurred during Letta agent setup for '{agent_name}': {e}",
-                exc_info=True,
-            )
+            logger.exception(f"An unexpected error occurred during Letta agent setup for '{agent_name}': {e}")
             # Return agent_id if found, otherwise re-raise or return error structure?
             # For now, re-raise to indicate failure.
             raise RuntimeError(f"Failed Letta agent setup for '{agent_name}'") from e
@@ -143,65 +140,62 @@ class LettaCreateAgent:
             If agent creation fails for other reasons.
 
         """
-        try:
-            memory_blocks = [
-                CreateBlock(
-                    value=human_block_content,
-                    label="human",
-                    limit=self._set_block_limit(human_block_content),
-                ),
-                CreateBlock(
-                    value=persona_block_content,
-                    label="persona",
-                    limit=self._set_block_limit(persona_block_content),
-                ),
-            ]
+        memory_blocks = [
+            CreateBlock(
+                value=human_block_content,
+                label="human",
+                limit=self._set_block_limit(human_block_content),
+            ),
+            CreateBlock(
+                value=persona_block_content,
+                label="persona",
+                limit=self._set_block_limit(persona_block_content),
+            ),
+        ]
 
-            tool_ids = self._find_tools_id(requested_tools)
-            available_llms: List[LlmConfig] = self.client.models.list()
-            available_model_names = {llm.handle for llm in available_llms}
+        tool_ids = self._find_tools_id(requested_tools)
+        available_llms: List[LlmConfig] = self.client.models.list()
+        available_model_names = {llm.handle for llm in available_llms}
 
-            if letta_model in available_model_names:
-                selected_model = letta_model
-                logger.info(f"Using configured LETTA_MODEL: {selected_model}")
-            else:
-                raise ValueError(f"Model {letta_model} not found in available models: {available_model_names}")
+        if letta_model in available_model_names:
+            selected_model = letta_model
+            logger.info(f"Using configured LETTA_MODEL: {selected_model}")
+        else:
+            raise ValueError(f"Model {letta_model} not found in available models: {available_model_names}")
 
-            # Use reasoning model if we got it (gemini 2.5 pro does not support)
-            enable_reasoner = None
-            max_reasoning_tokens = None
-            max_tokens = None
-            enable_sleeptime = True
+        # Use reasoning model if we got it (gemini 2.5 pro does not support)
+        enable_reasoner = None
+        max_reasoning_tokens = None
+        max_tokens = None
+        enable_sleeptime = True
 
-            # Still not sure if reasoning model is an advantage here
-            # if "claude-3-7-sonnet" in selected_model:
-            #     enable_reasoner = True
-            #     max_reasoning_tokens = 1024
-            #     max_tokens = 8192
+        # Still not sure if reasoning model is an advantage here
+        # if "claude-3-7-sonnet" in selected_model:
+        #     enable_reasoner = True
+        #     max_reasoning_tokens = 1024
+        #     max_tokens = 8192
 
-            # Is there a way to set the context window size from here?
-            # https://github.com/letta-ai/letta-python/blob/main/reference.md
-            agent = self.client.agents.create(
-                name=agent_name,
-                memory_blocks=memory_blocks,
-                model=selected_model,
-                embedding=letta_embedding,
-                enable_reasoner=enable_reasoner,
-                max_reasoning_tokens=max_reasoning_tokens,
-                max_tokens=max_tokens,
-                tool_ids=tool_ids,
-                enable_sleeptime=enable_sleeptime,
-                tool_exec_environment_variables=tool_exec_environment_variables,
-            )
-            logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
-            # Add a note so we can see when it was created
-            self.client.agents.passages.create(
-                agent_id=agent.id,
-                text=f"Created at {datetime.datetime.now()}Z",
-            )
-            return agent.id
-        except Exception as e:
-            raise RuntimeError(f"Failed to create agent '{agent_name}'") from e
+        # Is there a way to set the context window size from here?
+        # https://github.com/letta-ai/letta-python/blob/main/reference.md
+        agent = self.client.agents.create(
+            name=agent_name,
+            memory_blocks=memory_blocks,
+            model=selected_model,
+            embedding=letta_embedding,
+            enable_reasoner=enable_reasoner,
+            max_reasoning_tokens=max_reasoning_tokens,
+            max_tokens=max_tokens,
+            tool_ids=tool_ids,
+            enable_sleeptime=enable_sleeptime,
+            tool_exec_environment_variables=tool_exec_environment_variables,
+        )
+        logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
+        # Add a note so we can see when it was created
+        self.client.agents.passages.create(
+            agent_id=agent.id,
+            text=f"Created at {datetime.datetime.now()}Z",
+        )
+        return agent.id
 
     def _set_block_limit(self, block_content: str) -> int:
         if block_content is None:
