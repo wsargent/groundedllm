@@ -56,15 +56,13 @@ class ContentFetcherResolver:
         self.fetchers = {}
 
         # Initialize Scrapling fetcher
-        self.fetchers["scrapling"] = ScraplingLinkContentFetcher(
-            raise_on_failure=False  # We handle failures in the router
-        )
+        self.fetchers["scrapling"] = ScraplingLinkContentFetcher()
 
         # Initialize Jina fetcher
         self.fetchers["jina"] = JinaLinkContentFetcher()
 
         # Initialize default fetcher
-        self.fetchers["default"] = HaystackLinkContentFetcher(raise_on_failure=False)
+        self.fetchers["default"] = HaystackLinkContentFetcher()
 
     def _match_url_pattern(self, url: str, pattern: str) -> bool:
         """Check if URL matches a given pattern."""

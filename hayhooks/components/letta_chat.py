@@ -94,7 +94,7 @@ class LettaChatGenerator:
                 assert last_chunk is not None
                 completions = [self._create_message_from_chunks(last_chunk, chunks)]
             except Exception as e:
-                logger.exception("An error occurred while processing a streaming response")
+                logger.exception("An error occurred while processing a streaming response", e)
                 completions = [ChatMessage.from_assistant(f"An error occurred while streaming response: {str(e)}")]
 
         else:
@@ -102,7 +102,7 @@ class LettaChatGenerator:
                 completion: LettaResponse = client.agents.messages.create(agent_id=agent_id, messages=messages, request_options=self.request_options)
                 completions = [self._build_message(completion)]
             except Exception as e:
-                logger.exception("An error occurred while processing a response")
+                logger.exception("An error occurred while processing a response", e)
                 completions = [ChatMessage.from_assistant(f"An error occurred while waiting for response: {str(e)}")]
 
         # logger.debug(f"run: completions={completions}")
