@@ -69,8 +69,8 @@ class URLContentRouter:
                     all_streams.extend(streams)
                 else:
                     logger.debug(f"No streams found for {resolver}")
-            except Exception:
-                logger.exception(f"Exception in {resolver} run with {urls}")
+            except Exception as e:
+                logger.exception(f"Exception in {resolver} run with {urls}, error: {e}")
 
         return {"streams": all_streams}
 
