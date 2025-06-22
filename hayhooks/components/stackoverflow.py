@@ -362,7 +362,7 @@ class StackOverflowErrorSearch(StackOverflowBase):
             return {"documents": documents}
 
         except Exception as e:
-            logger.error(f"Error in search_by_error: {e}")
+            logger.error(f"Error in stackoverflow: {e}")
             return {"documents": [], "results_json": "[]", "results_markdown": ""}
 
     @component.output_types(documents=List[Document])
@@ -421,7 +421,7 @@ class StackOverflowErrorSearch(StackOverflowBase):
             return {"documents": documents}
 
         except Exception as e:
-            logger.error(f"Error in search_by_error (async): {e}")
+            logger.error(f"Error in stackoverflow (async): {e}")
             return {"documents": []}
 
 

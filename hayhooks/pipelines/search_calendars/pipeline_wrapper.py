@@ -64,7 +64,7 @@ class PipelineWrapper(BasePipelineWrapper):
 
     def run_api(  # type: ignore
         self,
-        query: str,  # Query is mandatory for search
+        query: Optional[str] = None,
         user_id: Optional[str] = None,
         calendar_id: str = DEFAULT_CALENDAR_ID,
         max_results: int = DEFAULT_MAX_RESULTS_SEARCH,
@@ -96,9 +96,6 @@ class PipelineWrapper(BasePipelineWrapper):
         if not self.pipeline or not self.calendar_reader:
             logger.error("SearchCalendarEvents pipeline is not configured correctly. Missing OAuth details or components.")
             raise RuntimeError("Pipeline not configured due to missing Google OAuth environment variables.")
-
-        if not query or not isinstance(query, str):
-            raise InvalidInputError("A non-empty 'query' string parameter is required for searching calendar events.")
 
         logger.debug(f"Running search_calendars with user_id='{user_id or self.calendar_reader.default_user_id}', calendar_id='{calendar_id}', query='{query}', max_results={max_results}")
 

@@ -55,7 +55,7 @@ def search_calendars(
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
     response = requests.post(f"{hayhooks_base_url}/search_calendars/run", json=payload)
 
-    response.raise_for_status()
+    # response.raise_for_status()
     json_response = response.json()
 
     if "result" in json_response:

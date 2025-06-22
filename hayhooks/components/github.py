@@ -1,4 +1,3 @@
-import mimetypes
 import re
 from typing import Dict, List, Optional
 
@@ -179,7 +178,10 @@ class GithubRepoContentResolver:
                             # can we guess the mime type from the file suffix?
                             path = document.meta.get("path")
                             # deprecated in 3.13 but we're on 3.12 here...
-                            mime_type = mimetypes.guess_type(path, strict=False)[0]
+                            # mime_type = mimetypes.guess_type(path, strict=False)[0]
+                            # If we have a document like a jekyll post that combines YAML and Markdown
+                            # then the markdown convert can result in a completely empty document :-/
+                            mime_type = "text/plain"
                             logger.debug(f"GithubRepoContentResolver mime type for path {path} is {mime_type}")
                             stream = ByteStream.from_string(text=document.content, meta=document.meta, mime_type=mime_type)
                             streams.append(stream)
