@@ -610,7 +610,7 @@ wheels = [
 
 [[package]]
 name = "google-api-python-client"
-version = "2.170.0"
+version = "2.173.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-api-core" },
@@ -619,23 +619,23 @@ dependencies = [
     { name = "httplib2" },
     { name = "uritemplate" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/db/86/1bd09aea2664a46bc65713cb7876381ec8949a4b1e71be97dfc359c79781/google_api_python_client-2.170.0.tar.gz", hash = "sha256:75f3a1856f11418ea3723214e0abc59d9b217fd7ed43dcf743aab7f06ab9e2b1", size = 12971933 }
+sdist = { url = "https://files.pythonhosted.org/packages/8f/7e/7c6e43e54f611f0f97f1678ea567fe06fecd545bd574db05e204e5b136fe/google_api_python_client-2.173.0.tar.gz", hash = "sha256:b537bc689758f4be3e6f40d59a6c0cd305abafdea91af4bc66ec31d40c08c804", size = 13091318 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ca/ab/928fb4551ce9c791de96b0681924d46de9a5b50931394fd19850383a08a1/google_api_python_client-2.170.0-py3-none-any.whl", hash = "sha256:7bf518a0527ad23322f070fa69f4f24053170d5c766821dc970ff0571ec22748", size = 13490660 },
+    { url = "https://files.pythonhosted.org/packages/e6/c9/dc9ca0537ee2ddac0f0b1e458903afe3f490a0f90dfd4b1b16eb339cdfbb/google_api_python_client-2.173.0-py3-none-any.whl", hash = "sha256:16a8e81c772dd116f5c4ee47d83643149e1367dc8fb4f47cb471fbcb5c7d7ac7", size = 13612778 },
 ]
 
 [[package]]
 name = "google-auth"
-version = "2.40.2"
+version = "2.40.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cachetools" },
     { name = "pyasn1-modules" },
     { name = "rsa" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/66/84/f67f53c505a6b2c5da05c988e2a5483f5ba9eee4b1841d2e3ff22f547cd5/google_auth-2.40.2.tar.gz", hash = "sha256:a33cde547a2134273226fa4b853883559947ebe9207521f7afc707efbf690f58", size = 280990 }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/9b/e92ef23b84fa10a64ce4831390b7a4c2e53c0132568d99d4ae61d04c8855/google_auth-2.40.3.tar.gz", hash = "sha256:500c3a29adedeb36ea9cf24b8d10858e152f2412e3ca37829b3fa18e33d63b77", size = 281029 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6a/c7/e2d82e6702e2a9e2311c138f8e1100f21d08aed0231290872b229ae57a86/google_auth-2.40.2-py2.py3-none-any.whl", hash = "sha256:f7e568d42eedfded58734f6a60c58321896a621f7c116c411550a4b4a13da90b", size = 216102 },
+    { url = "https://files.pythonhosted.org/packages/17/63/b19553b658a1692443c62bd07e5868adaa0ad746a0751ba62c59568cd45b/google_auth-2.40.3-py2.py3-none-any.whl", hash = "sha256:1370d4593e86213563547f97a92752fc658456fe4514c809544f330fed45a7ca", size = 216137 },
 ]
 
 [[package]]
@@ -762,8 +762,8 @@ requires-dist = [
     { name = "exa-py", specifier = ">=1.13.1" },
     { name = "gdown", specifier = ">=5.2.0" },
     { name = "github-haystack", specifier = ">=1.0.0" },
-    { name = "google-api-python-client", specifier = ">=2.118.0" },
-    { name = "google-auth", specifier = ">=2.28.1" },
+    { name = "google-api-python-client", specifier = ">=2.173.0" },
+    { name = "google-auth", specifier = ">=2.40.3" },
     { name = "google-auth-oauthlib", specifier = ">=1.2.0" },
     { name = "hayhooks", extras = ["mcp"], specifier = ">=0.9.1" },
     { name = "haystack-ai", specifier = ">=2.14.1" },
@@ -804,9 +804,9 @@ requires-dist = [
     { name = "pyzotero", specifier = ">=1.6.11" },
     { name = "rich", specifier = ">=14.0.0" },
     { name = "scrapling", specifier = ">=0.2.99" },
-    { name = "tavily-python", specifier = ">=0.7.3" },
+    { name = "tavily-python", specifier = ">=0.7.7" },
     { name = "trafilatura", specifier = ">=2.0.0" },
-    { name = "youtube-transcript-api", specifier = ">=1.0.3" },
+    { name = "youtube-transcript-api", specifier = ">=1.1.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2767,16 +2767,16 @@ wheels = [
 
 [[package]]
 name = "tavily-python"
-version = "0.7.3"
+version = "0.7.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
     { name = "requests" },
     { name = "tiktoken" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a7/ee/8a451c724d814d97c1fda8c6203bc9563c7fe104e7c0214f83574326525e/tavily_python-0.7.3.tar.gz", hash = "sha256:f091be8bfed28ab42ff239cf2c46f2ab3715071bf19951900157b3e4a60151c4", size = 16657 }
+sdist = { url = "https://files.pythonhosted.org/packages/67/b4/2b25db4e7ed09cb017ca3c73cf240f2efe278db571c8ae1dc7ca6d445d4b/tavily_python-0.7.7.tar.gz", hash = "sha256:419e7eb3fbb63b38b9ed4c879d622798ab1858fd373b82a2b4039cab6a2f2c57", size = 18879 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6f/82/0beda7ea25f1f586b1ae55b1b5399f999171ab12f87db1159fa6f00c2641/tavily_python-0.7.3-py3-none-any.whl", hash = "sha256:ed92e49e5be75a790ff7e36571bdb2982f179b34ca19f91d764ac7368219a8e5", size = 15022 },
+    { url = "https://files.pythonhosted.org/packages/9e/0a/5d2dbdd4e03bef2890731a59e1bb09b3d35c5937f3d3f05880d41ef5f8c3/tavily_python-0.7.7-py3-none-any.whl", hash = "sha256:5d236b5983dc4acc8347e58955d9512582a97cd029cad19f68b3d99a9911c80f", size = 15360 },
 ]
 
 [[package]]
@@ -3122,15 +3122,15 @@ wheels = [
 
 [[package]]
 name = "youtube-transcript-api"
-version = "1.0.3"
+version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "defusedxml" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b0/32/f60d87a99c05a53604c58f20f670c7ea6262b55e0bbeb836ffe4550b248b/youtube_transcript_api-1.0.3.tar.gz", hash = "sha256:902baf90e7840a42e1e148335e09fe5575dbff64c81414957aea7038e8a4db46", size = 2153252 }
+sdist = { url = "https://files.pythonhosted.org/packages/36/dd/10d413b20a2d14fa483853d0f6d920a0a0a6887d7c60167e4641733f99fb/youtube_transcript_api-1.1.0.tar.gz", hash = "sha256:786d9e64bd7fffee0dbc1471a61a798cebdc379b9cf8f7661d3664e831fcc1a5", size = 470144 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/44/40c03bb0f8bddfb9d2beff2ed31641f52d96c287ba881d20e0c074784ac2/youtube_transcript_api-1.0.3-py3-none-any.whl", hash = "sha256:d1874e57de65cf14c9d7d09b2b37c814d6287fa0e770d4922c4cd32a5b3f6c47", size = 2169911 },
+    { url = "https://files.pythonhosted.org/packages/b3/69/63f1b9f96a9d3b6bd35288fe27f987c41bd157e47b3d07ca025549e3f8e6/youtube_transcript_api-1.1.0-py3-none-any.whl", hash = "sha256:876ac42b1e3f8cc99b81d8fd810bd74ed07511e51dff5db50e714e3156ad3595", size = 485739 },
 ]
 
 [[package]]
