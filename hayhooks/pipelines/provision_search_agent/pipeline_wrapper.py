@@ -87,6 +87,7 @@ class PipelineWrapper(BasePipelineWrapper):
             "HAYHOOKS_BASE_URL": self._get_hayhooks_base_url(),  # base url for tools
             "HAYHOOKS_USER_ID": self._get_hayhooks_user_id(),  # google user id
         }
+        system_timezone = os.getenv("TZ", "America/Los_Angeles")
         create_agent_args = {
             "agent_name": agent_name,
             "chat_model": chat_model,
@@ -95,6 +96,7 @@ class PipelineWrapper(BasePipelineWrapper):
             "persona_block": self._read_persona_block_content(),
             "requested_tools": requested_tools,
             "tool_exec_environment_variables": tool_env_vars,
+            "timezone": system_timezone,
         }
 
         # Run the actual pipeline

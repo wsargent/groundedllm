@@ -36,6 +36,7 @@ class LettaCreateAgent:
         human_block: str,
         persona_block: str,
         requested_tools: List[str],
+        timezone: str,
         tool_exec_environment_variables: Dict[str, str],
     ) -> Dict[str, any]:
         """Finds an existing Letta agent by name or creates a new one with specified tools.
@@ -57,6 +58,8 @@ class LettaCreateAgent:
             Content for the 'persona' memory block.
         requested_tools:
             A list of tools to attach.
+        timezone:
+            The agent's timezone
         tool_exec_environment_variables:
             a dictionary of variables.
 
@@ -92,6 +95,7 @@ class LettaCreateAgent:
                     letta_embedding=embedding_model,
                     letta_model=chat_model,
                     requested_tools=requested_tools,
+                    timezone=timezone,
                     tool_exec_environment_variables=tool_exec_environment_variables,
                 )
                 logger.info(f"Created new agent '{agent_name}' with ID: {agent_id}")
@@ -107,7 +111,7 @@ class LettaCreateAgent:
             # For now, re-raise to indicate failure.
             raise RuntimeError(f"Failed Letta agent setup for '{agent_name}'") from e
 
-    def _create_agent(self, agent_name: str, human_block_content: str, persona_block_content: str, letta_model: str, letta_embedding: str, requested_tools: List[str], tool_exec_environment_variables: dict) -> str:
+    def _create_agent(self, agent_name: str, human_block_content: str, persona_block_content: str, letta_model: str, letta_embedding: str, requested_tools: List[str], timezone: str, tool_exec_environment_variables: dict) -> str:
         """Creates a new Letta agent with the specified configuration and tools.
 
         Args:
@@ -124,6 +128,8 @@ class LettaCreateAgent:
             The identifier for the embedding model.
         requested_tools:
             The requested tools to attach to the agent upon creation.
+        timezone:
+            The agent's timezone
         tool_exec_environment_variables:
             Tool environment variables.
 
@@ -187,6 +193,7 @@ class LettaCreateAgent:
             max_tokens=max_tokens,
             tool_ids=tool_ids,
             enable_sleeptime=enable_sleeptime,
+            timezone=timezone,
             tool_exec_environment_variables=tool_exec_environment_variables,
         )
         logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
