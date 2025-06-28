@@ -79,7 +79,7 @@ class TavilyWebSearch:
     def _process_response(self, query: str, response: dict):
         documents = []
         urls = []
-        # logger.debug(f"Tavily response: {response}")
+        logger.debug(f"Tavily response: {response}")
         for result in response["results"]:
             url = result["url"]
             doc_dict = {
@@ -88,9 +88,10 @@ class TavilyWebSearch:
                 "url": url,
                 "score": result["score"],
             }
-            logger.debug(f"Tavily result {url}")
+            doc = Document.from_dict(doc_dict)
+            logger.debug(f"Tavily result {doc}")
             urls.append(url)
-            documents.append(Document.from_dict(doc_dict))
+            documents.append(doc)
 
         number_documents = len(documents)
         if self.tavily_client and number_documents == 0:
