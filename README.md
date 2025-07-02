@@ -374,6 +374,7 @@ I have not researched these deeply, but this gives you an idea of what I'm going
 * [Surfsense](https://github.com/MODSetter/SurfSense) is an OSS DeepResearch project that can use personal sources of data.
 * [Deer-Flow](https://deerflow.tech) is a self-hosted deep research tool using Tavily.  It produces *long* reports.
 * [Morphic](https://www.morphic.sh) is an OSS project on [github](https://github.com/miurla/morphic) that can use Tavily, SearXNG, or Exa.
+* [local-deep-research](https://github.com/LearningCircuit/local-deep-research) is an open-source AI research assistant that performs systematic research by breaking down complex questions, searching multiple sources in parallel, and creating comprehensive reports with proper citations. It can run entirely locally for complete privacy.
 
 ### Cloud
 
