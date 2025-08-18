@@ -72,9 +72,17 @@ class TavilyWebSearch:
         if self.tavily_client is None:
             return {"documents": [], "urls": []}
 
-        response = self._call_tavily(query=query, search_depth=search_depth, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains, time_range=time_range)
-        output = self._process_response(query, response)
-        return output
+        try:
+            response = self._call_tavily(query=query, search_depth=search_depth, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains, time_range=time_range)
+            output = self._process_response(query, response)
+            return output
+        except Exception as e:
+            logger.error(
+                f"""Failed on query={query}, search_depth={search_depth}, max_results={max_results},
+                                         include_domains={include_domains}, exclude_domains={exclude_domains},
+                                         time_range={time_range}""",
+                e,
+            )
 
     def _process_response(self, query: str, response: dict):
         documents = []
