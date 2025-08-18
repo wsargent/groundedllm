@@ -88,11 +88,11 @@ services:
   # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
   letta:
-    image: letta/letta:0.8.8
+    image: letta/letta:0.11.3
     volumes:
       - ./letta/letta_mcp_config.json:/root/.letta/mcp_config.json
     ports:
-      - 8283:8283    
+      - 8283:8283
     environment:
       LETTA_DEBUG: "${LETTA_DEBUG:-false}"
       LETTA_PG_DB: ${LETTA_PG_DB:-letta}
@@ -119,7 +119,7 @@ services:
 
   # Open WebUI is the front-end UI to Letta
   open-webui:
-    image: ghcr.io/open-webui/open-webui:0.6.15
+    image: ghcr.io/open-webui/open-webui:0.6.22
     container_name: open-webui
     volumes:
      - open-webui:/app/backend/data
