@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from hayhooks import log as logger
 from haystack import component
@@ -38,41 +38,27 @@ class LettaCreateAgent:
         requested_tools: List[str],
         timezone: str,
         tool_exec_environment_variables: Dict[str, str],
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """Finds an existing Letta agent by name or creates a new one with specified tools.
 
         If the agent doesn't exist, it's created with the provided configuration
         and the requested tools are discovered from the MCP server and attached.
 
         Args:
-        ----
-        agent_name:
-            The name of the agent to find or create.
-        chat_model:
-            The identifier for the chat model (e.g., 'openai/gpt-4o').
-        embedding_model:
-            The identifier for the embedding model (e.g., 'openai/text-embedding-3-large').
-        human_block:
-            Content for the 'human' memory block.
-        persona_block:
-            Content for the 'persona' memory block.
-        requested_tools:
-            A list of tools to attach.
-        timezone:
-            The agent's timezone
-        tool_exec_environment_variables:
-            a dictionary of variables.
+            agent_name (str): The name of the agent to find or create.
+            chat_model (str): The identifier for the chat model (e.g., 'openai/gpt-4o').
+            embedding_model (str): The identifier for the embedding model (e.g., 'openai/text-embedding-3-large').
+            human_block (str): Content for the 'human' memory block.
+            persona_block (str): Content for the 'persona' memory block.
+            requested_tools (List[str]): A list of tools to attach.
+            timezone (str): The agent's timezone
+            tool_exec_environment_variables (Dict[str, str]): a dictionary of variables.
 
         Returns:
-        -------
-        dict:
-            A dictionary containing the "agent_id".
+            Dict[str, any]: A dictionary containing the "agent_id".
 
         Raises:
-        ------
-        RuntimeError:
-            If an unexpected error occurs during the setup process.
-
+            RuntimeError: If an unexpected error occurs during the setup process.
         """
         try:
             logger.info(f"Starting setup for agent '{agent_name}'...")
@@ -115,36 +101,21 @@ class LettaCreateAgent:
         """Creates a new Letta agent with the specified configuration and tools.
 
         Args:
-        ----
-        agent_name:
-            The name for the new agent.
-        human_block_content:
-            Content for the 'human' memory block.
-        persona_block_content:
-            Content for the 'persona' memory block.
-        letta_model:
-            The identifier for the chat model.
-        letta_embedding:
-            The identifier for the embedding model.
-        requested_tools:
-            The requested tools to attach to the agent upon creation.
-        timezone:
-            The agent's timezone
-        tool_exec_environment_variables:
-            Tool environment variables.
+            agent_name (str): The name for the new agent.
+            human_block_content (str): Content for the 'human' memory block.
+            persona_block_content (str): Content for the 'persona' memory block.
+            letta_model (str): The identifier for the chat model.
+            letta_embedding (str): The identifier for the embedding model.
+            requested_tools (List[str]): The requested tools to attach to the agent upon creation.
+            timezone (str): The agent's timezone
+            tool_exec_environment_variables (dict): Tool environment variables.
 
         Returns:
-        -------
-        str:
-            The ID of the newly created agent.
+            str: The ID of the newly created agent.
 
         Raises:
-        ------
-        ValueError:
-            If the specified chat model is not available.
-        RuntimeError:
-            If agent creation fails for other reasons.
-
+            ValueError: If the specified chat model is not available.
+            RuntimeError: If agent creation fails for other reasons.
         """
         memory_blocks = [
             CreateBlock(

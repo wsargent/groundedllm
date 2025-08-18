@@ -32,14 +32,13 @@ class GoogleOAuth:
         token_storage_path: str = os.getenv("GOOGLE_TOKEN_STORAGE_PATH", "google_tokens"),
         scopes: Optional[List[str]] = None,
     ):
-        """
-        Initialize the Google OAuth component.
+        """Initialize the Google OAuth component.
 
         Args:
-            client_secrets_file: Path to the client secrets JSON file downloaded from Google Cloud Console
-            base_callback_url: Base callback URL of the Hayhooks server (must match the authorized redirect URI in Google Cloud Console)
-            token_storage_path: Path to store the token files
-            scopes: List of Google API scopes to request
+            client_secrets_file (str): Path to the client secrets JSON file downloaded from Google Cloud Console
+            base_callback_url (str): Base callback URL of the Hayhooks server (must match the authorized redirect URI in Google Cloud Console)
+            token_storage_path (str): Path to store the token files
+            scopes (Optional[List[str]]): List of Google API scopes to request
         """
         self.client_secrets_file = client_secrets_file
         self.base_callback_url = base_callback_url

@@ -33,7 +33,7 @@ class URLContentRouter:
         """Initialize the URL router.
 
         Args:
-            resolvers: A list of URL content resolvers.
+            resolvers (List[Any]): A list of URL content resolvers.
         """
         self.resolvers = resolvers
         # The last resolver should be the generic one that can handle any URL
@@ -44,10 +44,10 @@ class URLContentRouter:
         """Route URLs to the appropriate resolver and fetch their content.
 
         Args:
-            urls: A list of URLs to fetch content from.
+            urls (List[str]): A list of URLs to fetch content from.
 
         Returns:
-            A dictionary with a "streams" key containing a list of ByteStream objects.
+            Dict[str, List[ByteStream]]: A dictionary with a "streams" key containing a list of ByteStream objects.
         """
         # Group URLs by resolver
         resolver_urls: Dict[Any, List[str]] = {}
@@ -78,10 +78,10 @@ class URLContentRouter:
         """Find the appropriate resolver for the given URL.
 
         Args:
-            url: The URL to find a resolver for.
+            url (str): The URL to find a resolver for.
 
         Returns:
-            The resolver that can handle the URL.
+            Any: The resolver that can handle the URL.
         """
         for resolver in self.resolvers:
             if resolver.can_handle(url):

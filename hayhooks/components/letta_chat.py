@@ -32,14 +32,14 @@ class LettaChatGenerator:
         generation_kwargs: Optional[Dict[str, Any]] = None,
         streaming_callback: Optional[Callable[[StreamingChunk], None]] = None,
     ):
-        """
-        Initialize the component with a Letta client.
+        """Initialize the component with a Letta client.
 
-        :param agent_id: The ID of the Letta agent to use for text generation.
-        :param base_url: The base URL of the Letta instance.
-        :param token: The token to use as HTTP bearer authorization for Letta.
-        :param generation_kwargs: A dictionary with keyword arguments to customize text generation.
-        :param streaming_callback: An optional callable for handling streaming responses.
+        Args:
+            agent_id (Optional[str]): The ID of the Letta agent to use for text generation.
+            base_url (Optional[str]): The base URL of the Letta instance.
+            token (Optional[Secret]): The token to use as HTTP bearer authorization for Letta.
+            generation_kwargs (Optional[Dict[str, Any]]): A dictionary with keyword arguments to customize text generation.
+            streaming_callback (Optional[Callable[[StreamingChunk], None]]): An optional callable for handling streaming responses.
         """
 
         logger.info(f"Using Letta base URL: {base_url} with agent_id = {agent_id}")
@@ -53,14 +53,15 @@ class LettaChatGenerator:
 
     @component.output_types(replies=List[str], meta=List[Dict[str, Any]])
     def run(self, prompt: str, agent_id: str, streaming_callback: Optional[Callable[[StreamingChunk], None]] = None):
-        """
-        Send a query to Letta and return the response.
+        """Send a query to Letta and return the response.
 
-        :param prompt: The string prompt to use for text generation.
-        :param agent_id: The id of the Letta agent to use for text generation.
-        :param streaming_callback: An optional callable for handling streaming responses.
-        :returns:
-            A list of strings containing the generated responses and a list of dictionaries containing the metadata for each response.
+        Args:
+            prompt (str): The string prompt to use for text generation.
+            agent_id (str): The id of the Letta agent to use for text generation.
+            streaming_callback (Optional[Callable[[StreamingChunk], None]]): An optional callable for handling streaming responses.
+
+        Returns:
+            Dict[str, List[str]]: A list of strings containing the generated responses and a list of dictionaries containing the metadata for each response.
         """
 
         client = Letta(base_url=self.base_url, token=self.token.resolve_value())
@@ -203,13 +204,13 @@ class LettaChatGenerator:
             return None
 
     def _build_message(self, response: LettaResponse):
-        """
-        Converts the response from Letta to a ChatMessage.
+        """Converts the response from Letta to a ChatMessage.
 
-        :param response:
-            The response returned by Letta.
-        :returns:
-            The ChatMessage.
+        Args:
+            response (LettaResponse): The response returned by Letta.
+
+        Returns:
+            ChatMessage: The ChatMessage.
         """
         # logger.debug(f"_build_message: response={response}")
 

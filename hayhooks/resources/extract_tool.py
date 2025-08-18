@@ -4,8 +4,7 @@ import requests
 
 
 def extract(url: str) -> str:
-    """
-    Extract page from a URL and returns the full contents.
+    """Extract page from a URL and returns the full contents.
 
     This tool will fetch HTML, Markdown, PDF, or a plain text web page from a URL
     and returns the contents as JSON.
@@ -17,15 +16,11 @@ def extract(url: str) -> str:
 
     If you want to get a summary of a web page or want specific information, use the excerpt tool instead.
 
-    Parameters
-    ----------
-    url: str
-        The URL of the page to extract.
+    Args:
+        url (str): The URL of the page to extract.
 
-    Returns
-    -------
-    str
-        A JSON document containing the contents of the pages.
+    Returns:
+        str: A JSON document containing the contents of the pages.
     """
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")

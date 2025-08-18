@@ -40,15 +40,14 @@ class YouTubeTranscriptResolver:
         enable_google_api: bool = True,
         enable_youtube_transcript_api: bool = True,
     ):
-        """
-        Initialize the YouTube transcript resolver.
+        """Initialize the YouTube transcript resolver.
 
         Args:
-            oauth_provider: The GoogleOAuth provider instance.
-            raise_on_failure: Whether to raise an exception if fetching fails and no streams are produced.
-            user_id: Optional default user ID for Google Cloud Platform services.
-            enable_google_api: Whether to enable fetching transcripts via the Google YouTube Data API.
-            enable_youtube_transcript_api: Whether to enable fetching transcripts via the youtube_transcript_api library.
+            oauth_provider (GoogleOAuth): The GoogleOAuth provider instance.
+            raise_on_failure (bool): Whether to raise an exception if fetching fails and no streams are produced.
+            user_id (Optional[str]): Optional default user ID for Google Cloud Platform services.
+            enable_google_api (bool): Whether to enable fetching transcripts via the Google YouTube Data API.
+            enable_youtube_transcript_api (bool): Whether to enable fetching transcripts via the youtube_transcript_api library.
         """
         self.raise_on_failure = raise_on_failure
         self.oauth_provider = oauth_provider
@@ -60,26 +59,25 @@ class YouTubeTranscriptResolver:
         """Check if this resolver can handle the given URL.
 
         Args:
-            url: The URL to check.
+            url (str): The URL to check.
 
         Returns:
-            True if this resolver can handle the URL, False otherwise.
+            bool: True if this resolver can handle the URL, False otherwise.
         """
         return "youtube.com" in url or "youtu.be" in url
 
     @component.output_types(streams=List[ByteStream], errors=Optional[List[Dict]])
     def run(self, urls: List[str], user_id: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Fetch transcripts from YouTube URLs.
+        """Fetch transcripts from YouTube URLs.
 
         Args:
-            urls: A list of YouTube URLs to fetch transcripts from.
-            user_id: Optional user ID for Google Cloud Platform services.
+            urls (List[str]): A list of YouTube URLs to fetch transcripts from.
+            user_id (Optional[str]): Optional user ID for Google Cloud Platform services.
                      If provided, it's used for the GoogleYouTubeTranscriptReader.
                      Overrides default_gcp_user_id if set during initialization.
 
         Returns:
-            A dictionary with:
+            Dict[str, Any]: A dictionary with:
             - "streams": A list of ByteStream objects for successfully fetched transcripts.
             - "errors": An optional list of RFC 7807 problem detail dictionaries for URLs that failed.
         """
@@ -340,10 +338,10 @@ class YouTubeTranscriptResolver:
         """Extract the video ID from a YouTube URL.
 
         Args:
-            url: The YouTube URL.
+            url (str): The YouTube URL.
 
         Returns:
-            The video ID if found, None otherwise.
+            Optional[str]: The video ID if found, None otherwise.
         """
         # Match patterns like:
         # https://www.youtube.com/watch?v=VIDEO_ID
@@ -361,12 +359,12 @@ class YouTubeTranscriptResolver:
         """Format the transcript as markdown.
 
         Args:
-            transcript: The transcript data from YouTubeTranscriptApi.
-            url: The original YouTube URL.
-            video_id: The YouTube video ID.
+            transcript (List[dict]): The transcript data from YouTubeTranscriptApi.
+            url (str): The original YouTube URL.
+            video_id (str): The YouTube video ID.
 
         Returns:
-            The transcript formatted as markdown.
+            str: The transcript formatted as markdown.
         """
         # Create title with link to video
         md = "# YouTube Video Transcript\n\n"
@@ -389,10 +387,10 @@ class YouTubeTranscriptResolver:
         """Format seconds as a timestamp (MM:SS).
 
         Args:
-            seconds: Time in seconds.
+            seconds (float): Time in seconds.
 
         Returns:
-            Formatted timestamp.
+            str: Formatted timestamp.
         """
         minutes = int(seconds // 60)
         seconds = int(seconds % 60)

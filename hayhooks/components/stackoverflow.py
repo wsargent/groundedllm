@@ -31,9 +31,9 @@ class StackOverflowBase:
         """Initialize the Stack Overflow component.
 
         Args:
-            api_key: Stack Overflow API key
-            access_token: Optional Stack Overflow access token for authenticated requests
-            timeout: HTTP request timeout in seconds
+            api_key (Secret): Stack Overflow API key
+            access_token (Optional[Secret]): Optional Stack Overflow access token for authenticated requests
+            timeout (int): HTTP request timeout in seconds
         """
         self.is_enabled = True  # still enabled even if no API key
         self.timeout = timeout
@@ -308,15 +308,15 @@ class StackOverflowErrorSearch(StackOverflowBase):
         """Search Stack Overflow for error-related questions.
 
         Args:
-            error_message: Error message to search for
-            language: Programming language
-            technologies: Related technologies
-            min_score: Minimum score threshold
-            include_comments: Include comments in results
-            limit: Maximum number of results
+            error_message (str): Error message to search for
+            language (Optional[str]): Programming language
+            technologies (Optional[List[str]]): Related technologies
+            min_score (Optional[int]): Minimum score threshold
+            include_comments (bool): Include comments in results
+            limit (Optional[int]): Maximum number of results
 
         Returns:
-            Dictionary containing documents
+            Dict[str, Union[List[Document], str]]: Dictionary containing documents
         """
         if not self.is_enabled:
             return {"documents": []}
@@ -372,16 +372,15 @@ class StackOverflowErrorSearch(StackOverflowBase):
         """Asynchronously search Stack Overflow for error-related questions.
 
         Args:
-            error_message: Error message to search for
-            language: Programming language
-            technologies: Related technologies
-            min_score: Minimum score threshold
-            include_comments: Include comments in results
-            response_format: Response format ("json" or "markdown")
-            limit: Maximum number of results
+            error_message (str): Error message to search for
+            language (Optional[str]): Programming language
+            technologies (Optional[List[str]]): Related technologies
+            min_score (Optional[int]): Minimum score threshold
+            include_comments (bool): Include comments in results
+            limit (Optional[int]): Maximum number of results
 
         Returns:
-            Dictionary containing documents
+            Dict[str, Union[List[Document], str]]: Dictionary containing documents
         """
         if not self.is_enabled:
             return {"documents": []}
@@ -434,13 +433,13 @@ class StackOverflowStackTraceAnalyzer(StackOverflowBase):
         """Analyze stack trace and find relevant solutions.
 
         Args:
-            stack_trace: Stack trace to analyze
-            language: Programming language
-            include_comments: Include comments in results
-            limit: Maximum number of results
+            stack_trace (str): Stack trace to analyze
+            language (str): Programming language
+            include_comments (bool): Include comments in results
+            limit (Optional[int]): Maximum number of results
 
         Returns:
-            Dictionary containing documents
+            Dict[str, Union[List[Document], str]]: Dictionary containing documents
         """
 
         logger.debug(f"run: stack_trace={stack_trace} self.is_enabled={self.is_enabled}")

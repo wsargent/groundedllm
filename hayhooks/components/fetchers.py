@@ -22,13 +22,12 @@ class ContentFetcherResolver:
         default_fetcher: str = "default",
         raise_on_failure: bool = False,
     ):
-        """
-        Initialize the ContentFetcherRouter.
+        """Initialize the ContentFetcherRouter.
 
         Args:
-            fetcher_configs: List of fetcher configurations with patterns and preferences
-            default_fetcher: Default fetcher to use when no patterns match
-            raise_on_failure: Whether to raise exceptions on fetcher failures
+            fetcher_configs (Optional[List[Dict[str, Any]]]): List of fetcher configurations with patterns and preferences
+            default_fetcher (str): Default fetcher to use when no patterns match
+            raise_on_failure (bool): Whether to raise exceptions on fetcher failures
         """
         self.raise_on_failure = raise_on_failure
         self.default_fetcher = default_fetcher
@@ -125,14 +124,13 @@ class ContentFetcherResolver:
 
     @component.output_types(streams=List[ByteStream])
     def run(self, urls: List[str]):
-        """
-        Route URLs to appropriate fetchers with fallback handling.
+        """Route URLs to appropriate fetchers with fallback handling.
 
         Args:
-            urls: List of URLs to fetch content from.
+            urls (List[str]): List of URLs to fetch content from.
 
         Returns:
-            Dictionary with "streams" key containing fetched content.
+            Dict[str, List[ByteStream]]: Dictionary with "streams" key containing fetched content.
         """
         all_streams = []
 
@@ -192,13 +190,12 @@ class ScraplingLinkContentFetcher:
         retry_attempts: int = 2,
         raise_on_failure: bool = False,
     ):
-        """
-        Initialize the ScraplingLinkContentFetcher.
+        """Initialize the ScraplingLinkContentFetcher.
 
         Args:
-            timeout: The timeout for the HTTP request in seconds.
-            retry_attempts: The number of retry attempts for failed requests.
-            raise_on_failure: Whether to raise an exception if fetching fails.
+            timeout (int): The timeout for the HTTP request in seconds.
+            retry_attempts (int): The number of retry attempts for failed requests.
+            raise_on_failure (bool): Whether to raise an exception if fetching fails.
         """
         self.timeout = timeout
         self.retry_attempts = retry_attempts
@@ -222,14 +219,13 @@ class ScraplingLinkContentFetcher:
 
     @component.output_types(streams=List[ByteStream])
     def run(self, urls: List[str]):
-        """
-        Fetch content from URLs using Scrapling service.
+        """Fetch content from URLs using Scrapling service.
 
         Args:
-            urls: A list of URLs to fetch content from.
+            urls (List[str]): A list of URLs to fetch content from.
 
         Returns:
-            A dictionary with a "streams" key containing a list of ByteStream objects.
+            Dict[str, List[ByteStream]]: A dictionary with a "streams" key containing a list of ByteStream objects.
         """
         if not self.is_available():
             if self.raise_on_failure:
@@ -249,14 +245,13 @@ class ScraplingLinkContentFetcher:
         return {"streams": streams}
 
     def _fetch_with_retries(self, url: str) -> Tuple[Optional[Dict[str, str]], Optional[ByteStream]]:
-        """
-        Fetch content from a URL with retry logic.
+        """Fetch content from a URL with retry logic.
 
         Args:
-            url: The URL to fetch content from.
+            url (str): The URL to fetch content from.
 
         Returns:
-            A tuple containing metadata and ByteStream.
+            Tuple[Optional[Dict[str, str]], Optional[ByteStream]]: A tuple containing metadata and ByteStream.
         """
         attempt = 0
 
@@ -280,14 +275,13 @@ class ScraplingLinkContentFetcher:
         return None, None
 
     def _fetch(self, url: str) -> Tuple[Dict[str, str], ByteStream]:
-        """
-        Fetch content from a URL using Scrapling.
+        """Fetch content from a URL using Scrapling.
 
         Args:
-            url: The URL to fetch content from.
+            url (str): The URL to fetch content from.
 
         Returns:
-            A tuple containing metadata and ByteStream.
+            Tuple[Dict[str, str], ByteStream]: A tuple containing metadata and ByteStream.
         """
 
         # response = StealthyFetcher.fetch(url, timeout=self.timeout, headless=True, block_images=True, disable_resources=True)
@@ -346,18 +340,15 @@ class HaystackLinkContentFetcher:
         http2: bool = False,
         client_kwargs: Optional[Dict] = None,
     ):
-        """
-        Initialize the FallbackLinkContentFetcher.
+        """Initialize the FallbackLinkContentFetcher.
 
         Args:
-            raise_on_failure: Whether to raise an exception if both fetchers fail.
-            user_agents: A list of user agents to use for the primary fetcher.
-            retry_attempts: The number of retry attempts for the primary fetcher.
-            timeout: The timeout for the primary fetcher in seconds.
-            http2: Whether to use HTTP/2 for the primary fetcher.
-            client_kwargs: Additional kwargs for the primary fetcher's HTTP client.
-            jina_timeout: The timeout for the fallback fetcher in seconds.
-            jina_retry_attempts: The number of retry attempts for the fallback fetcher.
+            raise_on_failure (bool): Whether to raise an exception if both fetchers fail.
+            user_agents (Optional[List[str]]): A list of user agents to use for the primary fetcher.
+            retry_attempts (int): The number of retry attempts for the primary fetcher.
+            timeout (int): The timeout for the primary fetcher in seconds.
+            http2 (bool): Whether to use HTTP/2 for the primary fetcher.
+            client_kwargs (Optional[Dict]): Additional kwargs for the primary fetcher's HTTP client.
         """
         self.primary_fetcher = LinkContentFetcher(
             raise_on_failure=False,  # We handle failures ourselves
@@ -374,14 +365,13 @@ class HaystackLinkContentFetcher:
 
     @component.output_types(streams=List[ByteStream])
     def run(self, urls: List[str]):
-        """
-        Fetch content from URLs.
+        """Fetch content from URLs.
 
         Args:
-            urls: A list of URLs to fetch content from.
+            urls (List[str]): A list of URLs to fetch content from.
 
         Returns:
-            A dictionary with a "streams" key containing a list of ByteStream objects.
+            Dict[str, List[ByteStream]]: A dictionary with a "streams" key containing a list of ByteStream objects.
         """
         primary_result = self.primary_fetcher.run(urls)
         streams = primary_result["streams"]
@@ -411,12 +401,12 @@ class JinaLinkContentFetcher:
     """
 
     def __init__(self, timeout: int = 10, retry_attempts: int = 2, api_key: Secret = Secret.from_env_var("JINA_API_KEY")):
-        """
-        Initialize the JinaLinkContentFetcher.
+        """Initialize the JinaLinkContentFetcher.
 
         Args:
-            timeout: The timeout for the HTTP request in seconds.
-            retry_attempts: The number of retry attempts for failed requests.
+            timeout (int): The timeout for the HTTP request in seconds.
+            retry_attempts (int): The number of retry attempts for failed requests.
+            api_key (Secret): Jina API key for authentication.
         """
         self.timeout = timeout
         self.retry_attempts = retry_attempts
@@ -445,14 +435,13 @@ class JinaLinkContentFetcher:
 
     @component.output_types(streams=List[ByteStream])
     def run(self, urls: List[str]):
-        """
-        Fetch content from URLs using jina.ai service.
+        """Fetch content from URLs using jina.ai service.
 
         Args:
-            urls: A list of URLs to fetch content from.
+            urls (List[str]): A list of URLs to fetch content from.
 
         Returns:
-            A dictionary with a "streams" key containing a list of ByteStream objects.
+            Dict[str, List[ByteStream]]: A dictionary with a "streams" key containing a list of ByteStream objects.
         """
         streams = []
 
@@ -469,14 +458,13 @@ class JinaLinkContentFetcher:
         return {"streams": streams}
 
     def _fetch_with_retries(self, url: str) -> Tuple[Optional[Dict[str, str]], Optional[ByteStream]]:
-        """
-        Fetch content from a URL with retry logic.
+        """Fetch content from a URL with retry logic.
 
         Args:
-            url: The URL to fetch content from.
+            url (str): The URL to fetch content from.
 
         Returns:
-            A tuple containing metadata and ByteStream.
+            Tuple[Optional[Dict[str, str]], Optional[ByteStream]]: A tuple containing metadata and ByteStream.
         """
         attempt = 0
 
@@ -499,14 +487,13 @@ class JinaLinkContentFetcher:
         return None, None
 
     def _fetch(self, url: str) -> Tuple[Dict[str, str], ByteStream]:
-        """
-        Fetch content from a URL using jina.ai service.
+        """Fetch content from a URL using jina.ai service.
 
         Args:
-            url: The URL to fetch content from.
+            url (str): The URL to fetch content from.
 
         Returns:
-            A tuple containing metadata and ByteStream.
+            Tuple[Dict[str, str], ByteStream]: A tuple containing metadata and ByteStream.
         """
         if self.api_key:
             # https://github.com/jina-ai/reader/tree/main?tab=readme-ov-file#streaming-mode

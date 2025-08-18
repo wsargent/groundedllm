@@ -5,8 +5,7 @@ import requests
 
 
 def search_zotero(query: List[dict]) -> str:
-    """
-    Search the Zotero database using a MongoDB-style query object or a list of query objects logically ANDed together.
+    """Search the Zotero database using a MongoDB-style query object or a list of query objects logically ANDed together.
 
     An example zotero item in Python looks like this:
 
@@ -66,26 +65,22 @@ def search_zotero(query: List[dict]) -> str:
                     u'parsedDate': u'1999-00-00'},
            u'version': 792}
 
-    Parameters
-    ----------
-    query : List[dict]
-        The MongoDB-style query object(s) to search for. Keys are field paths and values are the values to match.
-        If more than one query object is provided, they are logically ANDed together (all must match).
+    Args:
+        query (List[dict]): The MongoDB-style query object(s) to search for. Keys are field paths and values are the values to match.
+            If more than one query object is provided, they are logically ANDed together (all must match).
 
-        Examples:
-        - [{"DOI": "10.3389/fnins.2012.00138"}] matches items where data.DOI equals "10.3389/fnins.2012.00138"
-        - [{"url": "http://journal.frontiersin.org/article/10.3389/fnins.2012.00138/abstract"}] matches items.
-        - [{"shortTitle": "foo"}] matches items where data.shortTitle equals "foo"
-        - [{"title": "Example Paper"}] matches items where data.title equals "Example Paper"
-        - [{"creators.lastName": "Brooker"}] matches items where any creator has lastName "Brooker"
-        - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] matches items where both conditions are true
+            Examples:
+            - [{"DOI": "10.3389/fnins.2012.00138"}] matches items where data.DOI equals "10.3389/fnins.2012.00138"
+            - [{"url": "http://journal.frontiersin.org/article/10.3389/fnins.2012.00138/abstract"}] matches items.
+            - [{"shortTitle": "foo"}] matches items where data.shortTitle equals "foo"
+            - [{"title": "Example Paper"}] matches items where data.title equals "Example Paper"
+            - [{"creators.lastName": "Brooker"}] matches items where any creator has lastName "Brooker"
+            - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] matches items where both conditions are true
 
-    Returns
-    -------
-    str
-        A list of matching Zotero items as JSON objects.
-        Use the extract tool with an item's URL to extract the full text content.
-        Use the excerpt tool with several items URLs to ask an LLM a question about the items.
+    Returns:
+        str: A list of matching Zotero items as JSON objects.
+            Use the extract tool with an item's URL to extract the full text content.
+            Use the excerpt tool with several items URLs to ask an LLM a question about the items.
     """
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")

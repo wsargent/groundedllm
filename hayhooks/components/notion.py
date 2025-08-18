@@ -25,18 +25,17 @@ class NotionContentResolver:
             logger.info("NOTION_API_KEY is not initialized. Notion integration is disabled.")
 
     def _extract_page_ids(self, urls: List[str]) -> List[str]:
-        """
-        Extract Notion page IDs from URLs.
+        """Extract Notion page IDs from URLs.
 
         Notion page IDs are 32-character hexadecimal strings, sometimes with hyphens.
         They appear in URLs like https://www.notion.so/{workspace}/{page-id} or
         https://www.notion.so/{page-id}
 
         Args:
-            urls: List of Notion URLs
+            urls (List[str]): List of Notion URLs
 
         Returns:
-            List of extracted page IDs
+            List[str]: List of extracted page IDs
         """
         page_ids = []
         for url in urls:
@@ -53,14 +52,13 @@ class NotionContentResolver:
         return page_ids
 
     def _convert_to_streams(self, documents_result: Dict[str, List[Document]]) -> List[ByteStream]:
-        """
-        Convert Haystack Documents to ByteStream objects.
+        """Convert Haystack Documents to ByteStream objects.
 
         Args:
-            documents_result: Dictionary containing a list of documents
+            documents_result (Dict[str, List[Document]]): Dictionary containing a list of documents
 
         Returns:
-            List of ByteStream objects
+            List[ByteStream]: List of ByteStream objects
         """
         documents = documents_result.get("documents", [])
         streams = []

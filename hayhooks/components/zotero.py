@@ -110,8 +110,8 @@ class ZoteroDatabase:
         """Initialize the Zotero database.
 
         Args:
-            db_file: The path to the SQLite database file for caching Zotero items.
-            raise_on_failure: Whether to raise an exception if database operations fail.
+            db_file (str): The path to the SQLite database file for caching Zotero items.
+            raise_on_failure (bool): Whether to raise an exception if database operations fail.
         """
         self.raise_on_failure = raise_on_failure
 
@@ -164,7 +164,7 @@ class ZoteroDatabase:
             zotero_client: The Zotero client to use for fetching items.
 
         Returns:
-            The number of items synced.
+            int: The number of items synced.
         """
         try:
             conn = sqlite3.connect(self.db_file)
@@ -267,10 +267,10 @@ class ZoteroDatabase:
             - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] (matches items where both conditions are true)
 
         Args:
-            query: The MongoDB-style query object(s) to search for. Can be a single dict or a list of dicts.
+            query (dict | List[dict]): The MongoDB-style query object(s) to search for. Can be a single dict or a list of dicts.
 
         Returns:
-            A list of matching Zotero items.
+            List[dict]: A list of matching Zotero items.
         """
         try:
             # Handle both single dict and list of dicts
@@ -414,12 +414,12 @@ class ZoteroContentResolver:
         """Initialize the Zotero content resolver.
 
         Args:
-            library_id: The Zotero library ID.
-            api_key: The Zotero API key.
-            db_file: The path to the SQLite database file for caching Zotero items.
-            library_type: The type of library ('user' or 'group').
-            timeout: The timeout for API requests in seconds.
-            raise_on_failure: Whether to raise an exception if fetching fails.
+            library_id (Secret): The Zotero library ID.
+            api_key (Secret): The Zotero API key.
+            db_file (str): The path to the SQLite database file for caching Zotero items.
+            library_type (str): The type of library ('user' or 'group').
+            timeout (int): The timeout for API requests in seconds.
+            raise_on_failure (bool): Whether to raise an exception if fetching fails.
         """
         self.raise_on_failure = raise_on_failure
         self.timeout = timeout
@@ -446,10 +446,10 @@ class ZoteroContentResolver:
         """Find a matching Zotero item for the given URL.
 
         Args:
-            url: The URL to find a matching item for.
+            url (str): The URL to find a matching item for.
 
         Returns:
-            The matching Zotero item, or None if no match is found.
+            Optional[dict]: The matching Zotero item, or None if no match is found.
         """
         matching_item = None
 
@@ -475,12 +475,12 @@ class ZoteroContentResolver:
         """Process attachments for a Zotero item and add them to the streams list.
 
         Args:
-            parent_item: The parent Zotero item.
-            url: The original URL.
-            streams: The list of ByteStream objects to append to.
+            parent_item (dict): The parent Zotero item.
+            url (str): The original URL.
+            streams (List[ByteStream]): The list of ByteStream objects to append to.
 
         Returns:
-            True if processing was successful, False otherwise.
+            bool: True if processing was successful, False otherwise.
         """
         parent_item_key = parent_item.get("data", {}).get("key", "")
         title = parent_item.get("data", {}).get("title", "")
@@ -584,10 +584,10 @@ class ZoteroContentResolver:
         """Fetch content from Zotero for academic paper URLs.
 
         Args:
-            urls: A list of URLs to fetch content from.
+            urls (List[str]): A list of URLs to fetch content from.
 
         Returns:
-            A dictionary with a "streams" key containing a list of ByteStream objects.
+            Dict[str, List[ByteStream]]: A dictionary with a "streams" key containing a list of ByteStream objects.
         """
         streams = []
 
@@ -619,10 +619,10 @@ class ZoteroContentResolver:
         """Check if this resolver can handle the given URL.
 
         Args:
-            url: The URL to check.
+            url (str): The URL to check.
 
         Returns:
-            True if this resolver can handle the URL, False otherwise.
+            bool: True if this resolver can handle the URL, False otherwise.
         """
         if self.is_enabled is False:
             return False

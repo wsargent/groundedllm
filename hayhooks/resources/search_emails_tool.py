@@ -21,64 +21,55 @@ def search_emails(
     If an 'instruction' is provided, an LLM will show only the relevant parts of each email. Otherwise, all fetched emails
     (up to max_results) are returned.
 
-    Parameters
-    ----------
-    email_query : str
-        Gmail search query string using Gmail operators:
-        * from:"sender@domain.com" - emails from specific sender
-        * to:"recipient@domain.com" - emails to specific recipient
-        * subject:"keyword" - emails with keyword in subject line
-        * has:attachment - emails with attachments
-        * newer_than:Xd - emails newer than X days (e.g., newer_than:7d for last week)
-        * older_than:Xd - emails older than X days
-        * after:YYYY/MM/DD - emails after specific date
-        * before:YYYY/MM/DD - emails before specific date
-        * label:"label-name" - emails with specific label
-        * is:unread / is:read - filter by read status
-        * "exact phrase" - search for exact phrase
-        * keyword1 OR keyword2 - search for either keyword
-        * keyword1 AND keyword2 - search for both keywords
-        * -keyword - exclude emails containing keyword
+    Args:
+        email_query (str): Gmail search query string using Gmail operators:
+            * from:"sender@domain.com" - emails from specific sender
+            * to:"recipient@domain.com" - emails to specific recipient
+            * subject:"keyword" - emails with keyword in subject line
+            * has:attachment - emails with attachments
+            * newer_than:Xd - emails newer than X days (e.g., newer_than:7d for last week)
+            * older_than:Xd - emails older than X days
+            * after:YYYY/MM/DD - emails after specific date
+            * before:YYYY/MM/DD - emails before specific date
+            * label:"label-name" - emails with specific label
+            * is:unread / is:read - filter by read status
+            * "exact phrase" - search for exact phrase
+            * keyword1 OR keyword2 - search for either keyword
+            * keyword1 AND keyword2 - search for both keywords
+            * -keyword - exclude emails containing keyword
 
-        Example queries:
-        - from:"amazon.com" subject:shipped newer_than:14d
-        - subject:"order confirmation" newer_than:7d
-        - from:"support@company.com" has:attachment older_than:30d
+            Example queries:
+            - from:"amazon.com" subject:shipped newer_than:14d
+            - subject:"order confirmation" newer_than:7d
+            - from:"support@company.com" has:attachment older_than:30d
 
-        Best practices:
-        - Default to searching recent emails (newer_than:14d) unless user specifies otherwise
-        - Use specific sender domains when possible (from:"domain.com")
-        - Combine multiple operators for precise results
-        - Use quotes around exact phrases or email addresses with special characters
+            Best practices:
+            - Default to searching recent emails (newer_than:14d) unless user specifies otherwise
+            - Use specific sender domains when possible (from:"domain.com")
+            - Combine multiple operators for precise results
+            - Use quotes around exact phrases or email addresses with special characters
 
-    instruction : Optional[str]
-        Instructions for the email analysis system on what information to extract
-        and how to summarize the results. This guides the AI that processes the email content
-        to focus on specific aspects.
+        instruction (Optional[str]): Instructions for the email analysis system on what information to extract
+            and how to summarize the results. This guides the AI that processes the email content
+            to focus on specific aspects.
 
-        Examples:
-        * "Find shipping notifications and extract tracking numbers and delivery dates"
-        * "Look for order confirmations and summarize items purchased and order numbers"
-        * "Find emails about upcoming events and extract dates, times, and locations"
-        * "Identify customer support responses and summarize resolution status"
+            Examples:
+            * "Find shipping notifications and extract tracking numbers and delivery dates"
+            * "Look for order confirmations and summarize items purchased and order numbers"
+            * "Find emails about upcoming events and extract dates, times, and locations"
+            * "Identify customer support responses and summarize resolution status"
 
-        The instruction helps the system understand the context and purpose of your search
-        so it can provide more relevant summaries and highlight the information you need.
+            The instruction helps the system understand the context and purpose of your search
+            so it can provide more relevant summaries and highlight the information you need.
 
-    user_id : Optional[str]
-        The user ID.
-    label_ids : Optional[List[str]]
-        List of label IDs to filter by. Defaults to None.
-    max_results : int
-        Maximum number of messages to return. Defaults to DEFAULT_MAX_RESULTS_SEARCH.
-    page_token : Optional[str]
-        Token for fetching the next page of results. Defaults to None.
-    include_spam_trash : bool
-        Whether to include messages from SPAM and TRASH. Defaults to False.
+        user_id (Optional[str]): The user ID.
+        label_ids (Optional[List[str]]): List of label IDs to filter by. Defaults to None.
+        max_results (int): Maximum number of messages to return. Defaults to DEFAULT_MAX_RESULTS_SEARCH.
+        page_token (Optional[str]): Token for fetching the next page of results. Defaults to None.
+        include_spam_trash (bool): Whether to include messages from SPAM and TRASH. Defaults to False.
 
-    Returns
-    -------
-    str
+    Returns:
+        str: JSON string containing the search results or error information.
     """
     actual_user_id = user_id if user_id is not None else os.getenv("HAYHOOKS_USER_ID")
     if not actual_user_id:

@@ -271,12 +271,11 @@ class GitHubPRViewer:
     """
 
     def __init__(self, github_token: Optional[Secret] = None, raise_on_failure: bool = False):
-        """
-        Initialize GitHubPRViewer.
+        """Initialize GitHubPRViewer.
 
         Args:
-            github_token: GitHub token for API access
-            raise_on_failure: Whether to raise an exception on failure
+            github_token (Optional[Secret]): GitHub token for API access
+            raise_on_failure (bool): Whether to raise an exception on failure
         """
         self.github_token = github_token
         self.raise_on_failure = raise_on_failure
@@ -318,14 +317,13 @@ class GitHubPRViewer:
 
     @component.output_types(documents=List[Document])
     def run(self, url: str) -> Dict[str, List[Document]]:
-        """
-        Fetch and parse a GitHub pull request.
+        """Fetch and parse a GitHub pull request.
 
         Args:
-            url: GitHub pull request URL
+            url (str): GitHub pull request URL
 
         Returns:
-            Dictionary with "documents" key containing list of Documents
+            Dict[str, List[Document]]: Dictionary with "documents" key containing list of Documents
         """
         pr_info = self._parse_pr_url(url)
         if not pr_info:
