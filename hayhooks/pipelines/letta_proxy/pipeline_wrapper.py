@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Union
 
+import letta_client
 from hayhooks import BasePipelineWrapper, get_last_user_message, streaming_generator
 from hayhooks import log as logger
 from haystack import Pipeline, component
@@ -170,7 +171,7 @@ class LettaChatGenerator:
         """
         Process a streaming chunk based on its type and invoke the streaming callback.
         """
-        logger.debug(f"Processing streaming chunk: {chunk}")
+        logger.debug(f"Processing streaming chunk end_think={self.send_end_think}: {chunk}")
 
         if isinstance(chunk, ReasoningMessage):
             self.send_end_think = True
@@ -182,7 +183,6 @@ class LettaChatGenerator:
             content = f"\n- {display_time} {reasoning}"
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, ToolCallMessage):
-            self.send_end_think = False
             tool_call_message: ToolCallMessage = chunk
             now = datetime.now()
             display_time = now.astimezone().time().isoformat("seconds")
@@ -192,10 +192,7 @@ class LettaChatGenerator:
             arguments: str = tool_call_message.tool_call.arguments
             no_heartbeat_requested = """"request_heartbeat": false""" in arguments
             if no_heartbeat_requested:
-                self.send_end_think = True
                 call_statement = call_statement + " *without heartbeat*"
-            else:
-                self.send_end_think = False
 
             if self._debug_tool_statements():
                 call_statement = call_statement + " with arguments: " + arguments
@@ -225,11 +222,15 @@ class LettaChatGenerator:
             # Assistant message is the last chunk so we need to close the <think> tag
             return StreamingChunk(content=content, meta=meta_dict)
         if isinstance(chunk, LettaStopReason):
-            logger.debug(f"Ignoring stop reason: {chunk}")
+            logger.debug(f"Ignoring stop reason end_think={self.send_end_think}: {chunk}")
+            self.send_end_think = False
+        if isinstance(chunk, letta_client.types.letta_stop_reason.LettaStopReason):
+            logger.debug(f"Ignoring stop reason (client letta stop) end_think={self.send_end_think}: {chunk}")
+            self.send_end_think = False
         if isinstance(chunk, LettaUsageStatistics):
             logger.debug(f"Ignoring usage statistics: {chunk}")
         else:
-            logger.debug(f"Ignoring streaming chunk type: {type(chunk)}")
+            logger.debug(f"Ignoring unknown streaming chunk type: {type(chunk)}")
             return None
 
     def _build_message(self, agent_id: str, response: LettaResponse):
