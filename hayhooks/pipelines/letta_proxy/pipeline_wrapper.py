@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Union
 
-import letta_client
 from hayhooks import BasePipelineWrapper, get_last_user_message, streaming_generator
 from hayhooks import log as logger
 from haystack import Pipeline, component
@@ -182,7 +181,7 @@ class LettaChatGenerator:
             reasoning = reasoning_chunk.reasoning.strip().removeprefix('"').removesuffix('"')
             content = f"\n- {display_time} {reasoning}"
             return StreamingChunk(content=content, meta=meta_dict)
-        if isinstance(chunk, ToolCallMessage):
+        elif isinstance(chunk, ToolCallMessage):
             tool_call_message: ToolCallMessage = chunk
             now = datetime.now()
             display_time = now.astimezone().time().isoformat("seconds")
@@ -199,36 +198,34 @@ class LettaChatGenerator:
 
             content = f"\n- {display_time} {call_statement}..."
             return StreamingChunk(content=content, meta=meta_dict)
-        if isinstance(chunk, ToolReturnMessage):
+        elif isinstance(chunk, ToolReturnMessage):
             tool_return_message: ToolReturnMessage = chunk
             now = datetime.now()
+            self.send_end_think = True
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
             content = f" {tool_return_message.status}, returned {len(tool_return_message.tool_return)} characters."
             return StreamingChunk(content=content, meta=meta_dict)
-        if isinstance(chunk, AssistantMessage):
+        elif isinstance(chunk, AssistantMessage):
             now = datetime.now()
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
-            content = ""
 
             logger.debug(f"Found assistant message with end_think={self.send_end_think}: {chunk}")
-
             if self.send_end_think:
                 content = "</think>"
-
-            self.send_end_think = False  # always set this after think
-
+            else:
+                content = ""
+            self.send_end_think = False  # always set this after assistant message
             content = content + chunk.content
 
             # Assistant message is the last chunk so we need to close the <think> tag
             return StreamingChunk(content=content, meta=meta_dict)
-        if isinstance(chunk, LettaStopReason):
+        elif isinstance(chunk, LettaStopReason):
             logger.debug(f"Ignoring stop reason end_think={self.send_end_think}: {chunk}")
             self.send_end_think = False
-        if isinstance(chunk, letta_client.types.letta_stop_reason.LettaStopReason):
-            logger.debug(f"Ignoring stop reason (client letta stop) end_think={self.send_end_think}: {chunk}")
-            self.send_end_think = False
-        if isinstance(chunk, LettaUsageStatistics):
+            return None
+        elif isinstance(chunk, LettaUsageStatistics):
             logger.debug(f"Ignoring usage statistics: {chunk}")
+            return None
         else:
             logger.debug(f"Ignoring unknown streaming chunk type: {type(chunk)}")
             return None
