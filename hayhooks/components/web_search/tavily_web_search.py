@@ -37,8 +37,8 @@ class TavilyWebSearch:
         search_depth: Literal["basic", "advanced"] = DEFAULT_SEARCH_DEPTH,
         time_range: Optional[Literal["day", "week", "month", "year"]] = None,
         max_results: int = DEFAULT_MAX_RESULTS,
-        include_domains: Optional[list[str]] = None,
-        exclude_domains: Optional[list[str]] = None,
+        include_domains: Optional[Union[str, list[str]]] = None,
+        exclude_domains: Optional[Union[str, list[str]]] = None,
     ) -> Dict[str, Union[List[Document], List[str]]]:
         """Uses [Tavily](https://docs.tavily.com/welcome) to search the web for relevant documents.
 
@@ -57,10 +57,12 @@ class TavilyWebSearch:
             Returns only results that match inside the given time range.
         max_results: int
             The maximum number of results to return.  5 by default.
-        include_domains: Optional[list[str]]
+        include_domains: Optional[Union[str, list[str]]]
             The only website domains that should be searched, None by default.
-        exclude_domains: Optional[list[str]]
+            Can be a comma-separated string or a list of strings.
+        exclude_domains: Optional[Union[str, list[str]]]
             The website domains that should not be searched, None by default.
+            Can be a comma-separated string or a list of strings.
 
         Returns
         -------
@@ -72,8 +74,12 @@ class TavilyWebSearch:
         if self.tavily_client is None:
             return {"documents": [], "urls": []}
 
+        # Convert string parameters to lists if needed
+        include_domains_list = self._convert_domains_to_list(include_domains)
+        exclude_domains_list = self._convert_domains_to_list(exclude_domains)
+
         try:
-            response = self._call_tavily(query=query, search_depth=search_depth, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains, time_range=time_range)
+            response = self._call_tavily(query=query, search_depth=search_depth, max_results=max_results, include_domains=include_domains_list, exclude_domains=exclude_domains_list, time_range=time_range)
             output = self._process_response(query, response)
             return output
         except Exception as e:
@@ -83,6 +89,7 @@ class TavilyWebSearch:
                                          time_range={time_range}""",
                 e,
             )
+            return {"documents": [], "urls": []}
 
     def _process_response(self, query: str, response: dict):
         documents = []
@@ -126,3 +133,13 @@ class TavilyWebSearch:
             return "advanced"
         else:
             return "basic"
+
+    @staticmethod
+    def _convert_domains_to_list(domains: Optional[Union[str, list[str]]]) -> Optional[list[str]]:
+        """Convert domains parameter to list format."""
+        if domains is None:
+            return None
+        if isinstance(domains, str):
+            # Split by comma and strip whitespace
+            return [domain.strip() for domain in domains.split(",") if domain.strip()]
+        return domains

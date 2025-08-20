@@ -29,8 +29,8 @@ class ExaWebSearch:
         self,
         query: str,
         max_results: int = DEFAULT_MAX_RESULTS,
-        include_domains: Optional[list[str]] = None,
-        exclude_domains: Optional[list[str]] = None,
+        include_domains: Optional[Union[str, list[str]]] = None,
+        exclude_domains: Optional[Union[str, list[str]]] = None,
     ) -> Dict[str, Union[List[Document], List[str]]]:
         """Uses [Exa](https://docs.exa.ai/reference/getting-started) to search the web for relevant documents.
 
@@ -54,7 +54,11 @@ class ExaWebSearch:
         if not self.exa_client:
             return {"documents": [], "urls": []}
 
-        response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
+        # Convert string parameters to lists if needed
+        include_domains_list = self._convert_domains_to_list(include_domains)
+        exclude_domains_list = self._convert_domains_to_list(exclude_domains)
+
+        response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains_list, exclude_domains=exclude_domains_list)
         output = self._process_response(query, response)
         return output
 
@@ -63,8 +67,8 @@ class ExaWebSearch:
         self,
         query: str,
         max_results: int = DEFAULT_MAX_RESULTS,
-        include_domains: Optional[list[str]] = None,
-        exclude_domains: Optional[list[str]] = None,
+        include_domains: Optional[Union[str, list[str]]] = None,
+        exclude_domains: Optional[Union[str, list[str]]] = None,
     ) -> Dict[str, Union[List[Document], List[str]]]:
         """Asynchronous version of run method.
 
@@ -87,7 +91,11 @@ class ExaWebSearch:
         if not self.exa_client:
             return {"documents": [], "urls": []}
 
-        response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
+        # Convert string parameters to lists if needed
+        include_domains_list = self._convert_domains_to_list(include_domains)
+        exclude_domains_list = self._convert_domains_to_list(exclude_domains)
+
+        response = self._call_exa(query=query, max_results=max_results, include_domains=include_domains_list, exclude_domains=exclude_domains_list)
         output = self._process_response(query, response)
         return output
 
@@ -154,3 +162,13 @@ class ExaWebSearch:
         #     flags (List[str], optional): Experimental flags for Exa usage.
         #     moderation (bool, optional): If True, the search results will be moderated for safety.
         return self.exa_client.search(query, use_autoprompt=True, num_results=max_results, include_domains=include_domains, exclude_domains=exclude_domains)
+
+    @staticmethod
+    def _convert_domains_to_list(domains: Optional[Union[str, list[str]]]) -> Optional[list[str]]:
+        """Convert domains parameter to list format."""
+        if domains is None:
+            return None
+        if isinstance(domains, str):
+            # Split by comma and strip whitespace
+            return [domain.strip() for domain in domains.split(",") if domain.strip()]
+        return domains
