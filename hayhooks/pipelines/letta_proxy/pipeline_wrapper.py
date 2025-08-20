@@ -210,12 +210,10 @@ class LettaChatGenerator:
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
 
             logger.debug(f"Found assistant message with end_think={self.send_end_think}: {chunk}")
-            if self.send_end_think:
-                content = "</think>"
-            else:
-                content = ""
+            content = "</think>"
             self.send_end_think = False  # always set this after assistant message
             content = content + chunk.content
+            logger.debug(f"Returning assistant content: {content}")
 
             # Assistant message is the last chunk so we need to close the <think> tag
             return StreamingChunk(content=content, meta=meta_dict)
