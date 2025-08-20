@@ -7,7 +7,7 @@ from hayhooks import log as logger
 from haystack import Pipeline, component
 from haystack.dataclasses import ChatMessage, StreamingChunk, select_streaming_callback
 from haystack.utils import Secret
-from letta_client import Letta, MessageCreate, TextContent
+from letta_client import Letta, LettaStopReason, MessageCreate, TextContent
 from letta_client.agents.messages.types.letta_streaming_response import LettaStreamingResponse
 from letta_client.core import RequestOptions
 from letta_client.types.assistant_message import AssistantMessage
@@ -127,7 +127,7 @@ class LettaChatGenerator:
                 logger.exception(f"An error occurred while processing a response: {str(e)}", e)
                 completions = [ChatMessage.from_assistant(f"An error occurred while waiting for response: {str(e)}")]
 
-        # logger.debug(f"run: completions={completions}")
+        logger.debug(f"run: completions={completions}")
 
         return {"replies": completions}
 
@@ -139,7 +139,7 @@ class LettaChatGenerator:
         """
         Creates a single ChatMessage from the streamed chunks. Some data is retrieved from the completion chunk.
         """
-        # logger.debug(f"_create_message_from_chunks: completion_chunk={completion_chunk}, streamed_chunks={streamed_chunks}")
+        logger.debug(f"_create_message_from_chunks: completion_chunk={completion_chunk}, streamed_chunks={streamed_chunks}")
 
         # "".join([chunk.content for chunk in streamed_chunks])
         complete_response = ChatMessage.from_assistant("")
@@ -160,7 +160,7 @@ class LettaChatGenerator:
         )
         return complete_response
 
-    def _debug_tooL_statements(self) -> bool:
+    def _debug_tool_statements(self) -> bool:
         """
         Returns True if the environment variable DEBUG_TOOL_STATEMENTS is set to True.
         """
@@ -170,7 +170,8 @@ class LettaChatGenerator:
         """
         Process a streaming chunk based on its type and invoke the streaming callback.
         """
-        # logger.debug(f"Processing streaming chunk: {chunk}")
+        logger.debug(f"Processing streaming chunk: {chunk}")
+
         if isinstance(chunk, ReasoningMessage):
             self.send_end_think = True
             reasoning_chunk: ReasoningMessage = chunk
@@ -196,7 +197,7 @@ class LettaChatGenerator:
             else:
                 self.send_end_think = False
 
-            if self._debug_tooL_statements():
+            if self._debug_tool_statements():
                 call_statement = call_statement + " with arguments: " + arguments
 
             content = f"\n- {display_time} {call_statement}..."
@@ -211,6 +212,9 @@ class LettaChatGenerator:
             now = datetime.now()
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
             content = ""
+
+            logger.debug(f"Found assistant message with end_think={self.send_end_think}: {chunk}")
+
             if self.send_end_think:
                 content = "</think>"
 
@@ -220,8 +224,12 @@ class LettaChatGenerator:
 
             # Assistant message is the last chunk so we need to close the <think> tag
             return StreamingChunk(content=content, meta=meta_dict)
+        if isinstance(chunk, LettaStopReason):
+            logger.debug(f"Ignoring stop reason: {chunk}")
+        if isinstance(chunk, LettaUsageStatistics):
+            logger.debug(f"Ignoring usage statistics: {chunk}")
         else:
-            # logger.debug(f"Ignoring streaming chunk type: {type(chunk)}")
+            logger.debug(f"Ignoring streaming chunk type: {type(chunk)}")
             return None
 
     def _build_message(self, agent_id: str, response: LettaResponse):
@@ -233,7 +241,7 @@ class LettaChatGenerator:
         :returns:
             The ChatMessage.
         """
-        # logger.debug(f"_build_message: response={response}")
+        logger.debug(f"_build_message: response={response}")
 
         messages: List[LettaMessageUnion] = response.messages
         usage: LettaUsageStatistics = response.usage
