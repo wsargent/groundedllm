@@ -68,6 +68,13 @@ services:
       - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME:-localhost}/
       - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
       - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}
+    healthcheck:
+      test: curl -f http://localhost:8080/healthz
+      start_period: 30s
+      interval: 30s
+      timeout: 15s
+      retries: 3
+
 
   letta_db:
     image: ankane/pgvector:v0.5.1
