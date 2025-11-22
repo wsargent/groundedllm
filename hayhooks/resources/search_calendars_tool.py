@@ -9,12 +9,12 @@ DEFAULT_MAX_RESULTS_SEARCH = 10
 
 
 def search_calendars(
-    user_id: str = os.getenv("HAYHOOKS_USER_ID"),
-    calendar_id: str = DEFAULT_CALENDAR_ID,
+    user_id: Optional[str] = None,
+    calendar_id: str = "primary",
     start_time: Optional[str] = None,
     end_time: Optional[str] = None,
     event_id: Optional[str] = None,
-    max_results: int = DEFAULT_MAX_RESULTS_GET,
+    max_results: int = 50,
     query: Optional[str] = None,
     single_events: bool = True,
     order_by: str = "startTime",
@@ -39,6 +39,8 @@ def search_calendars(
         A dictionary containing a list of GoogleCalendarEvent objects under the key "events".
         Example: {"events": [GoogleCalendarEvent(...), ...]}
     """
+    if user_id is None:
+        user_id = os.getenv("HAYHOOKS_USER_ID")
 
     payload = {
         "user_id": user_id,

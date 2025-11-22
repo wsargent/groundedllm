@@ -12,7 +12,7 @@ def search_emails(
     instruction: Optional[str] = None,
     user_id: Optional[str] = None,
     label_ids: Optional[List[str]] = None,
-    max_results: int = DEFAULT_MAX_RESULTS_SEARCH,
+    max_results: int = 25,
     page_token: Optional[str] = None,
     include_spam_trash: bool = False,
 ) -> str:

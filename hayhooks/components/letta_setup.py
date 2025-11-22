@@ -3,12 +3,8 @@ from typing import Any, Dict, List, Optional
 
 from hayhooks import log as logger
 from haystack import component
-from letta_client import (
-    CreateBlock,
-    Letta,
-    LlmConfig,
-)
-from letta_client.types import Tool
+from letta_client import Letta
+from letta_client.types import CreateBlockParam, ModelListResponse, Tool
 
 from resources.utils import read_resource_file
 
@@ -64,7 +60,9 @@ class LettaCreateAgent:
             logger.info(f"Starting setup for agent '{agent_name}'...")
 
             # --- Agent Existence Check ---
-            agents = self.client.agents.list(name=agent_name)
+            agents_page = self.client.agents.list(name=agent_name)
+            # Convert paginated response to list
+            agents = list(agents_page)
             found_agent_id: Optional[str] = None
             if len(agents) == 1:
                 logger.info(f"Found existing agent '{agent_name}' with ID: {agents[0].id}")
@@ -82,7 +80,7 @@ class LettaCreateAgent:
                     letta_model=chat_model,
                     requested_tools=requested_tools,
                     timezone=timezone,
-                    tool_exec_environment_variables=tool_exec_environment_variables,
+                    secrets=tool_exec_environment_variables,
                 )
                 logger.info(f"Created new agent '{agent_name}' with ID: {agent_id}")
             else:
@@ -97,7 +95,7 @@ class LettaCreateAgent:
             # For now, re-raise to indicate failure.
             raise RuntimeError(f"Failed Letta agent setup for '{agent_name}'") from e
 
-    def _create_agent(self, agent_name: str, human_block_content: str, persona_block_content: str, letta_model: str, letta_embedding: str, requested_tools: List[str], timezone: str, tool_exec_environment_variables: dict) -> str:
+    def _create_agent(self, agent_name: str, human_block_content: str, persona_block_content: str, letta_model: str, letta_embedding: str, requested_tools: List[str], timezone: str, secrets: dict) -> str:
         """Creates a new Letta agent with the specified configuration and tools.
 
         Args:
@@ -108,7 +106,7 @@ class LettaCreateAgent:
             letta_embedding (str): The identifier for the embedding model.
             requested_tools (List[str]): The requested tools to attach to the agent upon creation.
             timezone (str): The agent's timezone
-            tool_exec_environment_variables (dict): Tool environment variables.
+            secrets (dict): Tool environment variables.
 
         Returns:
             str: The ID of the newly created agent.
@@ -118,12 +116,12 @@ class LettaCreateAgent:
             RuntimeError: If agent creation fails for other reasons.
         """
         memory_blocks = [
-            CreateBlock(
+            CreateBlockParam(
                 value=human_block_content,
                 label="human",
                 limit=self._set_block_limit(human_block_content),
             ),
-            CreateBlock(
+            CreateBlockParam(
                 value=persona_block_content,
                 label="persona",
                 limit=self._set_block_limit(persona_block_content),
@@ -131,7 +129,7 @@ class LettaCreateAgent:
         ]
 
         tool_ids = self._find_tools_id(requested_tools)
-        available_llms: List[LlmConfig] = self.client.models.list()
+        available_llms: ModelListResponse = self.client.models.list()
         available_model_names = {llm.handle for llm in available_llms}
 
         if letta_model in available_model_names:
@@ -165,12 +163,18 @@ class LettaCreateAgent:
             tool_ids=tool_ids,
             enable_sleeptime=enable_sleeptime,
             timezone=timezone,
-            tool_exec_environment_variables=tool_exec_environment_variables,
+            secrets=secrets,
         )
         logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
         # Add a note so we can see when it was created
-        self.client.agents.passages.create(
-            agent_id=agent.id,
+        archive = self.client.archives.create(
+            name="agent-timeline",
+            description="Agent timeline",
+            embedding="letta/letta-free",  # must specify an embedding
+        )
+        self.client.agents.archives.attach(agent_id=agent.id, archive_id=archive.id)
+        self.client.archives.passages.create(
+            archive_id=archive.id,
             text=f"Created at {datetime.datetime.now()}Z",
         )
         return agent.id
@@ -197,7 +201,8 @@ class LettaCreateAgent:
         return tool
 
     def _find_tool(self, name: str) -> Optional[Tool]:
-        tool_list = self.client.tools.list(name=name, limit=1)
+        tool_list_page = self.client.tools.list(name=name, limit=1)
+        tool_list = tool_list_page.items
         return tool_list[0] if tool_list else None
 
     def _find_tools_id(self, requested_tools: List[str]) -> List[str]:

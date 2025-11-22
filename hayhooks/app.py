@@ -60,9 +60,12 @@ LETTA_API_TOKEN = os.getenv("LETTA_API_TOKEN", "")
 def fetch_letta_models():
     """Fetch available models from Letta server using the Letta client directly"""
     try:
-        effective_token = LETTA_API_TOKEN if LETTA_API_TOKEN else None
-        # Initialize the Letta client
-        client = Letta(base_url=LETTA_BASE_URL, token=effective_token)
+        # Only pass token if it's set and non-empty, otherwise use placeholder
+        if LETTA_API_TOKEN:
+            client = Letta(base_url=LETTA_BASE_URL, api_key=LETTA_API_TOKEN, environment="local")
+        else:
+            # Letta client requires an api_key even for local development without auth
+            client = Letta(base_url=LETTA_BASE_URL, api_key=None, environment="local")
 
         # Get the list of agents
         agents = client.agents.list()
