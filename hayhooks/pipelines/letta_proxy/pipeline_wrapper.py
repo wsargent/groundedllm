@@ -5,17 +5,14 @@ from typing import Any, Callable, Dict, Generator, Iterator, List, Optional, Uni
 from hayhooks import BasePipelineWrapper, get_last_user_message, streaming_generator
 from hayhooks import log as logger
 from haystack import Pipeline, component
-from haystack.dataclasses import ChatMessage, StreamingChunk, select_streaming_callback
-from haystack.utils import Secret
-from letta_client import Letta, LettaStopReason, MessageCreate, TextContent
-from letta_client.agents.messages.types.letta_streaming_response import LettaStreamingResponse
-from letta_client.core import RequestOptions
-from letta_client.types.assistant_message import AssistantMessage
-from letta_client.types.letta_message_union import LettaMessageUnion
-from letta_client.types.letta_response import LettaResponse
-from letta_client.types.letta_usage_statistics import LettaUsageStatistics
-from letta_client.types.reasoning_message import ReasoningMessage
-from letta_client.types.tool_call_message import ToolCallMessage
+from haystack.dataclasses.chat_message import ChatMessage
+from haystack.dataclasses.streaming_chunk import StreamingChunk, select_streaming_callback
+from haystack.utils.auth import Secret
+from letta_client import Letta
+from letta_client.types import MessageCreateParam
+from letta_client.types.agents import AssistantMessage, LettaResponse, LettaStreamingResponse, Message, ReasoningMessage, ToolCallMessage
+from letta_client.types.agents.letta_streaming_response import LettaUsageStatistics
+from letta_client.types.agents.text_content_param import TextContentParam
 from letta_client.types.tool_return_message import ToolReturnMessage
 
 
@@ -28,7 +25,7 @@ class LettaChatGenerator:
     def __init__(
         self,
         base_url: Optional[str] = os.getenv("LETTA_BASE_URL"),
-        token: Optional[Secret] = Secret.from_env_var(["LETTA_API_TOKEN"], strict=False),
+        api_key: Optional[Secret] = Secret.from_env_var(["LETTA_API_TOKEN"], strict=False),
         generation_kwargs: Optional[Dict[str, Any]] = None,
         streaming_callback: Optional[Callable[[StreamingChunk], None]] = None,
     ):
@@ -37,19 +34,20 @@ class LettaChatGenerator:
 
         :param agent_id: The ID of the Letta agent to use for text generation.
         :param base_url: The base URL of the Letta instance.
-        :param token: The token to use as HTTP bearer authorization for Letta.
+        :param api_key: The API key to use as HTTP bearer authorization for Letta.
         :param generation_kwargs: A dictionary with keyword arguments to customize text generation.
         :param streaming_callback: An optional callable for handling streaming responses.
         """
 
         logger.info(f"Using Letta base URL: {base_url}")
         self.base_url = base_url
-        self.token = token
+        self.api_key = api_key
         self.send_end_think = False
         # Don't allow any OpenAI generation kwargs for now.
-        self.generation_kwargs = {}
+        self.generation_kwargs: Dict[str, Any] = {}
         self.streaming_callback = streaming_callback
-        self.request_options = RequestOptions(timeout_in_seconds=300, max_retries=3)
+        self.timeout = 300.0
+        self.max_retries = 3
 
     @component.output_types(replies=List[str], meta=List[Dict[str, Any]])
     def run(self, prompt: str, agent_id: str, streaming_callback: Optional[Callable[[StreamingChunk], None]] = None, **kwargs):
@@ -68,9 +66,14 @@ class LettaChatGenerator:
             logger.warning(f"Received unexpected kwargs: {kwargs}")
 
         try:
-            token_value = None if self.token is None else self.token.resolve_value()
+            api_key_value = None if self.api_key is None else self.api_key.resolve_value()
             logger.info(f"Connecting to Letta at {self.base_url} with agent {agent_id}")
-            client = Letta(base_url=self.base_url, token=token_value)
+            # Only pass api_key if it's set, otherwise use placeholder
+            if api_key_value:
+                client = Letta(base_url=self.base_url, api_key=api_key_value, timeout=self.timeout, max_retries=self.max_retries)
+            else:
+                # Letta client requires an api_key even for local development without auth
+                client = Letta(base_url=self.base_url, api_key="no_auth_required", timeout=self.timeout, max_retries=self.max_retries)
         except Exception as e:
             logger.exception(f"Failed to create Letta client: {str(e)}", e)
             raise ValueError(f"Failed to create Letta client: {str(e)}")
@@ -85,15 +88,14 @@ class LettaChatGenerator:
         except Exception as e:
             logger.exception(f"Failed to create message from prompt: {str(e)}", e)
             raise ValueError(f"Failed to create message: {str(e)}")
-        streaming_callback = select_streaming_callback(self.streaming_callback, streaming_callback, requires_async=False)
+        streaming_callback = select_streaming_callback(self.streaming_callback, streaming_callback, requires_async=False)  # type: ignore[assignment]
 
         completions: List[ChatMessage] = []
         if streaming_callback is not None:
             try:
                 logger.info(f"Creating stream for agent_id: {agent_id}")
-                logger.debug(f"Request options: {self.request_options}")
                 logger.debug(f"Messages: {messages}")
-                stream_completion: Iterator[LettaStreamingResponse] = client.agents.messages.create_stream(agent_id=agent_id, messages=messages, request_options=self.request_options)
+                stream_completion: Iterator[LettaStreamingResponse] = client.agents.messages.create(agent_id=agent_id, messages=messages, streaming=True)
 
                 meta_dict = {"type": "assistant", "received_at": datetime.now().isoformat()}
                 think_chunk = StreamingChunk(content="<think>", meta=meta_dict)
@@ -121,7 +123,7 @@ class LettaChatGenerator:
 
         else:
             try:
-                completion: LettaResponse = client.agents.messages.create(agent_id=agent_id, messages=messages, request_options=self.request_options)
+                completion: LettaResponse = client.agents.messages.create(agent_id=agent_id, messages=messages, streaming=False)
                 completions = [self._build_message(agent_id, completion)]
             except Exception as e:
                 logger.exception(f"An error occurred while processing a response: {str(e)}", e)
@@ -132,8 +134,8 @@ class LettaChatGenerator:
         return {"replies": completions}
 
     @staticmethod
-    def _message_from_user(prompt: str) -> MessageCreate:
-        return MessageCreate(role="user", content=[TextContent(text=prompt)])
+    def _message_from_user(prompt: str) -> MessageCreateParam:
+        return MessageCreateParam(role="user", content=[TextContentParam(text=prompt, type="text")])
 
     def _create_message_from_chunks(self, agent_id, completion_chunk, streamed_chunks: List[StreamingChunk]) -> ChatMessage:
         """
@@ -188,7 +190,7 @@ class LettaChatGenerator:
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
             tool_name = tool_call_message.tool_call.name
             call_statement = f"Calling tool {tool_name}"
-            arguments: str = tool_call_message.tool_call.arguments
+            arguments: str = tool_call_message.tool_call.arguments if tool_call_message.tool_call.arguments else ""
             no_heartbeat_requested = """"request_heartbeat": false""" in arguments
             if no_heartbeat_requested:
                 call_statement = call_statement + " *without heartbeat*"
@@ -212,15 +214,19 @@ class LettaChatGenerator:
             logger.debug(f"Found assistant message with end_think={self.send_end_think}: {chunk}")
             content = "</think>"
             self.send_end_think = False  # always set this after assistant message
-            content = content + chunk.content
+
+            # chunk.content can be a string or a list of content objects
+            if isinstance(chunk.content, str):
+                content = content + chunk.content
+            elif isinstance(chunk.content, list):
+                # Extract text from content list
+                text_parts = [c.text for c in chunk.content if hasattr(c, "text")]
+                content = content + "".join(text_parts)
+
             logger.debug(f"Returning assistant content: {content}")
 
             # Assistant message is the last chunk so we need to close the <think> tag
             return StreamingChunk(content=content, meta=meta_dict)
-        elif isinstance(chunk, LettaStopReason):
-            logger.debug(f"Ignoring stop reason end_think={self.send_end_think}: {chunk}")
-            self.send_end_think = False
-            return None
         elif isinstance(chunk, LettaUsageStatistics):
             logger.debug(f"Ignoring usage statistics: {chunk}")
             return None
@@ -239,14 +245,20 @@ class LettaChatGenerator:
         """
         logger.debug(f"_build_message: response={response}")
 
-        messages: List[LettaMessageUnion] = response.messages
-        usage: LettaUsageStatistics = response.usage
-        usage_dict = {"completion_tokens": usage.completion_tokens, "prompt_tokens": usage.prompt_tokens, "total_tokens": usage.total_tokens}
+        messages: List[Message] = response.messages
+        usage = response.usage
+        usage_dict = {"completion_tokens": usage.completion_tokens if usage.completion_tokens else 0, "prompt_tokens": usage.prompt_tokens if usage.prompt_tokens else 0, "total_tokens": usage.total_tokens if usage.total_tokens else 0}
 
         chat_message = None
         for message in messages:
             if isinstance(message, AssistantMessage):
-                chat_message = ChatMessage.from_assistant(message.content)
+                # Handle content that can be string or list
+                if isinstance(message.content, str):
+                    chat_message = ChatMessage.from_assistant(message.content)
+                elif isinstance(message.content, list):
+                    # Extract text from content list
+                    text_parts = [c.text for c in message.content if hasattr(c, "text")]
+                    chat_message = ChatMessage.from_assistant("".join(text_parts))
                 break
 
         if not chat_message:

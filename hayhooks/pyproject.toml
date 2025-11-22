@@ -1,6 +1,6 @@
 [project]
 name = "groundedllm-hayhooks"
-version = "0.1.0"
+version = "0.2.0"
 description = "Hayhooks"
 readme = "README.md"
 requires-python = "==3.12.*"
@@ -13,7 +13,7 @@ dependencies = [
     "hayhooks[mcp]>=0.9.1",
     "haystack-ai>=2.14.1",
     "httpx[http2]>=0.27.0",
-    "letta-client>=0.1.146",
+    "letta-client>=1.1.0",
     "linkup-sdk>=0.2.5",
     "markdown-it-py>=3.0.0",
     "mdit-plain>=1.0.1",

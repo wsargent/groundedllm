@@ -15,9 +15,9 @@ def excerpt(urls: List[str], question: str) -> str:
 
     If you want the full text of a web page, use the extract tool instead.
 
-    Args:
+    Parameters:
         urls (List[str]): The URLs of the pages to extract.
-        question str: The instructions to give and questions to ask about the web pages.
+        question (str): The instructions to give and questions to ask about the web pages.
 
     Returns:
         str: The answer from the LLM model.

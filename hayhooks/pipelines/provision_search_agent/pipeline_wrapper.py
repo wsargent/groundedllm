@@ -38,7 +38,17 @@ class PipelineWrapper(BasePipelineWrapper):
         if letta_base_url is None:
             raise ValueError("LETTA_BASE_URL is not defined!")
         logger.info(f"Using Letta base URL: {letta_base_url}")
-        letta = Letta(base_url=letta_base_url, token=letta_token)
+        logger.info(f"LETTA_API_TOKEN from env: {repr(letta_token)}")
+
+        # Only pass api_key if it's set and non-empty, otherwise Letta client will not require authentication
+        if letta_token:
+            logger.info("Creating Letta client WITH api_key")
+            letta = Letta(base_url=letta_base_url, api_key=letta_token, environment="local")
+        else:
+            logger.info("Creating Letta client WITHOUT api_key (using placeholder)")
+            # Letta client requires either api_key or explicit Authorization header
+            # Pass a placeholder api_key for local development without auth
+            letta = Letta(base_url=letta_base_url, api_key="no_auth_required", environment="local")
         create_agent = LettaCreateAgent(letta=letta)
 
         pipe.add_component("create_agent", create_agent)

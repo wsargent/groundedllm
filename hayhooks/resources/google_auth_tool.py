@@ -1,10 +1,11 @@
 import json
 import os
+from typing import Optional
 
 import requests
 
 
-def google_auth(user_id: str = os.getenv("HAYHOOKS_USER_ID")) -> str:
+def google_auth(user_id: Optional[str] = None) -> str:
     """
     Checks the user's Google authentication, and provides an authorization URL to display to the user.
 
@@ -27,7 +28,8 @@ def google_auth(user_id: str = os.getenv("HAYHOOKS_USER_ID")) -> str:
       str:
         The user's authentication status, or a registration link.
     """
-    user_id = os.getenv("HAYHOOKS_USER_ID")
+    if user_id is None:
+        user_id = os.getenv("HAYHOOKS_USER_ID")
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
     response = requests.post(f"{hayhooks_base_url}/google_auth/run", json={"user_id": user_id})
