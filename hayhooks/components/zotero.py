@@ -5,10 +5,10 @@ import re
 import sqlite3
 from typing import List, Optional
 
-from hayhooks import log as logger
 from haystack import component
 from haystack.dataclasses.byte_stream import ByteStream
 from haystack.utils.auth import Secret
+from loguru import logger
 from pyzotero import zotero
 
 # Check if the URL is from an academic site
@@ -255,6 +255,8 @@ class ZoteroDatabase:
                 - {"$ne": value} for "not equals".
                 - {"$exists": True} for checking if a field exists and is not null (IS NOT NULL).
                 - {"$exists": False} for checking if a field does not exist or is null (IS NULL).
+                - {"$contains": "text"} for case-insensitive partial text matching (LIKE %text%).
+                - {"$regex": "pattern"} for case-insensitive regex matching.
 
         If a list of query objects is provided, they are logically ANDed together (all conditions must match).
 
@@ -264,6 +266,8 @@ class ZoteroDatabase:
             - {"url": {"$exists": True}} (data.url exists and is not null)
             - {"parentItem": {"$exists": False}} (data.parentItem is null or does not exist, typically for top-level items)
             - {"creators.lastName": "Brooker"} (any creator in data.creators has lastName "Brooker")
+            - {"title": {"$contains": "hypnosis"}} (data.title contains "hypnosis", case-insensitive)
+            - {"abstractNote": {"$regex": "cognitive.*therapy"}} (data.abstractNote matches regex pattern, case-insensitive)
             - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] (matches items where both conditions are true)
 
         Args:
@@ -310,6 +314,12 @@ class ZoteroDatabase:
                             else:
                                 logger.warning(f"Invalid boolean value for $exists operator on field '{field}': {value['$exists']}. Skipping this condition.")
                                 continue  # Skip this field's condition
+                        elif "$contains" in value:
+                            sql_operator_expression = "LIKE ? COLLATE NOCASE"
+                            current_params_for_value.append(f"%{value['$contains']}%")
+                        elif "$regex" in value:
+                            sql_operator_expression = "REGEXP ?"
+                            current_params_for_value.append(value["$regex"])
                         else:
                             logger.warning(
                                 f"Query value for field '{field}' is a dictionary but does not contain a recognized operator: {value}. Interpreting as exact match for its string representation (this is likely not intended and may yield no results)."
@@ -362,6 +372,16 @@ class ZoteroDatabase:
             # Connect to the database
             conn = sqlite3.connect(self.db_file)
             cursor = conn.cursor()
+
+            # Add custom REGEXP function for case-insensitive regex matching
+            def regexp(pattern, text):
+                if text is None:
+                    return False
+                import re
+
+                return re.search(pattern, text, re.IGNORECASE) is not None
+
+            conn.create_function("REGEXP", 2, regexp)
 
             # Build the final query using INTERSECT to combine all subqueries
             final_sql_query = " INTERSECT ".join(subqueries)
@@ -470,6 +490,66 @@ class ZoteroContentResolver:
                     matching_item = doi_matches[0]  # Take the first match
 
         return matching_item
+
+    def _fetch_zotero_file_by_key(self, item_key: str, url: str, streams: List[ByteStream]) -> bool:
+        """Fetch a Zotero file directly by its item key.
+
+        Args:
+            item_key (str): The Zotero item key.
+            url (str): The original URL (for metadata).
+            streams (List[ByteStream]): The list of ByteStream objects to append to.
+
+        Returns:
+            bool: True if fetching was successful, False otherwise.
+        """
+        try:
+            logger.info(f"Fetching Zotero file for item key: {item_key}")
+
+            # Get the file contents using the item key
+            file_contents_str = self.zotero_client.file(item_key)
+
+            if file_contents_str is None:
+                logger.warning(f"Received None for file contents of item {item_key}. Skipping.")
+                return False
+
+            try:
+                file_contents_bytes = file_contents_str.encode("utf-8")
+            except AttributeError:
+                # If file_contents_str is already bytes
+                if isinstance(file_contents_str, bytes):
+                    file_contents_bytes = file_contents_str
+                else:
+                    logger.error(f"Could not encode file contents for item {item_key}. Type: {type(file_contents_str)}. Skipping.")
+                    return False
+
+            # Get item metadata to determine filename and title
+            item = self.zotero_client.item(item_key)
+            filename = item.get("data", {}).get("filename", f"{item_key}.pdf")
+            title = item.get("data", {}).get("title", "Untitled")
+
+            # Determine MIME type from filename
+            mime_type = "application/octet-stream"  # Default fallback
+            if filename:
+                guessed_type, _ = mimetypes.guess_type(filename)
+                if guessed_type:
+                    mime_type = guessed_type
+                elif filename.lower().endswith(".pdf"):
+                    mime_type = "application/pdf"
+
+            # Create ByteStream
+            stream = ByteStream(data=file_contents_bytes)
+            stream.meta = {"url": url, "filename": filename, "title": title, "source": "zotero"}
+            stream.mime_type = mime_type
+
+            streams.append(stream)
+            logger.info(f"Successfully fetched Zotero file: {filename}")
+            return True
+
+        except Exception as e:
+            logger.warning(f"Failed to fetch Zotero file for item key {item_key}: {str(e)}")
+            if self.raise_on_failure:
+                raise e
+            return False
 
     def _process_attachments(self, parent_item: dict, url: str, streams: List[ByteStream]) -> bool:
         """Process attachments for a Zotero item and add them to the streams list.
@@ -597,6 +677,17 @@ class ZoteroContentResolver:
 
         for url in urls:
             try:
+                # Check if this is a Zotero API file URL
+                if "api.zotero.org" in url and "/file" in url:
+                    # Extract item key from URL: https://api.zotero.org/users/{userID}/items/{itemKey}/file/view
+                    item_key_match = re.search(r"/items/([A-Z0-9]+)/file", url)
+                    if item_key_match:
+                        item_key = item_key_match.group(1)
+                        self._fetch_zotero_file_by_key(item_key, url, streams)
+                    else:
+                        logger.warning(f"Could not extract item key from Zotero API URL: {url}")
+                    continue
+
                 # Find matching item
                 matching_item = self._find_matching_item(url)
 
@@ -626,6 +717,10 @@ class ZoteroContentResolver:
         """
         if self.is_enabled is False:
             return False
+
+        # Check if the URL is a Zotero API file URL
+        if "api.zotero.org" in url and "/file" in url:
+            return True
 
         # Check if the URL is a DOI link
         if "doi.org" in url:

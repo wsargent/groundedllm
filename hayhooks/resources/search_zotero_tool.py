@@ -69,18 +69,40 @@ def search_zotero(query: List[dict]) -> str:
         query (List[dict]): The MongoDB-style query object(s) to search for. Keys are field paths and values are the values to match.
             If more than one query object is provided, they are logically ANDed together (all must match).
 
+            Supported operators:
+            - Exact match: {"field": "value"}
+            - Not equals: {"field": {"$ne": "value"}}
+            - Exists: {"field": {"$exists": True}}
+            - Contains (case-insensitive): {"field": {"$contains": "text"}}
+            - Regex (case-insensitive): {"field": {"$regex": "pattern"}}
+
             Examples:
             - [{"DOI": "10.3389/fnins.2012.00138"}] matches items where data.DOI equals "10.3389/fnins.2012.00138"
             - [{"url": "http://journal.frontiersin.org/article/10.3389/fnins.2012.00138/abstract"}] matches items.
             - [{"shortTitle": "foo"}] matches items where data.shortTitle equals "foo"
             - [{"title": "Example Paper"}] matches items where data.title equals "Example Paper"
+            - [{"title": {"$contains": "habits"}}] matches items where data.title contains "hypnosis" (case-insensitive)
+            - [{"abstractNote": {"$regex": "Consciousness.*Beckett"}}] matches items with regex pattern (case-insensitive)
             - [{"creators.lastName": "Brooker"}] matches items where any creator has lastName "Brooker"
             - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] matches items where both conditions are true
 
     Returns:
-        str: A list of matching Zotero items as JSON objects.
-            Use the extract tool with an item's URL to extract the full text content.
-            Use the excerpt tool with several items URLs to ask an LLM a question about the items.
+        str: A list of matching Zotero items as JSON objects. Each item contains:
+            - links.attachment.href: The Zotero API URL to the PDF file (use this with excerpt tool)
+            - data.url: The original publication URL
+            - data.title: The paper title
+            - data.abstractNote: The abstract
+            - Other metadata fields
+
+            IMPORTANT: To ask questions about the PDF content, use the excerpt tool with the
+            links.attachment.href URLs (format: https://api.zotero.org/users/{userID}/items/{itemKey}/file/view).
+
+            Example workflow:
+            1. Search: search_zotero([{"title": {"$contains": "habits"}}])
+            2. Extract PDF URLs from results: item["links"]["attachment"]["href"]
+            3. Ask questions: excerpt(urls=[pdf_url1, pdf_url2, ...], question="What are the key findings?")
+
+            You can also use the extract tool with any URL to get the full text content.
     """
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
