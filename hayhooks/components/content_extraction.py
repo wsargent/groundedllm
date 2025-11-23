@@ -72,6 +72,22 @@ class URLContentRouter:
             except Exception:
                 logger.exception(f"Exception in {resolver} run with {urls}")
 
+        # If no streams were successfully fetched, create an empty placeholder stream
+        # to prevent pipeline blocking. This allows the pipeline to complete gracefully
+        # even when all URL fetches fail. The TextFileToDocument converter will handle
+        # the empty bytes and produce an empty document.
+        if not all_streams:
+            logger.warning(f"No streams fetched for any URLs: {urls}. Creating empty placeholder stream.")
+            from haystack.dataclasses import ByteStream
+
+            # Create an empty text stream with a clear metadata indicator
+            empty_stream = ByteStream(
+                data=b"",
+                meta={"url": "error://no-content-fetched"},
+                mime_type="text/plain",
+            )
+            all_streams.append(empty_stream)
+
         return {"streams": all_streams}
 
     def _find_resolver(self, url: str) -> Any:

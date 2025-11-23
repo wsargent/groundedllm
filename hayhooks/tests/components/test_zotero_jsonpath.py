@@ -134,3 +134,67 @@ def test_search_with_multiple_expressions(zotero_db):
     results = zotero_db.find_items_by_mongo_query([{"creators.lastName": "Brooker"}, {"title": "Another Paper"}])
     assert len(results) == 1
     assert results[0]["key"] == "item3"
+
+
+def test_search_with_contains_operator(zotero_db):
+    # Test case-insensitive contains search
+    results = zotero_db.find_items_by_mongo_query({"title": {"$contains": "test"}})
+    assert len(results) == 2
+    assert "item1" in [item["key"] for item in results]
+    assert "item2" in [item["key"] for item in results]
+
+    # Test partial match
+    results = zotero_db.find_items_by_mongo_query({"title": {"$contains": "Paper"}})
+    assert len(results) == 3
+
+    # Test with no matches
+    results = zotero_db.find_items_by_mongo_query({"title": {"$contains": "NonExistent"}})
+    assert len(results) == 0
+
+    # Test case insensitivity
+    results = zotero_db.find_items_by_mongo_query({"title": {"$contains": "PAPER"}})
+    assert len(results) == 3
+
+
+def test_search_with_regex_operator(zotero_db):
+    # Test regex pattern matching
+    results = zotero_db.find_items_by_mongo_query({"title": {"$regex": "Test Paper [12]"}})
+    assert len(results) == 2
+    assert "item1" in [item["key"] for item in results]
+    assert "item2" in [item["key"] for item in results]
+
+    # Test regex with wildcard
+    results = zotero_db.find_items_by_mongo_query({"title": {"$regex": "Another.*"}})
+    assert len(results) == 1
+    assert results[0]["key"] == "item3"
+
+    # Test case insensitivity
+    results = zotero_db.find_items_by_mongo_query({"title": {"$regex": "test paper"}})
+    assert len(results) == 2
+
+    # Test with no matches
+    results = zotero_db.find_items_by_mongo_query({"title": {"$regex": "^NonExistent$"}})
+    assert len(results) == 0
+
+
+def test_search_with_contains_in_nested_fields(zotero_db):
+    # Test contains on shortTitle
+    results = zotero_db.find_items_by_mongo_query({"shortTitle": {"$contains": "P"}})
+    assert len(results) == 3
+
+    # Test contains on URL
+    results = zotero_db.find_items_by_mongo_query({"url": {"$contains": "paper1"}})
+    assert len(results) == 1
+    assert results[0]["key"] == "item1"
+
+
+def test_search_combining_operators(zotero_db):
+    # Test combining exact match with contains
+    results = zotero_db.find_items_by_mongo_query([{"title": {"$contains": "Test"}}, {"creators.lastName": "Smith"}])
+    assert len(results) == 1
+    assert results[0]["key"] == "item1"
+
+    # Test combining regex with exact match
+    results = zotero_db.find_items_by_mongo_query([{"title": {"$regex": "Another.*"}}, {"DOI": "10.1234/test3"}])
+    assert len(results) == 1
+    assert results[0]["key"] == "item3"
