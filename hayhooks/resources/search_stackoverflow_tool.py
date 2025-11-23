@@ -35,6 +35,8 @@ def search_stackoverflow(error_message: str, language: Optional[str] = None, tec
     :rtype: str
     """
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
+    if not hayhooks_base_url:
+        raise EnvironmentError("HAYHOOKS_BASE_URL environment variable is not set.")
 
     response = requests.post(f"{hayhooks_base_url}/search_stackoverflow/run", json={"error_message": error_message, "language": language, "technologies": technologies, "min_score": min_score, "include_comments": include_comments, "limit": limit})
     response.raise_for_status()

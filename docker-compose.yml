@@ -106,6 +106,7 @@ services:
       ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY
       # https://docs.letta.com/guides/server/providers/google
       GEMINI_API_KEY: $GEMINI_API_KEY
+      HAYHOOKS_BASE_URL: $HAYHOOKS_BASE_URL
       #OLLAMA_BASE_URL: $OLLAMA_BASE_URL
       # Do not attempt to use Ollama, LM Studio or OpenRouter chat models with Letta.
       # Letta is *very* picky and will only reliably work with the major cloud providers.

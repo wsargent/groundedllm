@@ -24,6 +24,9 @@ def excerpt(urls: List[str], question: str) -> str:
     """
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
+    if not hayhooks_base_url:
+        raise EnvironmentError("HAYHOOKS_BASE_URL environment variable is not set.")
+
     response = requests.post(
         f"{hayhooks_base_url}/excerpt/run",
         json={"urls": urls, "question": question},
