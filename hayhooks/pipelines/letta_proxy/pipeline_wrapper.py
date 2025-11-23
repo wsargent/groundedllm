@@ -42,7 +42,6 @@ class LettaChatGenerator:
         logger.info(f"Using Letta base URL: {base_url}")
         self.base_url = base_url
         self.api_key = api_key
-        self.send_end_think = False
         # Don't allow any OpenAI generation kwargs for now.
         self.generation_kwargs: Dict[str, Any] = {}
         self.streaming_callback = streaming_callback
@@ -97,10 +96,7 @@ class LettaChatGenerator:
                 logger.debug(f"Messages: {messages}")
                 stream_completion: Iterator[LettaStreamingResponse] = client.agents.messages.create(agent_id=agent_id, messages=messages, streaming=True)
 
-                meta_dict = {"type": "assistant", "received_at": datetime.now().isoformat()}
-                think_chunk = StreamingChunk(content="<think>", meta=meta_dict)
-                chunks = [think_chunk]
-                streaming_callback(think_chunk)
+                chunks = []
                 last_chunk = None
                 # Sometimes the response will time out while streaming, so we need a try / catch
                 try:
@@ -172,13 +168,12 @@ class LettaChatGenerator:
         """
         Process a streaming chunk based on its type and invoke the streaming callback.
         """
-        logger.debug(f"Processing streaming chunk end_think={self.send_end_think}: {chunk}")
+        logger.debug(f"Processing streaming chunk: {chunk}")
 
         if isinstance(chunk, ReasoningMessage):
-            self.send_end_think = True
             reasoning_chunk: ReasoningMessage = chunk
             now = datetime.now()
-            meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            meta_dict = {"type": "reasoning", "received_at": now.isoformat()}
             display_time = now.astimezone().time().isoformat("seconds")
             reasoning = reasoning_chunk.reasoning.strip().removeprefix('"').removesuffix('"')
             content = f"\n- {display_time} {reasoning}"
@@ -187,7 +182,7 @@ class LettaChatGenerator:
             tool_call_message: ToolCallMessage = chunk
             now = datetime.now()
             display_time = now.astimezone().time().isoformat("seconds")
-            meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            meta_dict = {"type": "tool_call", "received_at": now.isoformat()}
             tool_name = tool_call_message.tool_call.name
             call_statement = f"Calling tool {tool_name}"
             arguments: str = tool_call_message.tool_call.arguments if tool_call_message.tool_call.arguments else ""
@@ -203,29 +198,27 @@ class LettaChatGenerator:
         elif isinstance(chunk, ToolReturnMessage):
             tool_return_message: ToolReturnMessage = chunk
             now = datetime.now()
-            self.send_end_think = True
-            meta_dict = {"type": "assistant", "received_at": now.isoformat()}
+            meta_dict = {"type": "tool_return", "received_at": now.isoformat()}
             content = f" {tool_return_message.status}, returned {len(tool_return_message.tool_return)} characters."
             return StreamingChunk(content=content, meta=meta_dict)
         elif isinstance(chunk, AssistantMessage):
             now = datetime.now()
             meta_dict = {"type": "assistant", "received_at": now.isoformat()}
 
-            logger.debug(f"Found assistant message with end_think={self.send_end_think}: {chunk}")
-            content = "</think>"
-            self.send_end_think = False  # always set this after assistant message
+            logger.debug(f"Found assistant message: {chunk}")
 
             # chunk.content can be a string or a list of content objects
             if isinstance(chunk.content, str):
-                content = content + chunk.content
+                content = chunk.content
             elif isinstance(chunk.content, list):
                 # Extract text from content list
                 text_parts = [c.text for c in chunk.content if hasattr(c, "text")]
-                content = content + "".join(text_parts)
+                content = "".join(text_parts)
+            else:
+                content = ""
 
             logger.debug(f"Returning assistant content: {content}")
 
-            # Assistant message is the last chunk so we need to close the <think> tag
             return StreamingChunk(content=content, meta=meta_dict)
         elif isinstance(chunk, LettaUsageStatistics):
             logger.debug(f"Ignoring usage statistics: {chunk}")
@@ -307,12 +300,40 @@ class PipelineWrapper(BasePipelineWrapper):
             if not agent_id:
                 raise ValueError("No agent_id provided in the request body")
         prompt = get_last_user_message(messages)
-        return streaming_generator(
-            pipeline=self.pipeline,
-            pipeline_run_args={
-                "llm": {
-                    "prompt": prompt,
-                    "agent_id": agent_id,
-                }
-            },
-        )
+
+        # streaming_generator yields StreamingChunk objects, but hayhooks expects strings
+        # We need to extract the content from each chunk and add headers
+        def content_generator() -> Generator[str, None, None]:
+            current_section = None
+            for chunk in streaming_generator(
+                pipeline=self.pipeline,
+                pipeline_run_args={
+                    "llm": {
+                        "prompt": prompt,
+                        "agent_id": agent_id,
+                    }
+                },
+            ):
+                # Extract content from StreamingChunk objects
+                if isinstance(chunk, StreamingChunk):
+                    chunk_type = chunk.meta.get("type", "unknown")
+
+                    # Add section header when switching to a new type
+                    if chunk_type != current_section:
+                        if chunk_type == "reasoning":
+                            yield "\n\n**Agent Thoughts:**\n"
+                        elif chunk_type == "tool_call":
+                            yield "\n\n**Tool Calls:**\n"
+                        elif chunk_type == "tool_return":
+                            # Don't add header for tool returns, they're part of tool calls
+                            pass
+                        elif chunk_type == "assistant":
+                            yield "\n\n**Assistant Response:**\n"
+                        current_section = chunk_type
+
+                    yield chunk.content
+                else:
+                    # Fallback for any other type (shouldn't happen, but be safe)
+                    yield str(chunk)
+
+        return content_generator()

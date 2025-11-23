@@ -1,4 +1,3 @@
-import datetime
 from typing import Any, Dict, List, Optional
 
 from hayhooks import log as logger
@@ -142,7 +141,7 @@ class LettaCreateAgent:
         enable_reasoner = None
         max_reasoning_tokens = None
         max_tokens = None
-        enable_sleeptime = True
+        enable_sleeptime = False
 
         # Still not sure if reasoning model is an advantage here
         # if "claude-3-7-sonnet" in selected_model:
@@ -154,6 +153,7 @@ class LettaCreateAgent:
         # https://github.com/letta-ai/letta-python/blob/main/reference.md
         agent = self.client.agents.create(
             name=agent_name,
+            agent_type="letta_v1_agent",
             memory_blocks=memory_blocks,
             model=selected_model,
             embedding=letta_embedding,
@@ -166,17 +166,18 @@ class LettaCreateAgent:
             secrets=secrets,
         )
         logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
-        # Add a note so we can see when it was created
-        archive = self.client.archives.create(
-            name="agent-timeline",
-            description="Agent timeline",
-            embedding="letta/letta-free",  # must specify an embedding
-        )
-        self.client.agents.archives.attach(agent_id=agent.id, archive_id=archive.id)
-        self.client.archives.passages.create(
-            archive_id=archive.id,
-            text=f"Created at {datetime.datetime.now()}Z",
-        )
+        # This doesn't work in 0.14.x because of https://github.com/letta-ai/letta/issues/3073
+        # # Add a note so we can see when it was created
+        # archive = self.client.archives.create(
+        #     name="agent-timeline",
+        #     description="Agent timeline",
+        #     embedding="letta/letta-free",  # must specify an embedding
+        # )
+        # self.client.agents.archives.attach(agent_id=agent.id, archive_id=archive.id)
+        # self.client.archives.passages.create(
+        #     archive_id=archive.id,
+        #     text=f"Created at {datetime.datetime.now()}Z",
+        # )
         return agent.id
 
     def _set_block_limit(self, block_content: str) -> int:
