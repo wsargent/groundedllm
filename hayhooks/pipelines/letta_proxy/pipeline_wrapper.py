@@ -186,6 +186,12 @@ class LettaChatGenerator:
             tool_name = tool_call_message.tool_call.name
             call_statement = f"Calling tool {tool_name}"
             arguments: str = tool_call_message.tool_call.arguments if tool_call_message.tool_call.arguments else ""
+
+            # DEBUG: Log raw arguments to investigate HTML entity issue
+            logger.debug(f"RAW tool call arguments from Letta: {repr(arguments)}")
+            logger.debug(f"Arguments contain &quot;: {'&quot;' in arguments}")
+            logger.debug(f"Arguments contain &amp;: {'&amp;' in arguments}")
+
             no_heartbeat_requested = """"request_heartbeat": false""" in arguments
             if no_heartbeat_requested:
                 call_statement = call_statement + " *without heartbeat*"

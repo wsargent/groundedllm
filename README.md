@@ -83,11 +83,11 @@ If you want to use Claude Sonnet 4, you'll want an [Anthropic API Key](https://c
 ```
 ANTHROPIC_API_KEY=...
 
-LETTA_CHAT_MODEL=anthropic/claude-sonnet-4-20250514
+LETTA_CHAT_MODEL=anthropic/claude-sonnet-4-5-20250929
 
-HAYHOOKS_EXCERPT_MODEL=anthropic/claude-3-5-haiku-latest
-HAYHOOKS_SEARCH_MODEL=anthropic/claude-3-5-haiku-latest
-HAYHOOKS_SEARCH_EMAIL_MODEL=anthropic/claude-3-5-haiku-latest
+HAYHOOKS_EXCERPT_MODEL=anthropic/claude-4-5-haiku-latest
+HAYHOOKS_SEARCH_MODEL=anthropic/claude-4-5-haiku-latest
+HAYHOOKS_SEARCH_EMAIL_MODEL=anthropic/claude-4-5-haiku-latest
 ```
 
 ### OpenAI Config
