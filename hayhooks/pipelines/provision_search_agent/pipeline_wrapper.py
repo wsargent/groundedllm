@@ -91,7 +91,10 @@ class PipelineWrapper(BasePipelineWrapper):
             "search_zotero",  # search zotero repository
             "search_stackoverflow",  # searches stack overflow
             "search_calendars",  # search calendars
-            "search_emails",  # search emails
+            "search_emails",  # search emails,
+            # Archival memory requires these tools: https://docs.letta.com/guides/ade/archival-memory
+            "archival_memory_insert",
+            "archival_memory_search",
         ]
         tool_env_vars = {
             "HAYHOOKS_BASE_URL": self._get_hayhooks_base_url(),  # base url for tools

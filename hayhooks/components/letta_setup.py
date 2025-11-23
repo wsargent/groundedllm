@@ -168,16 +168,12 @@ class LettaCreateAgent:
         logger.info(f"Successfully created agent '{agent_name}' (ID: {agent.id}) with {len(tool_ids)} tools.")
         # This doesn't work in 0.14.x because of https://github.com/letta-ai/letta/issues/3073
         # # Add a note so we can see when it was created
-        # archive = self.client.archives.create(
-        #     name="agent-timeline",
-        #     description="Agent timeline",
-        #     embedding="letta/letta-free",  # must specify an embedding
-        # )
-        # self.client.agents.archives.attach(agent_id=agent.id, archive_id=archive.id)
-        # self.client.archives.passages.create(
-        #     archive_id=archive.id,
-        #     text=f"Created at {datetime.datetime.now()}Z",
-        # )
+        archive = self.client.archives.create(
+            name="agent-timeline",
+            description="Agent timeline",
+            embedding=letta_embedding,  # must specify an embedding
+        )
+        self.client.agents.archives.attach(agent_id=agent.id, archive_id=archive.id)
         return agent.id
 
     def _set_block_limit(self, block_content: str) -> int:
