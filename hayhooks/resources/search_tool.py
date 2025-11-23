@@ -49,6 +49,9 @@ def search(
     """
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
+    if not hayhooks_base_url:
+        raise EnvironmentError("HAYHOOKS_BASE_URL environment variable is not set.")
+
     response = requests.post(
         f"{hayhooks_base_url}/search/run",
         json={"question": question, "max_results": max_results, "search_depth": search_depth, "time_range": time_range, "include_domains": include_domains, "exclude_domains": exclude_domains},

@@ -55,6 +55,9 @@ def search_calendars(
     }
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
+    if not hayhooks_base_url:
+        raise EnvironmentError("HAYHOOKS_BASE_URL environment variable is not set.")
+
     response = requests.post(f"{hayhooks_base_url}/search_calendars/run", json=payload)
 
     # response.raise_for_status()

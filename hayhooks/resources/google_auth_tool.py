@@ -32,6 +32,9 @@ def google_auth(user_id: Optional[str] = None) -> str:
         user_id = os.getenv("HAYHOOKS_USER_ID")
 
     hayhooks_base_url = os.getenv("HAYHOOKS_BASE_URL")
+    if not hayhooks_base_url:
+        raise EnvironmentError("HAYHOOKS_BASE_URL environment variable is not set.")
+
     response = requests.post(f"{hayhooks_base_url}/google_auth/run", json={"user_id": user_id})
 
     response.raise_for_status()
