@@ -44,7 +44,7 @@ class PipelineWrapper(BasePipelineWrapper):
             - [{"url": "http://journal.frontiersin.org/article/10.3389/fnins.2012.00138/abstract"}] matches items.
             - [{"shortTitle": "foo"}] matches items where data.shortTitle equals "foo"
             - [{"title": "Example Paper"}] matches items where data.title equals "Example Paper"
-            - [{"title": {"$contains": "hypnosis"}}] matches items where data.title contains "hypnosis" (case-insensitive)
+            - [{"title": {"$contains": "Consciousness"}}] matches items where data.title contains "Consciousness" (case-insensitive)
             - [{"abstractNote": {"$regex": "cognitive.*therapy"}}] matches items with regex pattern (case-insensitive)
             - [{"creators.lastName": "Brooker"}] matches items where any creator has lastName "Brooker"
             - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] matches items where both conditions are true
@@ -64,7 +64,7 @@ class PipelineWrapper(BasePipelineWrapper):
             links.attachment.href URLs (format: https://api.zotero.org/users/{userID}/items/{itemKey}/file/view).
 
             Example workflow:
-            1. Search with $contains: [{"title": {"$contains": "hypnosis"}}]
+            1. Search with $contains: [{"title": {"$contains": "Consciousness"}}]
             2. Extract PDF URLs from results: item["links"]["attachment"]["href"]
             3. Ask questions with excerpt tool using those URLs
         """
