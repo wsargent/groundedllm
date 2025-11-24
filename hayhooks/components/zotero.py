@@ -266,7 +266,7 @@ class ZoteroDatabase:
             - {"url": {"$exists": True}} (data.url exists and is not null)
             - {"parentItem": {"$exists": False}} (data.parentItem is null or does not exist, typically for top-level items)
             - {"creators.lastName": "Brooker"} (any creator in data.creators has lastName "Brooker")
-            - {"title": {"$contains": "hypnosis"}} (data.title contains "hypnosis", case-insensitive)
+            - {"title": {"$contains": "Consciousness"}} (data.title contains "Consciousness", case-insensitive)
             - {"abstractNote": {"$regex": "cognitive.*therapy"}} (data.abstractNote matches regex pattern, case-insensitive)
             - [{"title": "Example Paper"}, {"DOI": "10.1234/test"}] (matches items where both conditions are true)
 
