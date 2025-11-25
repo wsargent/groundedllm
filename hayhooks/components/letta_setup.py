@@ -174,6 +174,33 @@ class LettaCreateAgent:
             embedding=letta_embedding,  # must specify an embedding
         )
         self.client.agents.archives.attach(agent_id=agent.id, archive_id=archive.id)
+
+        # Write a block detailing how to use archival memory
+        archival_policies = self.client.blocks.create(
+            label="archival_policies",
+            description="This block describes how to manage archival memory.  It can be edited as new policies are suggested.",
+            value="""
+            Archival Memory Management:
+
+            - Your archival memory is used to keep a persistent log of events and findings, particularly changes in how you operate.  Using this log will help you make better decisions, because you can build up more context from past tool use.
+            - Use archival_memory_insert to record important events, findings, and changes in your operation.
+            - Always include a timestamp in the format YYYY-MM-DDThh:mm:ssX (X indicating timezone offset).
+            - If you are asked about events or past decisions that you do not have in your context window, perform an archival_memory_search.
+            - If you use information pulled from archival memory to answer a question, clearly state that archival memory is your source.
+            
+            When NOT to insert:
+            - Temporary conversational context
+            - Information already stored
+            - Trivial details or pleasantries
+
+            Search strategies:
+            - Use natural language questions for best results
+            - Include tags when filtering by category
+            - Try semantic variations if first search doesn't find what you need
+            """,
+        )
+        self.client.agents.blocks.attach(agent_id=agent.id, block_id=archival_policies.id)
+
         return agent.id
 
     def _set_block_limit(self, block_content: str) -> int:
