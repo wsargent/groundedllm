@@ -43,7 +43,7 @@ services:
       - GOOGLE_AUTH_CALLBACK_URL=http://localhost:1416
       # Connections to other containers
       - OPENWEBUI_BASE_URL=http://open-webui:8080
-      - LETTA_API_KEY=${LETTA_API_KEY}
+      #- LETTA_API_KEY=${LETTA_API_KEY}
       - LETTA_BASE_URL=http://letta:8283
       - OPENAI_API_BASE=http://litellm:4000
       - SEARXNG_BASE_URL=http://searxng:8080
@@ -96,7 +96,7 @@ services:
   # Letta is an agent building framework with built-in memory/vectordb support.
   # https://docs.letta.com/quickstart/docker
   letta:
-    image: letta/letta:0.15.0
+    image: letta/letta:0.15.1
     volumes:
       - ./letta/letta_mcp_config.json:/root/.letta/mcp_config.json
     ports:
@@ -128,7 +128,7 @@ services:
 
   # Open WebUI is the front-end UI to Letta
   open-webui:
-    image: ghcr.io/open-webui/open-webui:0.6.36
+    image: ghcr.io/open-webui/open-webui:0.6.40
     container_name: open-webui
     volumes:
      - open-webui:/app/backend/data

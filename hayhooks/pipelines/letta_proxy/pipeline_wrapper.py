@@ -69,10 +69,10 @@ class LettaChatGenerator:
             logger.info(f"Connecting to Letta at {self.base_url} with agent {agent_id}")
             # Only pass api_key if it's set, otherwise use placeholder
             if api_key_value:
-                client = Letta(base_url=self.base_url, api_key=api_key_value, timeout=self.timeout, max_retries=self.max_retries)
+                client = Letta(base_url=self.base_url, api_key=api_key_value, timeout=self.timeout, max_retries=self.max_retries, environment="local")
             else:
                 # Letta client requires an api_key even for local development without auth
-                client = Letta(base_url=self.base_url, api_key="no_auth_required", timeout=self.timeout, max_retries=self.max_retries)
+                client = Letta(base_url=self.base_url, timeout=self.timeout, max_retries=self.max_retries, environment="local")
         except Exception as e:
             logger.exception(f"Failed to create Letta client: {str(e)}", e)
             raise ValueError(f"Failed to create Letta client: {str(e)}")
