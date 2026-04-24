@@ -554,6 +554,8 @@ class ZoteroContentResolver:
     def _process_attachments(self, parent_item: dict, url: str, streams: List[ByteStream]) -> bool:
         """Process attachments for a Zotero item and add them to the streams list.
 
+        Prefers markdown over plain text over PDF.
+
         Args:
             parent_item (dict): The parent Zotero item.
             url (str): The original URL.
@@ -568,13 +570,14 @@ class ZoteroContentResolver:
         try:
             child_items = self.zotero_client.children(parent_item_key, itemType="attachment")
 
-            # If no child items found, log and return
             if not child_items:
                 logger.warning(f"No child items found for Zotero item {parent_item_key} with URL {url}, skipping")
                 return False
 
-            # Find attachment items
-            attachment_found = False
+            # Categorize attachments by type; priority: markdown > plain text > PDF
+            markdown_attachments: List[tuple] = []
+            plaintext_attachments: List[tuple] = []
+            pdf_attachments: List[tuple] = []
 
             for child in child_items:
                 if not isinstance(child, dict):
@@ -582,74 +585,68 @@ class ZoteroContentResolver:
                     continue
 
                 child_data = child.get("data", {})
-                if not isinstance(child_data, dict):  # child.get might return non-dict if data is malformed
+                if not isinstance(child_data, dict):
                     logger.warning(f"Child item 'data' field is not a dictionary. Skipping item: {child}")
                     continue
 
-                # Check if the child is an attachment
-                if child_data.get("itemType") == "attachment":
-                    filename = child_data.get("filename")
-                    child_item_key = child.get("key")
+                if child_data.get("itemType") != "attachment":
+                    continue
 
-                    if not child_item_key:  # Should always have a key, but good to check
-                        logger.warning(f"Attachment item found without a key, skipping: {child_data}")
-                        continue
+                filename = child_data.get("filename")
+                child_item_key = child.get("key")
 
-                    log_filename = filename if filename else "Unknown Filename"
-                    logger.info(f"Found attachment item: {log_filename} ({child_item_key})")
+                if not child_item_key:
+                    logger.warning(f"Attachment item found without a key, skipping: {child_data}")
+                    continue
 
-                    # Skip if no filename
-                    if not filename:
-                        continue
+                if not filename:
+                    continue
 
-                    # Check if the file is a PDF or HTML
-                    is_pdf = filename.lower().endswith(".pdf")
-                    is_html = filename.lower().endswith((".html", ".htm"))
+                logger.info(f"Found attachment item: {filename} ({child_item_key})")
 
-                    if not (is_pdf or is_html):
-                        logger.warning("Non-PDF or HTML attachment, trying it anyway: " + filename)
+                lower = filename.lower()
+                if lower.endswith((".md", ".markdown")):
+                    markdown_attachments.append((child_item_key, filename))
+                elif lower.endswith(".txt"):
+                    plaintext_attachments.append((child_item_key, filename))
+                elif lower.endswith(".pdf"):
+                    pdf_attachments.append((child_item_key, filename))
+                else:
+                    logger.info(f"Skipping unsupported attachment type: {filename}")
 
-                    # We found a valid attachment
-                    attachment_found = True
+            chosen_attachments = markdown_attachments or plaintext_attachments or pdf_attachments
 
-                    # Get the file contents using the child item key
-                    file_contents_str = self.zotero_client.file(child_item_key)
-
-                    # Ensure file_contents_str is not None before encoding
-                    if file_contents_str is None:
-                        logger.warning(f"Received None for file contents of attachment {child_item_key} ({filename}). Skipping.")
-                        continue
-
-                    try:
-                        file_contents_bytes = file_contents_str.encode("utf-8")
-                    except AttributeError:
-                        # If file_contents_str is already bytes (less likely for zotero.file but good to handle)
-                        if isinstance(file_contents_str, bytes):
-                            file_contents_bytes = file_contents_str
-                        else:
-                            logger.error(f"Could not encode file contents for attachment {child_item_key} ({filename}). Type: {type(file_contents_str)}. Skipping.")
-                            continue
-
-                    # Determine MIME type from filename
-                    mime_type = "application/octet-stream"  # Default fallback
-                    if filename:
-                        guessed_type, _ = mimetypes.guess_type(filename)
-                        if guessed_type:
-                            mime_type = guessed_type
-                        elif filename.lower().endswith(".pdf"):  # Common case if guess_type fails
-                            mime_type = "application/pdf"
-
-                    # Create ByteStream
-                    stream = ByteStream(data=file_contents_bytes)
-                    stream.meta = {"url": url, "filename": filename, "title": title, "source": "zotero"}
-                    stream.mime_type = mime_type
-
-                    streams.append(stream)
-
-            # If no valid attachments were found, log and return
-            if not attachment_found:
-                logger.warning(f"No valid PDF or HTML attachments found for Zotero item with URL {url}, skipping")
+            if not chosen_attachments:
+                logger.warning(f"No valid Markdown, plain text, or PDF attachments found for Zotero item with URL {url}, skipping")
                 return False
+
+            for child_item_key, filename in chosen_attachments:
+                file_contents_str = self.zotero_client.file(child_item_key)
+
+                if file_contents_str is None:
+                    logger.warning(f"Received None for file contents of attachment {child_item_key} ({filename}). Skipping.")
+                    continue
+
+                try:
+                    file_contents_bytes = file_contents_str.encode("utf-8")
+                except AttributeError:
+                    if isinstance(file_contents_str, bytes):
+                        file_contents_bytes = file_contents_str
+                    else:
+                        logger.error(f"Could not encode file contents for attachment {child_item_key} ({filename}). Type: {type(file_contents_str)}. Skipping.")
+                        continue
+
+                mime_type = "application/octet-stream"
+                guessed_type, _ = mimetypes.guess_type(filename)
+                if guessed_type:
+                    mime_type = guessed_type
+                elif filename.lower().endswith(".pdf"):
+                    mime_type = "application/pdf"
+
+                stream = ByteStream(data=file_contents_bytes)
+                stream.meta = {"url": url, "filename": filename, "title": title, "source": "zotero"}
+                stream.mime_type = mime_type
+                streams.append(stream)
 
             return True
 
