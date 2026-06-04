@@ -5,7 +5,7 @@ from hayhooks import log as logger
 from haystack import Document, component
 from haystack.utils import Secret
 from linkup import LinkupClient
-from linkup.types import LinkupSearchResults, LinkupSearchTextResult
+from linkup import LinkupSearchResults, LinkupSearchTextResult
 
 DEFAULT_MAX_RESULTS = 5
 DEFAULT_SEARCH_DEPTH = "basic"

@@ -53,6 +53,7 @@ dependencies = [
     "opentelemetry-instrumentation-requests==0.55b1",
     "opentelemetry-instrumentation-starlette==0.55b1",
     "opentelemetry-instrumentation-tortoiseorm==0.55b1",
+    "curl-cffi>=0.15.0",
 ]
 
 [tool.setuptools]

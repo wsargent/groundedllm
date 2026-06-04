@@ -1,12 +1,13 @@
 import os
 import time
 import uuid
+from contextlib import asynccontextmanager
 from typing import Generator, List, Union
 
 import uvicorn
 from fastapi import HTTPException, Request
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 from hayhooks import BasePipelineWrapper, create_app
@@ -29,7 +30,7 @@ from components.google.google_oauth import GoogleOAuth
 
 with LazyImport("Run 'pip install \"mcp\"' to install MCP.") as mcp_import:
     from mcp.server import Server
-    from mcp.server.sse import SseServerTransport
+    from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
     from mcp.types import EmbeddedResource, ImageContent, TextContent, Tool
 
 ###########
@@ -228,9 +229,20 @@ mcp_import.check()
 
 # Setup the MCP server
 mcp_server: Server = Server("hayhooks-mcp-server")
+session_manager = StreamableHTTPSessionManager(mcp_server)
 
-# Setup the SSE server transport for MCP
-mcp_sse = SseServerTransport("/messages/")
+# Wrap the hayhooks lifespan to also run the MCP session manager
+_original_lifespan = hayhooks.router.lifespan_context
+
+
+@asynccontextmanager
+async def _combined_lifespan(app):
+    async with _original_lifespan(app):
+        async with session_manager.run():
+            yield
+
+
+hayhooks.router.lifespan_context = _combined_lifespan
 
 
 @mcp_server.list_tools()
@@ -248,19 +260,11 @@ async def call_tool(name: str, arguments: dict) -> List[TextContent | ImageConte
         return await run_pipeline_as_tool(name, arguments)
     except Exception as e:
         log.error(f"Error calling MCP tool '{name}': {e}")
-        # Consider returning an error structure if MCP spec allows
         return []
 
 
-async def handle_sse(request: Request) -> Response:
-    async with mcp_sse.connect_sse(request.scope, request.receive, request._send) as streams:
-        await mcp_server.run(streams[0], streams[1], mcp_server.create_initialization_options())
-    return Response(status_code=200, media_type="text/event-stream")
-
-
-# Add MCP routes directly to the main Hayhooks app
-hayhooks.add_route("/sse", handle_sse)
-hayhooks.mount("/messages", mcp_sse.handle_post_message)
+# Add MCP endpoint using streamable HTTP transport
+hayhooks.mount("/mcp", session_manager.handle_request)
 # --- End MCP Server Integration ---
 
 # --- Google OAuth2 Integration ---

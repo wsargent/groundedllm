@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from haystack.utils import Secret
-from linkup.types import LinkupSearchResults
+from linkup import LinkupSearchResults
 
 from components.web_search.linkup_web_search import LinkupWebSearch
 

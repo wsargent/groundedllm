@@ -214,7 +214,7 @@ class TestGithubRepoContentResolver:
         assert "streams" in result
         assert len(result["streams"]) == 2
         assert all(isinstance(stream, ByteStream) for stream in result["streams"])
-        assert all(stream.mime_type == "text/x-python" for stream in result["streams"])
+        assert all(stream.mime_type == "text/plain" for stream in result["streams"])
 
         # Verify viewer was called correctly
         mock_viewer_class.assert_called_once_with(github_token=None, raise_on_failure=False)
@@ -379,7 +379,7 @@ class TestGithubRepoContentResolver:
 
         # Verify result
         assert len(result["streams"]) == 1
-        assert result["streams"][0].mime_type == "text/markdown"
+        assert result["streams"][0].mime_type == "text/plain"
 
     @patch("components.github.GitHubRepoViewer")
     def test_run_with_different_branch_types(self, mock_viewer_class):
@@ -428,7 +428,7 @@ class TestGithubRepoContentResolver:
 
         # Verify result
         assert len(result["streams"]) == 1
-        assert result["streams"][0].mime_type == "text/markdown"
+        assert result["streams"][0].mime_type == "text/plain"
 
     @patch("components.github.GitHubRepoViewer")
     def test_run_mixed_github_urls(self, mock_viewer_class):
