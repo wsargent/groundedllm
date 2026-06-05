@@ -10,10 +10,10 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
+from fastapi_openai_compat import ChatCompletion, ChatRequest, Choice, Message, ModelObject, ModelsResponse
 from hayhooks import BasePipelineWrapper, create_app
 from hayhooks.server.pipelines import registry
 from hayhooks.server.routers import openai as openai_module_to_patch
-from hayhooks.server.routers.openai import ChatCompletion, ChatRequest, Choice, Message, ModelObject, ModelsResponse
 from hayhooks.server.utils.mcp_utils import (
     list_pipelines_as_tools,
     run_pipeline_as_tool,
@@ -100,8 +100,6 @@ async def get_models_override():
         object="list",
     )
 
-
-openai_module_to_patch.get_models = get_models_override
 
 for route_idx, route in enumerate(openai_module_to_patch.router.routes):
     if isinstance(route, APIRoute) and route.path in ["/models", "/v1/models"]:
