@@ -13,6 +13,7 @@ from components.web_search.brave_web_search import BraveWebSearch
 from components.web_search.exa_web_search import ExaWebSearch
 from components.web_search.linkup_web_search import LinkupWebSearch
 from components.web_search.searxng_web_search import SearXNGWebSearch
+from components.web_search.serpbase_web_search import SerpBaseWebSearch
 from components.web_search.tavily_web_search import TavilyWebSearch
 from resources.utils import read_resource_file
 
@@ -34,12 +35,14 @@ class PipelineWrapper(BasePipelineWrapper):
         searxng_search = SearXNGWebSearch()
         exa_search = ExaWebSearch()
         brave_search = BraveWebSearch()
+        serpbase_search = SerpBaseWebSearch()
 
         pipe.add_component("tavily_search", tavily_search)
         pipe.add_component("linkup_search", linkup_search)
         pipe.add_component("searxng_search", searxng_search)
         pipe.add_component("exa_search", exa_search)
         pipe.add_component("brave_search", brave_search)
+        pipe.add_component("serpbase_search", serpbase_search)
 
         #######
         # Set up the joiner
@@ -118,6 +121,9 @@ class PipelineWrapper(BasePipelineWrapper):
 
         # Linkup doesn't rank its documents (or at least doesn't expose it) >:-(
         pipe.connect("linkup_search.documents", "document_joiner.documents")
+
+        # SerpBase is a Google Search Results API — structured JSON, no scraping maintenance
+        pipe.connect("serpbase_search.documents", "document_joiner.documents")
 
         #######
         # If we don't have any documents at all, we've either screwed up the pipeline, or
@@ -211,6 +217,7 @@ class PipelineWrapper(BasePipelineWrapper):
                     "include_domains": include_domains if include_domains != "" else None,
                     "exclude_domains": exclude_domains if exclude_domains != "" else None,
                 },
+                "serpbase_search": {"query": question, "max_results": max_results},
                 "prompt_builder": {"query": question},
             }
         )
